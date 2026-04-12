@@ -283,7 +283,7 @@ drawChart();
 let chart;
 function drawChart(){
 if(chart)chart.destroy();
-chart=new Chart(chartCanvas,{
+chart=new Chart(document.getElementById("chart"),{
 type:"bar",
 data:{
 labels:["Hours","Points"],
