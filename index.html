@@ -1,298 +1,1361 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Student Productivity Hub</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Study Hub – by Pushpendra</title>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Chart.js for visualizations -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{
-font-family:system-ui;
-background:linear-gradient(135deg,#e3f2fd,#ffffff);
-transition:0.3s;
-}
+  <!-- Firebase v9 modular SDK (gstatic – works when hosted) -->
+  <script type="module">
+    import { initializeApp }   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* HEADER */
-header{
-display:flex;
-justify-content:space-between;
-padding:12px 16px;
-background:#fff;
-box-shadow:0 2px 10px rgba(0,0,0,.05);
-position:sticky;top:0;
-}
+    /* ── PASTE YOUR FIREBASE CONFIG HERE ─────────────────────
+       Get it from: Firebase Console → Project Settings → Your apps
+       Replace the placeholder values below with your real config.
+    ── */
+    const firebaseConfig = {
+      apiKey:            "YOUR_API_KEY",
+      authDomain:        "YOUR_PROJECT.firebaseapp.com",
+      projectId:         "YOUR_PROJECT_ID",
+      storageBucket:     "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId:             "YOUR_APP_ID"
+    };
 
-/* CARD */
-.card{
-background:#fff;
-margin:14px;
-padding:16px;
-border-radius:14px;
-box-shadow:0 4px 12px rgba(0,0,0,.05);
-}
+    /* ── Firebase init (wrapped in try/catch so the app still
+       works offline or when config is not yet filled in)    ── */
+    try {
+      const fbApp = initializeApp(firebaseConfig);
+      const db    = getFirestore(fbApp);
 
-/* STATS */
-.stats{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
-gap:10px;
-}
-.stat{
-background:#f5f7fb;
-padding:12px;
-border-radius:10px;
-text-align:center;
-}
+      /* Save all data to Firestore (called after every change) */
+      window.fbSave = async function(uid, payload) {
+        try {
+          await setDoc(doc(db, "students", uid), payload, { merge: true });
+        } catch(e) { console.warn("Firebase save failed:", e.message); }
+      };
 
-/* INPUT */
-input,textarea,select{
-width:100%;
-padding:8px;
-margin-top:6px;
-border-radius:8px;
-border:1px solid #ddd;
-}
+      /* Load data from Firestore on first visit */
+      window.fbLoad = async function(uid) {
+        try {
+          const snap = await getDoc(doc(db, "students", uid));
+          return snap.exists() ? snap.data() : null;
+        } catch(e) { console.warn("Firebase load failed:", e.message); return null; }
+      };
 
-/* BUTTON */
-button{
-padding:10px;
-border:none;
-border-radius:8px;
-background:#4f46e5;
-color:#fff;
-cursor:pointer;
-}
+      console.log("✅ Firebase connected");
+    } catch(e) {
+      /* Firebase config not set → app runs 100% on localStorage */
+      window.fbSave = async function() {};
+      window.fbLoad = async function() { return null; };
+      console.warn("Firebase not configured – running offline only.");
+    }
+  </script>
 
-/* QUOTE */
-.quote{
-margin:14px;
-padding:12px;
-background:#eef2ff;
-border-left:4px solid #4f46e5;
-border-radius:10px;
-}
+  <style>
+    /* ═══════════════════════════════════════════════════════════
+       DESIGN TOKENS – change colors/fonts here globally
+    ═══════════════════════════════════════════════════════════ */
+    :root {
+      --accent:    #6c63ff;
+      --accent2:   #48cfad;
+      --danger:    #ff6b6b;
+      --warn:      #feca57;
+      --bg:        #f0f2f8;
+      --surface:   #ffffff;
+      --surface2:  #f7f8fc;
+      --text:      #1e2235;
+      --muted:     #8892b0;
+      --border:    rgba(0,0,0,0.07);
+      --radius:    14px;
+      --shadow:    0 4px 24px rgba(108,99,255,0.08);
+      --trans:     0.22s ease;
+    }
+    /* Dark mode */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:      #0f1117;
+        --surface: #1a1d2e;
+        --surface2:#21253a;
+        --text:    #e8ecff;
+        --muted:   #6272a4;
+        --border:  rgba(255,255,255,0.06);
+        --shadow:  0 4px 24px rgba(0,0,0,0.35);
+      }
+    }
 
-/* LOGIN */
-#login{
-display:flex;
-flex-direction:column;
-justify-content:center;
-align-items:center;
-height:100vh;
-gap:10px;
-}
-</style>
+    /* ─── Reset ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      transition: background var(--trans);
+      line-height: 1.6;
+    }
+
+    /* ─── Exam themes (body class) ─── */
+    body.t-neet  { --accent:#00b894; --accent2:#55efc4; }
+    body.t-jee   { --accent:#0984e3; --accent2:#74b9ff; }
+    body.t-cuet  { --accent:#e17055; --accent2:#fab1a0; }
+    body.t-ssc   { --accent:#d63031; --accent2:#ff7675; }
+    body.t-other { --accent:#6c63ff; --accent2:#a29bfe; }
+
+    /* ─── Scrollbar ─── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 99px; opacity: .5; }
+
+    /* ═══ HEADER ════════════════════════════════════════════════ */
+    #hdr {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky; top: 0; z-index: 200;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    #hdr .brand { display: flex; align-items: center; gap: 10px; }
+    #hdr .brand .dot {
+      width: 32px; height: 32px; border-radius: 10px;
+      background: var(--accent); display: grid; place-items: center;
+      color: #fff; font-size: 16px;
+    }
+    #hdr .brand h1 { font-size: 16px; font-weight: 700; letter-spacing: -.3px; }
+    #hdr .brand p  { font-size: 12px; color: var(--muted); margin-top: 1px; }
+    #hdr .hdr-right { display: flex; align-items: center; gap: 10px; }
+    #sync-status {
+      font-size: 11px; padding: 4px 10px;
+      border-radius: 20px; background: var(--surface2);
+      color: var(--muted); display: flex; align-items: center; gap: 5px;
+    }
+    #sync-status .dot2 { width: 7px; height: 7px; border-radius: 50%; background: #aaa; }
+    #sync-status.ok .dot2 { background: #00b894; }
+    .icon-btn {
+      width: 34px; height: 34px; border-radius: 9px;
+      border: 1px solid var(--border); background: var(--surface2);
+      cursor: pointer; display: grid; place-items: center;
+      color: var(--muted); font-size: 15px; transition: var(--trans);
+    }
+    .icon-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* ═══ NAV TABS ══════════════════════════════════════════════ */
+    #nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex; overflow-x: auto;
+      scrollbar-width: none; padding: 0 16px;
+      position: sticky; top: 58px; z-index: 190;
+    }
+    #nav::-webkit-scrollbar { display: none; }
+    .nav-btn {
+      padding: 13px 18px; border: none; background: none;
+      color: var(--muted); font-size: 13px; font-weight: 500;
+      cursor: pointer; white-space: nowrap;
+      border-bottom: 2px solid transparent;
+      transition: color var(--trans), border-color var(--trans);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .nav-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .nav-btn:hover:not(.active) { color: var(--text); }
+
+    /* ═══ MAIN LAYOUT ════════════════════════════════════════════ */
+    main {
+      max-width: 900px; margin: 0 auto;
+      padding: 24px 16px 80px;
+    }
+    .page { display: none; animation: fadeUp .3s ease; }
+    .page.active { display: block; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ═══ CARDS ══════════════════════════════════════════════════ */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      margin-bottom: 18px;
+    }
+    .card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .card-header h2 {
+      font-size: 15px; font-weight: 700;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-header h2 .icon {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: color-mix(in srgb, var(--accent) 15%, transparent);
+      color: var(--accent); display: grid; place-items: center; font-size: 14px;
+    }
+
+    /* ═══ STAT CARDS ═════════════════════════════════════════════ */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 14px; margin-bottom: 20px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      position: relative; overflow: hidden;
+      transition: transform var(--trans), box-shadow var(--trans);
+    }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+    .stat-card::before {
+      content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+    }
+    .stat-card .s-icon {
+      font-size: 20px; margin-bottom: 10px;
+      width: 36px; height: 36px; border-radius: 10px;
+      background: color-mix(in srgb, var(--accent) 12%, transparent);
+      display: grid; place-items: center;
+    }
+    .stat-card .s-val { font-size: 26px; font-weight: 800; color: var(--accent); }
+    .stat-card .s-lbl { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    /* ═══ QUOTE BANNER ═══════════════════════════════════════════ */
+    #quote-wrap {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      color: #fff;
+      margin-bottom: 20px;
+      position: relative; overflow: hidden;
+    }
+    #quote-wrap::after {
+      content: "\201C"; position: absolute;
+      right: 20px; top: -10px; font-size: 100px;
+      opacity: .15; font-family: serif; line-height: 1;
+    }
+    #quote-wrap p { font-size: 15px; font-style: italic; line-height: 1.7; }
+    #quote-wrap span { font-size: 12px; opacity: .8; margin-top: 8px; display: block; }
+    .quote-day {
+      position: absolute; top: 14px; right: 18px;
+      font-size: 11px; opacity: .7;
+      background: rgba(255,255,255,.2);
+      padding: 3px 10px; border-radius: 20px;
+    }
+
+    /* ═══ FORMS ══════════════════════════════════════════════════ */
+    .field { margin-bottom: 14px; }
+    .field label {
+      display: block; font-size: 12px; font-weight: 600;
+      color: var(--muted); margin-bottom: 6px; letter-spacing: .4px;
+    }
+    input, select, textarea {
+      width: 100%; padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px; font-size: 14px;
+      background: var(--surface2); color: var(--text);
+      outline: none; transition: border-color var(--trans), box-shadow var(--trans);
+      font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
+    }
+    textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    @media (max-width: 480px) {
+      .row2, .row3 { grid-template-columns: 1fr; }
+    }
+
+    /* ═══ BUTTONS ════════════════════════════════════════════════ */
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 10px 20px; border-radius: 10px; border: none;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: transform .12s, opacity var(--trans), box-shadow var(--trans);
+      letter-spacing: .2px;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn-primary {
+      background: var(--accent); color: #fff;
+      box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 40%, transparent);
+    }
+    .btn-primary:hover { opacity: .9; }
+    .btn-outline {
+      background: transparent; color: var(--accent);
+      border: 1.5px solid var(--accent);
+    }
+    .btn-outline:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+    .btn-danger {
+      background: var(--danger); color: #fff;
+      box-shadow: 0 4px 14px color-mix(in srgb, var(--danger) 30%, transparent);
+    }
+    .btn-sm { padding: 7px 14px; font-size: 12px; border-radius: 8px; }
+    .btn-ghost {
+      background: var(--surface2); color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { color: var(--text); }
+    .btn-w { width: 100%; justify-content: center; }
+
+    /* ═══ BADGES ═════════════════════════════════════════════════ */
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; font-weight: 700; padding: 3px 10px;
+      border-radius: 20px; letter-spacing: .3px;
+    }
+    .badge-green { background: #d4f8e8; color: #00875a; }
+    .badge-blue  { background: #dbeafe; color: #1d4ed8; }
+    .badge-gold  { background: #fef3c7; color: #92400e; }
+    .badge-red   { background: #fee2e2; color: #b91c1c; }
+    .badge-purple{ background: #ede9fe; color: #6d28d9; }
+
+    /* ═══ ROUTINE GRID ════════════════════════════════════════════ */
+    .routine-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+    }
+    @media (max-width: 560px) { .routine-grid { grid-template-columns: 1fr; } }
+    .routine-box {
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: 12px; padding: 14px;
+    }
+    .routine-box .rb-label {
+      font-size: 12px; font-weight: 700; color: var(--muted);
+      margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+    }
+    .routine-box textarea {
+      border: none; background: transparent; padding: 0;
+      font-size: 13px; min-height: 70px; box-shadow: none;
+    }
+    .routine-box textarea:focus { border: none; box-shadow: none; }
+
+    /* ═══ PROGRESS BAR ════════════════════════════════════════════ */
+    .prog-wrap { margin-top: 10px; }
+    .prog-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+    .prog-bar { height: 7px; background: var(--surface2); border-radius: 99px; overflow: hidden; }
+    .prog-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width .5s ease; }
+
+    /* ═══ SESSION LOG ════════════════════════════════════════════ */
+    #session-list { margin-top: 14px; }
+    .session-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px; background: var(--surface2);
+      border-radius: 10px; margin-bottom: 8px; gap: 10px;
+      animation: fadeUp .2s ease;
+    }
+    .session-item .s-left { display: flex; align-items: center; gap: 10px; }
+    .session-item .s-time {
+      font-size: 13px; font-weight: 700; color: var(--accent);
+      min-width: 56px;
+    }
+    .session-item .s-note { font-size: 13px; color: var(--text); }
+    .session-item .s-date { font-size: 11px; color: var(--muted); }
+    .session-item .del-btn {
+      background: none; border: none; cursor: pointer;
+      color: var(--muted); font-size: 14px; padding: 4px;
+      border-radius: 6px; transition: color var(--trans);
+    }
+    .session-item .del-btn:hover { color: var(--danger); }
+
+    /* ═══ TIMETABLE ══════════════════════════════════════════════ */
+    .subj-row {
+      display: flex; gap: 8px; align-items: center;
+      margin-bottom: 10px; flex-wrap: wrap;
+    }
+    .subj-row input { flex: 1; min-width: 100px; }
+    .subj-row input[type="number"] { max-width: 90px; }
+    .subj-row .color-dot {
+      width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0;
+    }
+    #tt-output {
+      margin-top: 18px; border-radius: 12px; overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .tt-header {
+      padding: 14px 18px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      color: #fff;
+    }
+    .tt-header h3 { font-size: 15px; }
+    .tt-header p  { font-size: 12px; opacity: .85; margin-top: 2px; }
+    .tt-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 18px; border-bottom: 1px solid var(--border);
+      background: var(--surface); font-size: 13px;
+    }
+    .tt-row:last-child { border-bottom: none; }
+    .tt-row .tt-subj { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+    .tt-bar-wrap { flex: 1; margin: 0 14px; }
+    .tt-bar { height: 6px; border-radius: 99px; background: var(--accent); }
+
+    /* ═══ REWARD SYSTEM ══════════════════════════════════════════ */
+    .reward-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(120px,1fr)); gap: 10px; }
+    .reward-item {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px; text-align: center;
+      transition: transform var(--trans);
+    }
+    .reward-item:hover { transform: translateY(-2px); }
+    .reward-item .ri-icon { font-size: 26px; margin-bottom: 6px; }
+    .reward-item .ri-name { font-size: 12px; font-weight: 700; color: var(--text); }
+    .reward-item .ri-req  { font-size: 11px; color: var(--muted); }
+    .reward-item.unlocked { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+
+    /* ═══ LOGIN MODAL ════════════════════════════════════════════ */
+    #login-modal {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 999;
+    }
+    #login-box {
+      background: var(--surface);
+      border-radius: 20px; padding: 36px 30px;
+      width: 360px; max-width: 95vw;
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      animation: fadeUp .3s ease;
+    }
+    #login-box .lb-icon { font-size: 42px; text-align: center; margin-bottom: 14px; }
+    #login-box h2 { font-size: 20px; font-weight: 800; text-align: center; margin-bottom: 5px; }
+    #login-box p  { font-size: 13px; color: var(--muted); text-align: center; margin-bottom: 22px; }
+
+    /* ═══ CHART CONTAINERS ═══════════════════════════════════════ */
+    .chart-wrap {
+      position: relative; height: 220px; margin-top: 10px;
+    }
+    .chart-wrap-tall { position: relative; height: 260px; margin-top: 10px; }
+
+    /* ═══ EMPTY STATE ════════════════════════════════════════════ */
+    .empty-state {
+      text-align: center; padding: 40px 20px;
+      color: var(--muted); font-size: 14px;
+    }
+    .empty-state .es-icon { font-size: 40px; margin-bottom: 10px; }
+
+    /* ═══ TOAST ══════════════════════════════════════════════════ */
+    #toast {
+      position: fixed; bottom: 28px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--text); color: var(--surface);
+      padding: 11px 22px; border-radius: 10px; font-size: 13px; font-weight: 500;
+      opacity: 0; transition: opacity .25s, transform .25s;
+      pointer-events: none; z-index: 9999; white-space: nowrap;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.2);
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ═══ MISC ═══════════════════════════════════════════════════ */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+    .muted   { color: var(--muted); font-size: 12px; }
+    .mt8 { margin-top: 8px; }
+    .mt16 { margin-top: 16px; }
+    .flex-between { display: flex; align-items: center; justify-content: space-between; }
+    .chip {
+      display: inline-block; font-size: 11px; padding: 3px 10px;
+      border-radius: 20px; background: var(--surface2);
+      border: 1px solid var(--border); color: var(--muted); font-weight: 600;
+    }
+    #reward-pop {
+      position: fixed; top: 80px; right: 20px;
+      background: linear-gradient(135deg,#ffd700,#ff8c00);
+      color: #fff; padding: 12px 20px; border-radius: 14px;
+      font-size: 13px; font-weight: 700;
+      box-shadow: 0 8px 24px rgba(255,165,0,0.4);
+      opacity: 0; transform: translateY(-10px);
+      transition: opacity .3s, transform .3s;
+      z-index: 9998; pointer-events: none;
+    }
+    #reward-pop.show { opacity: 1; transform: translateY(0); }
+  </style>
 </head>
+<body class="t-other">
 
-<body>
-
-<!-- LOGIN -->
-<div id="login">
-<h2>Welcome</h2>
-<input id="name" placeholder="Enter your name">
-<select id="exam">
-<option value="neet">NEET</option>
-<option value="jee">JEE</option>
-<option value="cuet">CUET</option>
-<option value="other">Other</option>
-</select>
-<button onclick="saveUser()">Start</button>
-<button onclick="googleLogin()">Login with Google</button>
+<!-- ═══════════════════════════════════════════════════════════
+     LOGIN MODAL – first visit only
+═══════════════════════════════════════════════════════════ -->
+<div id="login-modal">
+  <div id="login-box">
+    <div class="lb-icon">🎓</div>
+    <h2>Study Hub</h2>
+    <p>Set up your personalized dashboard in 10 seconds</p>
+    <div class="field">
+      <label>YOUR NAME</label>
+      <input id="l-name" type="text" placeholder="e.g. Pushpendra" autocomplete="off"/>
+    </div>
+    <div class="field">
+      <label>TARGET EXAM</label>
+      <select id="l-exam">
+        <option value="neet">🔬 NEET</option>
+        <option value="jee">⚙️ JEE</option>
+        <option value="cuet">📘 CUET</option>
+        <option value="ssc">📋 SSC</option>
+        <option value="other">🎯 Other</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>DAILY STUDY GOAL (hours)</label>
+      <input id="l-goal" type="number" min="1" max="16" value="8" placeholder="8"/>
+    </div>
+    <button class="btn btn-primary btn-w mt16" onclick="doLogin()">Get Started →</button>
+  </div>
 </div>
 
-<!-- APP -->
-<div id="app" style="display:none">
+<!-- ═══ REWARD POP ═════════════════════════════════════════════ -->
+<div id="reward-pop">🏆 +<span id="rp-pts"></span> points earned!</div>
 
-<header>
-<h3 id="userText"></h3>
-<button onclick="logout()">Logout</button>
-</header>
-
-<div class="quote" id="quote"></div>
-
-<div class="card">
-<div class="stats">
-<div class="stat">Hours<br><b id="hoursT">0</b></div>
-<div class="stat">Points<br><b id="points">0</b></div>
-<div class="stat">Streak<br><b id="streak">0</b></div>
-</div>
-</div>
-
-<div class="card">
-<h4>Study Time</h4>
-<input id="h" placeholder="Hours">
-<input id="m" placeholder="Minutes">
-<input id="s" placeholder="Seconds">
-<button onclick="addTime()">Add</button>
+<!-- ═══════════════════════════════════════════════════════════
+     HEADER
+═══════════════════════════════════════════════════════════ -->
+<div id="hdr">
+  <div class="brand">
+    <div class="dot">📖</div>
+    <div>
+      <h1 id="hdr-title">Study Hub</h1>
+      <p id="hdr-sub">Loading…</p>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div id="sync-status"><span class="dot2"></span><span id="sync-lbl">Offline</span></div>
+    <button class="icon-btn" title="Reset all data" onclick="resetAll()">🗑</button>
+  </div>
 </div>
 
-<div class="card">
-<h4>Routine</h4>
-<textarea id="did" placeholder="What I did"></textarea>
-<textarea id="will" placeholder="What I will do"></textarea>
-<textarea id="achieved" placeholder="What I achieved"></textarea>
-<textarea id="regret" placeholder="What I regret"></textarea>
-<button onclick="saveRoutine()">Save</button>
-</div>
+<!-- ═══ NAV ════════════════════════════════════════════════════ -->
+<nav id="nav">
+  <button class="nav-btn active" data-page="dashboard" onclick="goPage('dashboard',this)">🏠 Dashboard</button>
+  <button class="nav-btn" data-page="log"       onclick="goPage('log',this)">⏱ Log Time</button>
+  <button class="nav-btn" data-page="routine"   onclick="goPage('routine',this)">📋 Routine</button>
+  <button class="nav-btn" data-page="timetable" onclick="goPage('timetable',this)">📅 Timetable</button>
+  <button class="nav-btn" data-page="analytics" onclick="goPage('analytics',this)">📊 Analytics</button>
+  <button class="nav-btn" data-page="rewards"   onclick="goPage('rewards',this)">🏅 Rewards</button>
+</nav>
 
-<div class="card">
-<h4>Timetable</h4>
-<input id="days" placeholder="Days left">
-<button onclick="genPlan()">Generate</button>
-<div id="plan"></div>
-</div>
+<!-- ═══════════════════════════════════════════════════════════
+     MAIN PAGES
+═══════════════════════════════════════════════════════════ -->
+<main>
 
-<div class="card">
-<h4>Analytics</h4>
-<canvas id="chart"></canvas>
-</div>
+  <!-- ── PAGE: DASHBOARD ─────────────────────────────────── -->
+  <div class="page active" id="p-dashboard">
 
-</div>
+    <!-- Quote -->
+    <div id="quote-wrap">
+      <div class="quote-day" id="q-day"></div>
+      <p id="q-text">Loading…</p>
+      <span id="q-author"></span>
+    </div>
 
-<script type="module">
+    <!-- Stats -->
+    <div class="stat-grid" id="stat-grid">
+      <div class="stat-card">
+        <div class="s-icon">⏱</div>
+        <div class="s-val" id="s-total">0m</div>
+        <div class="s-lbl">Total Study Time</div>
+      </div>
+      <div class="stat-card">
+        <div class="s-icon">🔥</div>
+        <div class="s-val" id="s-streak">0</div>
+        <div class="s-lbl">Day Streak</div>
+      </div>
+      <div class="stat-card">
+        <div class="s-icon">⭐</div>
+        <div class="s-val" id="s-pts">0</div>
+        <div class="s-lbl">Reward Points</div>
+      </div>
+      <div class="stat-card">
+        <div class="s-icon">📅</div>
+        <div class="s-val" id="s-today">0m</div>
+        <div class="s-lbl">Studied Today</div>
+      </div>
+    </div>
 
-/* 🔥 FIREBASE */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut }
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    <!-- Today's goal progress -->
+    <div class="card">
+      <div class="card-header">
+        <h2><span class="icon">🎯</span> Today's Goal Progress</h2>
+        <span class="chip" id="goal-chip">0 / 0h</span>
+      </div>
+      <div class="prog-wrap">
+        <div class="prog-bar"><div class="prog-fill" id="goal-fill" style="width:0%"></div></div>
+      </div>
+      <p class="muted mt8" id="goal-msg">Log some study time to track progress!</p>
+    </div>
 
-const firebaseConfig = {
-apiKey:"YOUR_API_KEY",
-authDomain:"YOUR_DOMAIN",
-projectId:"YOUR_PROJECT_ID"
-};
+    <!-- Weekly mini chart -->
+    <div class="card">
+      <div class="card-header">
+        <h2><span class="icon">📈</span> This Week</h2>
+      </div>
+      <div class="chart-wrap"><canvas id="weekChart"></canvas></div>
+    </div>
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const provider = new GoogleAuthProvider();
+  </div><!-- end dashboard -->
 
-/* STATE */
-let data = JSON.parse(localStorage.getItem("data")) || {
-hours:0,points:0,streak:0
-};
+  <!-- ── PAGE: LOG TIME ──────────────────────────────────── -->
+  <div class="page" id="p-log">
 
-/* QUOTES (30+) */
-const quotes=[
-"Push yourself, because no one else will",
-"Consistency beats motivation",
-"Success is daily habits",
-"Discipline > Motivation",
-"Small progress is progress",
-"Focus on your goal",
-"Hard work pays off",
-"Never quit",
-"Stay hungry stay foolish",
-"Be better every day",
-"Dream big work hard",
-"Your future needs you",
-"Study now shine later",
-"Pain is temporary",
-"Effort creates success",
-"Believe in yourself",
-"Stay consistent",
-"Work smarter",
-"Keep going",
-"Don’t stop",
-"Make it happen",
-"You can do it",
-"Push limits",
-"Level up",
-"Stay focused",
-"Grind daily",
-"Keep learning",
-"Stay strong",
-"No excuses",
-"Be unstoppable"
+    <div class="card">
+      <div class="card-header">
+        <h2><span class="icon">⏱</span> Log Study Session</h2>
+      </div>
+      <div class="row3">
+        <div class="field">
+          <label>HOURS</label>
+          <input id="l-h" type="number" min="0" max="23" placeholder="0"/>
+        </div>
+        <div class="field">
+          <label>MINUTES</label>
+          <input id="l-m" type="number" min="0" max="59" placeholder="0"/>
+        </div>
+        <div class="field">
+          <label>SECONDS</label>
+          <input id="l-s" type="number" min="0" max="59" placeholder="0"/>
+        </div>
+      </div>
+      <div class="field">
+        <label>SUBJECT / TOPIC</label>
+        <input id="l-note" type="text" placeholder="e.g. Physics – Kinematics Ch.3"/>
+      </div>
+      <button class="btn btn-primary" onclick="logSession()">+ Add Session</button>
+      <span class="muted" style="margin-left:12px">1 minute = 1 reward point</span>
+    </div>
+
+    <!-- Session list -->
+    <div class="card">
+      <div class="card-header">
+        <h2><span class="icon">📝</span> Recent Sessions</h2>
+        <button class="btn btn-ghost btn-sm" onclick="clearSessions()">Clear all</button>
+      </div>
+      <div id="session-list"></div>
+    </div>
+
+  </div><!-- end log -->
+
+  <!-- ── PAGE: ROUTINE ───────────────────────────────────── -->
+  <div class="page" id="p-routine">
+
+    <div class="card">
+      <div class="card-header">
+        <h2><span class="icon">📋</span> Daily Routine Tracker</h2>
+        <span class="chip" id="rt-date"></span>
+      </div>
+      <p class="muted" style="margin-bottom:16px">Auto-saved as you type · Resets each new day</p>
+      <div class="routine-grid">
+        <div class="routine-box">
+          <div class="rb-label">✅ What I did today</div>
+          <textarea id="rt-did" placeholder="Chapters completed, topics studied…" oninput="saveRoutine()"></textarea>
+        </div>
+        <div class="routine-box">
+          <div class="rb-label">🎯 What I will do tomorrow</div>
+          <textarea id="rt-will" placeholder="Plan for tomorrow…" oninput="saveRoutine()"></textarea>
+        </div>
+        <div class="routine-box">
+          <div class="rb-label">🏆 What I achieved</div>
+          <textarea id="rt-achieved" placeholder="Wins, progress, milestones…" oninput="saveRoutine()"></textarea>
+        </div>
+        <div class="routine-box">
+          <div class="rb-label">😔 What I regret</div>
+          <textarea id="rt-regret" placeholder="Distractions, missed goals…" oninput="saveRoutine()"></textarea>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end routine -->
+
+  <!-- ── PAGE: TIMETABLE ────────────────────────────────── -->
+  <div class="page" id="p-timetable">
+
+    <div class="card">
+      <div class="card-header">
+        <h2><span class="icon">📅</span> Timetable Generator</h2>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>EXAM NAME</label>
+          <input id="tt-exam" type="text" placeholder="e.g. NEET 2026"/>
+        </div>
+        <div class="field">
+          <label>DAYS LEFT</label>
+          <input id="tt-days" type="number" min="1" placeholder="e.g. 90"/>
+        </div>
+      </div>
+      <label style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.4px;display:block;margin-bottom:10px">SUBJECTS &amp; HOURS PER DAY</label>
+      <div id="subj-list"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
+        <button class="btn btn-outline btn-sm" onclick="addSubjRow()">+ Add Subject</button>
+        <button class="btn btn-primary btn-sm" onclick="genTimetable()">Generate Plan</button>
+      </div>
+    </div>
+
+    <div id="tt-output" style="display:none"></div>
+
+    <!-- Pie chart for subject split -->
+    <div class="card" id="tt-chart-card" style="display:none">
+      <div class="card-header"><h2><span class="icon">🥧</span> Time Distribution</h2></div>
+      <div class="chart-wrap-tall"><canvas id="ttPie"></canvas></div>
+    </div>
+
+  </div><!-- end timetable -->
+
+  <!-- ── PAGE: ANALYTICS ────────────────────────────────── -->
+  <div class="page" id="p-analytics">
+
+    <div class="card">
+      <div class="card-header"><h2><span class="icon">📊</span> Daily Study (Last 14 Days)</h2></div>
+      <div class="chart-wrap-tall"><canvas id="dailyBar"></canvas></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h2><span class="icon">🥧</span> Subject Breakdown</h2></div>
+      <div class="chart-wrap"><canvas id="subjPie"></canvas></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h2><span class="icon">📈</span> Points Over Time</h2></div>
+      <div class="chart-wrap"><canvas id="ptsLine"></canvas></div>
+    </div>
+
+  </div><!-- end analytics -->
+
+  <!-- ── PAGE: REWARDS ──────────────────────────────────── -->
+  <div class="page" id="p-rewards">
+
+    <div class="card">
+      <div class="card-header">
+        <h2><span class="icon">⭐</span> Your Points</h2>
+        <span class="badge badge-gold" id="rw-pts-badge">0 pts</span>
+      </div>
+      <div class="prog-wrap">
+        <div class="prog-label"><span>Level Progress</span><span id="rw-level-lbl"></span></div>
+        <div class="prog-bar"><div class="prog-fill" id="rw-level-fill" style="width:0%"></div></div>
+      </div>
+      <p class="muted mt8" id="rw-next"></p>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h2><span class="icon">🏅</span> Badges</h2></div>
+      <div class="reward-grid" id="rw-grid"></div>
+    </div>
+
+  </div><!-- end rewards -->
+
+</main>
+
+<div id="toast"></div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     JAVASCRIPT – All logic below
+═══════════════════════════════════════════════════════════ -->
+<script>
+
+/* ══════════════════════════════════════════════════════════
+   1. CONSTANTS
+══════════════════════════════════════════════════════════ */
+var QUOTES = [
+  {t:"Success is the sum of small efforts, repeated day in and day out.", a:"Robert Collier"},
+  {t:"Don't watch the clock; do what it does. Keep going.", a:"Sam Levenson"},
+  {t:"The secret of getting ahead is getting started.", a:"Mark Twain"},
+  {t:"It always seems impossible until it's done.", a:"Nelson Mandela"},
+  {t:"You don't have to be great to start, but you have to start to be great.", a:"Zig Ziglar"},
+  {t:"Hard work beats talent when talent doesn't work hard.", a:"Tim Notke"},
+  {t:"Believe you can and you're halfway there.", a:"Theodore Roosevelt"},
+  {t:"Your only limit is your mind.", a:"Anonymous"},
+  {t:"Push yourself, because no one else is going to do it for you.", a:"Anonymous"},
+  {t:"Great things never come from comfort zones.", a:"Anonymous"},
+  {t:"Dream it. Wish it. Do it.", a:"Anonymous"},
+  {t:"The harder you work for something, the greater you'll feel when you achieve it.", a:"Anonymous"},
+  {t:"Don't stop when you're tired. Stop when you're done.", a:"Anonymous"},
+  {t:"Wake up with determination. Go to bed with satisfaction.", a:"Anonymous"},
+  {t:"It's going to be hard, but hard does not mean impossible.", a:"Anonymous"},
+  {t:"Don't wait for opportunity. Create it.", a:"Anonymous"},
+  {t:"The expert in anything was once a beginner.", a:"Helen Hayes"},
+  {t:"Strive for progress, not perfection.", a:"Anonymous"},
+  {t:"Every accomplishment starts with the decision to try.", a:"John F. Kennedy"},
+  {t:"Education is the most powerful weapon you can use to change the world.", a:"Nelson Mandela"},
+  {t:"An investment in knowledge pays the best interest.", a:"Benjamin Franklin"},
+  {t:"The beautiful thing about learning is nobody can take it away from you.", a:"B.B. King"},
+  {t:"Hardships often prepare ordinary people for an extraordinary destiny.", a:"C.S. Lewis"},
+  {t:"Nothing in life is to be feared, it is only to be understood.", a:"Marie Curie"},
+  {t:"All our dreams can come true if we have the courage to pursue them.", a:"Walt Disney"},
+  {t:"You are capable of more than you know.", a:"Anonymous"},
+  {t:"Study hard, for the well is deep and our brains are shallow.", a:"Richard Baxter"},
+  {t:"Small daily improvements over time lead to stunning results.", a:"Robin Sharma"},
+  {t:"The future belongs to those who believe in the beauty of their dreams.", a:"Eleanor Roosevelt"},
+  {t:"Genius is 1% inspiration and 99% perspiration.", a:"Thomas Edison"},
+  {t:"A reader lives a thousand lives; the man who never reads lives only one.", a:"George R.R. Martin"},
+  {t:"Excellence is not a destination but a continuous journey.", a:"Brian Tracy"},
 ];
 
-/* INIT */
-window.onload=()=>{
-let name=localStorage.getItem("name");
-if(name){
-startApp();
+var BADGES = [
+  {icon:"🌱", name:"Beginner",    req:60,   label:"1h studied"},
+  {icon:"📚", name:"Reader",      req:300,  label:"5h studied"},
+  {icon:"🔥", name:"On Fire",     req:600,  label:"10h studied"},
+  {icon:"⚡", name:"Energized",   req:1500, label:"25h studied"},
+  {icon:"🏆", name:"Champion",    req:3000, label:"50h studied"},
+  {icon:"💎", name:"Diamond",     req:6000, label:"100h studied"},
+  {icon:"🚀", name:"Rocket",      req:12000,label:"200h studied"},
+  {icon:"🌟", name:"Star",        req:30000,label:"500h studied"},
+];
+
+var SUBJ_COLORS = ["#6c63ff","#00b894","#e17055","#0984e3","#fd79a8","#fdcb6e","#55efc4","#a29bfe"];
+
+/* ══════════════════════════════════════════════════════════
+   2. STATE – single source of truth
+══════════════════════════════════════════════════════════ */
+function defaultState() {
+  return {
+    name: "", exam: "other", goal: 8,
+    totalSecs: 0, todaySecs: 0, points: 0,
+    streak: 0, bestStreak: 0, lastDate: "",
+    sessions: [],          // [{secs, note, date}]
+    dailyLog: {},          // {YYYY-MM-DD: secs}
+    pointsLog: {},         // {YYYY-MM-DD: pts}
+    routine: {},           // {YYYY-MM-DD: {did,will,achieved,regret}}
+    uid: "user_" + Math.random().toString(36).slice(2,9),
+  };
 }
-showQuote();
-};
+var S = defaultState();
 
-/* LOGIN */
-window.saveUser=()=>{
-localStorage.setItem("name",name.value);
-localStorage.setItem("exam",exam.value);
-startApp();
-};
-
-window.googleLogin=()=>signInWithPopup(auth,provider);
-window.logout=()=>signOut(auth);
-
-/* START */
-function startApp(){
-login.style.display="none";
-app.style.display="block";
-userText.innerText="Hello "+localStorage.getItem("name");
-update();
-}
-
-/* QUOTE */
-function showQuote(){
-let day=new Date().getDate();
-quote.innerText=quotes[day%quotes.length];
-}
-
-/* STUDY TIME */
-window.addTime=()=>{
-let sec=(+h.value*3600)+(+m.value*60)+(+s.value);
-if(sec<=0)return;
-
-data.hours += sec/3600;
-data.points += Math.floor(sec/60);
-data.streak += 1;
-
-localStorage.setItem("data",JSON.stringify(data));
-update();
-};
-
-/* ROUTINE */
-window.saveRoutine=()=>{
-localStorage.setItem("routine",JSON.stringify({
-did:did.value,
-will:will.value,
-achieved:achieved.value,
-regret:regret.value
-}));
-};
-
-/* TIMETABLE */
-window.genPlan=()=>{
-let d=+days.value;
-let hrs=d>60?6:d>30?8:10;
-plan.innerText="Study "+hrs+" hrs/day";
-};
-
-/* UPDATE */
-function update(){
-hoursT.innerText=data.hours.toFixed(1);
-points.innerText=data.points;
-streak.innerText=data.streak;
-drawChart();
+/* ══════════════════════════════════════════════════════════
+   3. PERSIST – localStorage + Firebase
+══════════════════════════════════════════════════════════ */
+function persist() {
+  localStorage.setItem("sh_v3", JSON.stringify(S));
+  // Firebase sync (only if configured)
+  if (typeof window.fbSave === "function") {
+    window.fbSave(S.uid, S).then(function() {
+      setSyncStatus(true);
+    }).catch(function() {
+      setSyncStatus(false);
+    });
+  }
 }
 
-/* CHART */
-let chart;
-function drawChart(){
-if(chart)chart.destroy();
-chart=new Chart(document.getElementById("chart"),{
-type:"bar",
-data:{
-labels:["Hours","Points"],
-datasets:[{data:[data.hours,data.points]}]
+function setSyncStatus(ok) {
+  var el = document.getElementById("sync-status");
+  var lb = document.getElementById("sync-lbl");
+  el.className = ok ? "ok" : "";
+  lb.textContent = ok ? "Synced" : "Offline";
 }
-});
+
+function loadState() {
+  var raw = localStorage.getItem("sh_v3");
+  if (raw) {
+    try { S = Object.assign(defaultState(), JSON.parse(raw)); }
+    catch(e) {}
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   4. INIT
+══════════════════════════════════════════════════════════ */
+window.onload = function() {
+  loadState();
+  if (!S.name) {
+    document.getElementById("login-modal").style.display = "flex";
+  } else {
+    document.getElementById("login-modal").style.display = "none";
+    boot();
+  }
+};
+
+function boot() {
+  applyTheme(S.exam);
+  checkStreak();
+  renderHeader();
+  renderQuote();
+  renderStats();
+  renderGoalProgress();
+  renderSessionList();
+  loadRoutineUI();
+  renderRewards();
+  addSubjRow();
+  drawWeekChart();
+  document.getElementById("rt-date").textContent = todayKey();
+}
+
+/* ══════════════════════════════════════════════════════════
+   5. LOGIN
+══════════════════════════════════════════════════════════ */
+function doLogin() {
+  var name = document.getElementById("l-name").value.trim();
+  var exam = document.getElementById("l-exam").value;
+  var goal = parseInt(document.getElementById("l-goal").value) || 8;
+  if (!name) { showToast("Please enter your name!"); return; }
+  S.name = name; S.exam = exam; S.goal = goal;
+  persist();
+  document.getElementById("login-modal").style.display = "none";
+  boot();
+}
+
+function resetAll() {
+  if (!confirm("Reset ALL data? This cannot be undone.")) return;
+  localStorage.removeItem("sh_v3");
+  location.reload();
+}
+
+/* ══════════════════════════════════════════════════════════
+   6. THEME
+══════════════════════════════════════════════════════════ */
+function applyTheme(exam) {
+  document.body.className = "t-" + (exam || "other");
+}
+
+/* ══════════════════════════════════════════════════════════
+   7. NAVIGATION
+══════════════════════════════════════════════════════════ */
+function goPage(id, btn) {
+  document.querySelectorAll(".page").forEach(function(p) { p.classList.remove("active"); });
+  document.querySelectorAll(".nav-btn").forEach(function(b) { b.classList.remove("active"); });
+  document.getElementById("p-" + id).classList.add("active");
+  btn.classList.add("active");
+  // Redraw charts when switching to analytics tab
+  if (id === "analytics") drawAnalyticsCharts();
+}
+
+/* ══════════════════════════════════════════════════════════
+   8. QUOTE (changes daily)
+══════════════════════════════════════════════════════════ */
+function renderQuote() {
+  var now   = new Date();
+  var start = new Date(now.getFullYear(), 0, 0);
+  var day   = Math.floor((now - start) / 86400000);
+  var q     = QUOTES[day % QUOTES.length];
+  document.getElementById("q-text").textContent   = "\u201C" + q.t + "\u201D";
+  document.getElementById("q-author").textContent = "— " + q.a;
+  document.getElementById("q-day").textContent    = now.toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"short"});
+}
+
+/* ══════════════════════════════════════════════════════════
+   9. STREAK
+══════════════════════════════════════════════════════════ */
+function checkStreak() {
+  var today = todayKey();
+  var yest  = offsetDate(-1);
+  if (S.lastDate !== today) {
+    if (S.lastDate === yest) {
+      // consecutive – wait for session log to increment
+    } else if (S.lastDate !== "") {
+      S.streak = 0; persist();
+    }
+    S.todaySecs = 0;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   10. STATS
+══════════════════════════════════════════════════════════ */
+function renderHeader() {
+  var map = {neet:"NEET",jee:"JEE",cuet:"CUET",ssc:"SSC",other:"Exam"};
+  document.getElementById("hdr-title").textContent = "Study Hub";
+  document.getElementById("hdr-sub").textContent   = "Hello, " + S.name + " 👋  ·  " + (map[S.exam]||"Exam");
+}
+
+function renderStats() {
+  document.getElementById("s-total").textContent  = fmtTime(S.totalSecs);
+  document.getElementById("s-streak").textContent = S.streak;
+  document.getElementById("s-pts").textContent    = S.points;
+  document.getElementById("s-today").textContent  = fmtTime(S.todaySecs);
+}
+
+function renderGoalProgress() {
+  var goalSecs = (S.goal || 8) * 3600;
+  var pct      = Math.min(100, Math.round((S.todaySecs / goalSecs) * 100));
+  document.getElementById("goal-fill").style.width = pct + "%";
+  document.getElementById("goal-chip").textContent =
+    fmtTime(S.todaySecs) + " / " + S.goal + "h";
+  document.getElementById("goal-msg").textContent =
+    pct >= 100
+      ? "🎉 Goal achieved! Great work today."
+      : pct > 0
+        ? pct + "% of your daily goal done. Keep going!"
+        : "Log some study time to track progress!";
+}
+
+/* ══════════════════════════════════════════════════════════
+   11. SESSION LOG
+══════════════════════════════════════════════════════════ */
+function logSession() {
+  var h    = parseInt(document.getElementById("l-h").value) || 0;
+  var m    = parseInt(document.getElementById("l-m").value) || 0;
+  var s    = parseInt(document.getElementById("l-s").value) || 0;
+  var note = document.getElementById("l-note").value.trim();
+  var secs = h*3600 + m*60 + s;
+  if (secs === 0) { showToast("Please enter some time!"); return; }
+
+  var today = todayKey();
+  var pts   = Math.floor(secs / 60);
+
+  // Update state
+  S.totalSecs += secs;
+  S.todaySecs += secs;
+  S.points    += pts;
+  S.dailyLog[today]  = (S.dailyLog[today]  || 0) + secs;
+  S.pointsLog[today] = (S.pointsLog[today] || 0) + pts;
+
+  // Streak
+  var yest = offsetDate(-1);
+  if (S.lastDate !== today) {
+    S.streak = (S.lastDate === yest || S.lastDate === "") ? S.streak + 1 : 1;
+    S.bestStreak = Math.max(S.bestStreak, S.streak);
+    S.lastDate = today;
+  }
+
+  // Session entry
+  S.sessions.unshift({ secs: secs, note: note || "Study session", date: today });
+  if (S.sessions.length > 50) S.sessions = S.sessions.slice(0, 50);
+
+  persist();
+  renderStats();
+  renderGoalProgress();
+  renderSessionList();
+  drawWeekChart();
+  renderRewards();
+  showRewardPop(pts);
+
+  // Clear inputs
+  ["l-h","l-m","l-s","l-note"].forEach(function(id){ document.getElementById(id).value = ""; });
+  showToast("Session logged! +" + pts + " pts");
+}
+
+function renderSessionList() {
+  var el = document.getElementById("session-list");
+  if (!S.sessions.length) {
+    el.innerHTML = '<div class="empty-state"><div class="es-icon">⏱</div>No sessions yet. Log your first session!</div>';
+    return;
+  }
+  el.innerHTML = S.sessions.map(function(s, i) {
+    return '<div class="session-item">' +
+      '<div class="s-left">' +
+        '<div class="s-time">' + fmtTime(s.secs) + '</div>' +
+        '<div>' +
+          '<div class="s-note">' + esc(s.note) + '</div>' +
+          '<div class="s-date">' + s.date + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<button class="del-btn" onclick="delSession(' + i + ')">✕</button>' +
+    '</div>';
+  }).join("");
+}
+
+function delSession(i) {
+  var s    = S.sessions[i];
+  var pts  = Math.floor(s.secs / 60);
+  S.totalSecs -= s.secs;
+  S.todaySecs  = Math.max(0, S.todaySecs - (s.date === todayKey() ? s.secs : 0));
+  S.points     = Math.max(0, S.points - pts);
+  S.dailyLog[s.date]  = Math.max(0, (S.dailyLog[s.date]  || 0) - s.secs);
+  S.pointsLog[s.date] = Math.max(0, (S.pointsLog[s.date] || 0) - pts);
+  S.sessions.splice(i, 1);
+  persist();
+  renderStats();
+  renderGoalProgress();
+  renderSessionList();
+  renderRewards();
+  showToast("Session removed");
+}
+
+function clearSessions() {
+  if (!S.sessions.length) return;
+  if (!confirm("Clear all sessions? Stats will be reset.")) return;
+  S = Object.assign(S, defaultState(), { name: S.name, exam: S.exam, goal: S.goal, uid: S.uid });
+  persist();
+  renderStats(); renderGoalProgress(); renderSessionList();
+  renderRewards(); drawWeekChart();
+  showToast("All sessions cleared");
+}
+
+/* ══════════════════════════════════════════════════════════
+   12. ROUTINE
+══════════════════════════════════════════════════════════ */
+function saveRoutine() {
+  var today = todayKey();
+  S.routine[today] = {
+    did:      document.getElementById("rt-did").value,
+    will:     document.getElementById("rt-will").value,
+    achieved: document.getElementById("rt-achieved").value,
+    regret:   document.getElementById("rt-regret").value,
+  };
+  persist();
+}
+
+function loadRoutineUI() {
+  var today = todayKey();
+  var r     = S.routine[today] || {};
+  document.getElementById("rt-did").value      = r.did      || "";
+  document.getElementById("rt-will").value     = r.will     || "";
+  document.getElementById("rt-achieved").value = r.achieved || "";
+  document.getElementById("rt-regret").value   = r.regret   || "";
+}
+
+/* ══════════════════════════════════════════════════════════
+   13. TIMETABLE
+══════════════════════════════════════════════════════════ */
+var ttPieChart = null;
+
+function addSubjRow() {
+  var list  = document.getElementById("subj-list");
+  var idx   = list.children.length;
+  var color = SUBJ_COLORS[idx % SUBJ_COLORS.length];
+  var row   = document.createElement("div");
+  row.className = "subj-row";
+  row.innerHTML =
+    '<div class="color-dot" style="background:' + color + '"></div>' +
+    '<input type="text" placeholder="Subject (e.g. Physics)"/>' +
+    '<input type="number" min="0.5" max="12" step="0.5" placeholder="h/day"/>' +
+    '<button class="btn btn-ghost btn-sm" onclick="this.parentElement.remove()">✕</button>';
+  list.appendChild(row);
+}
+
+function genTimetable() {
+  var examName = document.getElementById("tt-exam").value.trim() || "Your Exam";
+  var days     = parseInt(document.getElementById("tt-days").value) || 0;
+  if (days < 1) { showToast("Please enter days left!"); return; }
+
+  var suggested = days > 90 ? 6 : days > 30 ? 8 : days > 14 ? 10 : 12;
+  var rows      = document.getElementById("subj-list").querySelectorAll(".subj-row");
+  var subjects  = [];
+  rows.forEach(function(row, i) {
+    var inputs = row.querySelectorAll("input");
+    var name   = inputs[0].value.trim();
+    var hrs    = parseFloat(inputs[1].value) || 0;
+    if (name) subjects.push({ name: name, hrs: hrs, color: SUBJ_COLORS[i % SUBJ_COLORS.length] });
+  });
+
+  var totalPerDay = subjects.reduce(function(a, s) { return a + s.hrs; }, 0);
+  var maxHrs = Math.max.apply(null, subjects.map(function(s){ return s.hrs; })) || 1;
+
+  // Build output
+  var out = document.getElementById("tt-output");
+  var html =
+    '<div class="tt-header">' +
+      '<h3>' + esc(examName) + '</h3>' +
+      '<p>' + days + ' days left · Recommended: ' + suggested + 'h/day · Your plan: ' + totalPerDay.toFixed(1) + 'h/day</p>' +
+    '</div>';
+
+  if (!subjects.length) {
+    html += '<div class="tt-row"><span style="color:var(--muted)">Add subjects above to see your plan.</span></div>';
+  } else {
+    subjects.forEach(function(s) {
+      var totalHrs = (s.hrs * days).toFixed(0);
+      var barPct   = Math.round((s.hrs / maxHrs) * 100);
+      html +=
+        '<div class="tt-row">' +
+          '<div class="tt-subj"><div style="width:10px;height:10px;border-radius:50%;background:' + s.color + '"></div>' + esc(s.name) + '</div>' +
+          '<div class="tt-bar-wrap"><div class="tt-bar" style="width:' + barPct + '%;background:' + s.color + '"></div></div>' +
+          '<div style="font-size:12px;color:var(--muted);white-space:nowrap">' + s.hrs + 'h/day · ' + totalHrs + 'h total</div>' +
+        '</div>';
+    });
+  }
+  out.innerHTML = html;
+  out.style.display = "block";
+
+  // Pie chart
+  if (subjects.length > 0) {
+    document.getElementById("tt-chart-card").style.display = "block";
+    if (ttPieChart) ttPieChart.destroy();
+    ttPieChart = new Chart(document.getElementById("ttPie"), {
+      type: "doughnut",
+      data: {
+        labels: subjects.map(function(s){ return s.name; }),
+        datasets: [{ data: subjects.map(function(s){ return s.hrs; }), backgroundColor: subjects.map(function(s){ return s.color; }), borderWidth: 2, borderColor: "#fff" }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom", labels: { font: { size: 12 }, padding: 14 } } } }
+    });
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   14. CHARTS
+══════════════════════════════════════════════════════════ */
+var weekChart = null;
+
+function drawWeekChart() {
+  var labels = [], vals = [];
+  for (var i = 6; i >= 0; i--) {
+    var d   = offsetDate(-i);
+    var hrs = Math.round(((S.dailyLog[d] || 0) / 3600) * 10) / 10;
+    labels.push(new Date(d + "T00:00:00").toLocaleDateString("en-IN",{weekday:"short"}));
+    vals.push(hrs);
+  }
+  var ctx = document.getElementById("weekChart");
+  if (!ctx) return;
+  if (weekChart) weekChart.destroy();
+  weekChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [{
+        data: vals, borderRadius: 8, borderSkipped: false,
+        backgroundColor: "rgba(108,99,255,0.2)",
+        borderColor: "rgba(108,99,255,0.85)", borderWidth: 2,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { callback: function(v){ return v+"h"; }, font: { size: 11 } }, grid: { color: "rgba(0,0,0,0.05)" } },
+        x: { ticks: { font: { size: 11 } }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+var analyticsCharts = {};
+function drawAnalyticsCharts() {
+  // 14-day bar
+  var labels14 = [], vals14 = [];
+  for (var i = 13; i >= 0; i--) {
+    var d   = offsetDate(-i);
+    var hrs = Math.round(((S.dailyLog[d] || 0) / 3600) * 10) / 10;
+    labels14.push(d.slice(5));
+    vals14.push(hrs);
+  }
+  if (analyticsCharts.bar) analyticsCharts.bar.destroy();
+  analyticsCharts.bar = new Chart(document.getElementById("dailyBar"), {
+    type: "bar",
+    data: {
+      labels: labels14,
+      datasets: [{ data: vals14, backgroundColor: "rgba(108,99,255,0.7)", borderRadius: 6, borderSkipped: false }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { callback: function(v){ return v+"h"; }, font: { size: 10 } }, grid: { color: "rgba(0,0,0,0.05)" } },
+        x: { ticks: { font: { size: 10 }, maxRotation: 45 }, grid: { display: false } }
+      }
+    }
+  });
+
+  // Subject pie
+  var subjMap = {};
+  S.sessions.forEach(function(s) {
+    var key = s.note && s.note !== "Study session" ? s.note.split("–")[0].split("-")[0].trim() : "General";
+    subjMap[key] = (subjMap[key] || 0) + s.secs;
+  });
+  var sk = Object.keys(subjMap).slice(0, 8);
+  if (analyticsCharts.pie) analyticsCharts.pie.destroy();
+  if (sk.length) {
+    analyticsCharts.pie = new Chart(document.getElementById("subjPie"), {
+      type: "doughnut",
+      data: {
+        labels: sk,
+        datasets: [{ data: sk.map(function(k){ return Math.round(subjMap[k]/60); }), backgroundColor: SUBJ_COLORS, borderWidth: 2, borderColor: "#fff" }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom", labels: { font: { size: 11 }, padding: 12 } } } }
+    });
+  } else {
+    document.getElementById("subjPie").parentElement.innerHTML =
+      '<div class="empty-state"><div class="es-icon">🥧</div>Log sessions with subject names to see breakdown</div>';
+  }
+
+  // Points line (last 14 days)
+  var ptsVals = [];
+  for (var j = 13; j >= 0; j--) ptsVals.push(S.pointsLog[offsetDate(-j)] || 0);
+  if (analyticsCharts.line) analyticsCharts.line.destroy();
+  analyticsCharts.line = new Chart(document.getElementById("ptsLine"), {
+    type: "line",
+    data: {
+      labels: labels14,
+      datasets: [{ data: ptsVals, borderColor: "#00b894", backgroundColor: "rgba(0,184,148,0.12)", tension: 0.4, fill: true, pointRadius: 4, pointBackgroundColor: "#00b894" }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { font: { size: 10 } }, grid: { color: "rgba(0,0,0,0.05)" } },
+        x: { ticks: { font: { size: 10 }, maxRotation: 45 }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+/* ══════════════════════════════════════════════════════════
+   15. REWARDS
+══════════════════════════════════════════════════════════ */
+function renderRewards() {
+  var pts = S.points;
+  document.getElementById("rw-pts-badge").textContent = pts + " pts";
+
+  // Level progress
+  var levels    = [0, 100, 500, 1000, 2500, 5000, 10000, 25000, 50000];
+  var levelNames= ["Newbie","Beginner","Learner","Scholar","Expert","Master","Legend","Champion","Elite"];
+  var lvl = 0;
+  for (var i = levels.length - 1; i >= 0; i--) { if (pts >= levels[i]) { lvl = i; break; } }
+  var nextPts = levels[lvl + 1] || levels[levels.length - 1];
+  var lvlPct  = lvl === levels.length - 1 ? 100 : Math.round(((pts - levels[lvl]) / (nextPts - levels[lvl])) * 100);
+
+  document.getElementById("rw-level-lbl").textContent  = levelNames[lvl] + " (Lv." + lvl + ")";
+  document.getElementById("rw-level-fill").style.width = lvlPct + "%";
+  document.getElementById("rw-next").textContent       = lvl < levels.length - 1
+    ? (nextPts - pts) + " more points to " + levelNames[lvl + 1]
+    : "Max level reached! 🎉";
+
+  // Badges (based on total minutes = points)
+  var grid = document.getElementById("rw-grid");
+  grid.innerHTML = BADGES.map(function(b) {
+    var unlocked = pts >= b.req;
+    return '<div class="reward-item' + (unlocked ? " unlocked" : "") + '">' +
+      '<div class="ri-icon">' + (unlocked ? b.icon : "🔒") + '</div>' +
+      '<div class="ri-name">' + b.name + '</div>' +
+      '<div class="ri-req">' + b.label + (unlocked ? ' ✓' : '') + '</div>' +
+    '</div>';
+  }).join("");
+}
+
+/* ══════════════════════════════════════════════════════════
+   16. UTILITIES
+══════════════════════════════════════════════════════════ */
+function fmtTime(secs) {
+  var h = Math.floor(secs / 3600);
+  var m = Math.floor((secs % 3600) / 60);
+  var s = secs % 60;
+  if (h > 0) return h + "h " + m + "m";
+  if (m > 0) return m + "m " + (s > 0 ? s + "s" : "");
+  return s + "s";
+}
+
+function todayKey() { return new Date().toISOString().slice(0, 10); }
+
+function offsetDate(n) {
+  var d = new Date(); d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+function esc(str) {
+  return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+function showToast(msg) {
+  var t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  setTimeout(function(){ t.classList.remove("show"); }, 2500);
+}
+
+function showRewardPop(pts) {
+  var el = document.getElementById("reward-pop");
+  document.getElementById("rp-pts").textContent = pts;
+  el.classList.add("show");
+  setTimeout(function(){ el.classList.remove("show"); }, 2200);
 }
 
 </script>
-
 </body>
 </html>
