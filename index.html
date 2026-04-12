@@ -1,426 +1,298 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Student ROI Tracker – by Pushpendra</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Productivity Hub</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,sans-serif;background:#f8f9fb;color:#1a1a1a;min-height:100vh}
-#header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:#fff;border-bottom:1px solid #e2e4e9;position:sticky;top:0;z-index:100}
-#header h1{font-size:17px;font-weight:600;color:#111}
-#header p{font-size:12px;color:#6b7280;margin-top:1px}
-#auth-area{display:flex;align-items:center;gap:10px}
-#user-info{display:none;align-items:center;gap:8px}
-#user-avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;border:1.5px solid #e2e4e9}
-#user-name{font-size:13px;font-weight:500}
-#btn-logout{padding:6px 14px;border:1px solid #e2e4e9;border-radius:8px;background:#fff;cursor:pointer;font-size:12px;color:#6b7280}
-#btn-logout:hover{background:#f3f4f6}
-#btn-login{display:flex;align-items:center;gap:8px;padding:8px 16px;border:1px solid #e2e4e9;border-radius:8px;background:#fff;cursor:pointer;font-size:13px;font-weight:500}
-#btn-login:hover{background:#f3f4f6}
-#login-wall{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;padding:2rem;text-align:center}
-#login-card{background:#fff;border:1px solid #e2e4e9;border-radius:16px;padding:3rem 2.5rem;max-width:420px;width:100%}
-.ico{font-size:42px;margin-bottom:16px}
-#login-card h2{font-size:20px;font-weight:600;margin-bottom:8px}
-#login-card p{font-size:14px;color:#6b7280;margin-bottom:28px;line-height:1.6}
-#btn-google{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px 20px;border:1px solid #e2e4e9;border-radius:10px;background:#fff;cursor:pointer;font-size:14px;font-weight:500;transition:box-shadow .15s}
-#btn-google:hover{box-shadow:0 2px 8px rgba(0,0,0,.1)}
-#auth-err{margin-top:14px;font-size:13px;color:#E24B4A;min-height:18px}
-.feats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:24px;text-align:left}
-.feat{background:#f8f9fb;border-radius:8px;padding:10px 12px;font-size:12px;color:#6b7280}
-.feat b{display:block;color:#111;margin-bottom:2px}
-#app{display:none;max-width:860px;margin:0 auto;padding:20px 16px 40px}
-.tabs{display:flex;border-bottom:1px solid #e2e4e9;margin-bottom:20px;overflow-x:auto;scrollbar-width:none}
-.tabs::-webkit-scrollbar{display:none}
-.tab-btn{padding:9px 16px;border:none;border-bottom:2px solid transparent;background:none;color:#6b7280;cursor:pointer;font-size:13px;white-space:nowrap}
-.tab-btn.active{border-bottom-color:#3266ad;color:#3266ad;font-weight:500}
-.card{background:#fff;border:1px solid #e2e4e9;border-radius:12px;padding:16px 20px;margin-bottom:14px}
-.ctitle{font-size:13px;font-weight:500;margin-bottom:14px}
-.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:18px}
-.metric{background:#f8f9fb;border-radius:10px;padding:12px 14px}
-.metric .lbl{font-size:11px;color:#6b7280;margin-bottom:4px}
-.metric .val{font-size:22px;font-weight:600}
-.metric .sub{font-size:11px;color:#6b7280;margin-top:2px}
-.field{margin-bottom:12px}
-.field label{display:block;font-size:12px;color:#6b7280;margin-bottom:4px}
-.field input,.field select,.field textarea{width:100%;padding:8px 10px;border:1px solid #e2e4e9;border-radius:8px;font-size:13px;background:#fff;color:#111;outline:none}
-.field input:focus,.field select:focus,.field textarea:focus{border-color:#3266ad}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.btn{width:100%;padding:10px;border:1px solid #e2e4e9;border-radius:8px;background:#fff;cursor:pointer;font-size:13px;font-weight:500;color:#111}
-.btn:hover{background:#f3f4f6}
-.btnp{background:#3266ad;color:#fff;border-color:#3266ad}
-.btnp:hover{background:#2a58a0}
-.badge{display:inline-block;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500}
-.banner{border-radius:10px;padding:10px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;font-size:14px}
-.tip{background:#f0f4ff;border-radius:10px;padding:12px 16px;font-size:13px;color:#6b7280;margin-bottom:16px}
-.pbar{height:6px;background:#eee;border-radius:3px;overflow:hidden;margin-top:4px}
-.pfill{height:100%;border-radius:3px}
-.trow{padding:10px 0;border-bottom:1px solid #f0f0f0}
-.trow:last-child{border-bottom:none}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none}
-.toast.show{opacity:1}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th{text-align:left;padding:7px 8px;color:#6b7280;font-weight:400;border-bottom:1px solid #e2e4e9}
-td{padding:7px 8px;border-bottom:1px solid #f0f0f0}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+font-family:system-ui;
+background:linear-gradient(135deg,#e3f2fd,#ffffff);
+transition:0.3s;
+}
+
+/* HEADER */
+header{
+display:flex;
+justify-content:space-between;
+padding:12px 16px;
+background:#fff;
+box-shadow:0 2px 10px rgba(0,0,0,.05);
+position:sticky;top:0;
+}
+
+/* CARD */
+.card{
+background:#fff;
+margin:14px;
+padding:16px;
+border-radius:14px;
+box-shadow:0 4px 12px rgba(0,0,0,.05);
+}
+
+/* STATS */
+.stats{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+gap:10px;
+}
+.stat{
+background:#f5f7fb;
+padding:12px;
+border-radius:10px;
+text-align:center;
+}
+
+/* INPUT */
+input,textarea,select{
+width:100%;
+padding:8px;
+margin-top:6px;
+border-radius:8px;
+border:1px solid #ddd;
+}
+
+/* BUTTON */
+button{
+padding:10px;
+border:none;
+border-radius:8px;
+background:#4f46e5;
+color:#fff;
+cursor:pointer;
+}
+
+/* QUOTE */
+.quote{
+margin:14px;
+padding:12px;
+background:#eef2ff;
+border-left:4px solid #4f46e5;
+border-radius:10px;
+}
+
+/* LOGIN */
+#login{
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+height:100vh;
+gap:10px;
+}
 </style>
 </head>
+
 <body>
 
-<div id="header">
-  <div>
-    <h1>Student ROI Tracker</h1>
-    <p>Built by Pushpendra</p>
-  </div>
-  <div id="auth-area">
-    <div id="user-info">
-      <img id="user-avatar" src="" alt="avatar"/>
-      <span id="user-name"></span>
-      <button id="btn-logout">Sign out</button>
-    </div>
-    <button id="btn-login">
-      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-3.59-13.46-8.83l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-      Sign in with Google
-    </button>
-  </div>
+<!-- LOGIN -->
+<div id="login">
+<h2>Welcome</h2>
+<input id="name" placeholder="Enter your name">
+<select id="exam">
+<option value="neet">NEET</option>
+<option value="jee">JEE</option>
+<option value="cuet">CUET</option>
+<option value="other">Other</option>
+</select>
+<button onclick="saveUser()">Start</button>
+<button onclick="googleLogin()">Login with Google</button>
 </div>
 
-<div id="login-wall">
-  <div id="login-card">
-    <div class="ico">📊</div>
-    <h2>Track your exam preparation ROI</h2>
-    <p>Log study hours, mock tests, revision schedules and get smart analytics for NEET, JEE, CUET and more.</p>
-    <button id="btn-google">
-      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-3.59-13.46-8.83l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-      Sign in with Google
-    </button>
-    <div id="auth-err"></div>
-    <div class="feats">
-      <div class="feat"><b>ROI Dashboard</b>Track input vs output</div>
-      <div class="feat"><b>Streak System</b>Build consistency</div>
-      <div class="feat"><b>Revision Reminders</b>1-3-7-21 rule</div>
-      <div class="feat"><b>Mock Test Tracker</b>Monitor accuracy</div>
-    </div>
-  </div>
+<!-- APP -->
+<div id="app" style="display:none">
+
+<header>
+<h3 id="userText"></h3>
+<button onclick="logout()">Logout</button>
+</header>
+
+<div class="quote" id="quote"></div>
+
+<div class="card">
+<div class="stats">
+<div class="stat">Hours<br><b id="hoursT">0</b></div>
+<div class="stat">Points<br><b id="points">0</b></div>
+<div class="stat">Streak<br><b id="streak">0</b></div>
+</div>
 </div>
 
-<div id="app">
-  <div class="tabs" id="tabs"></div>
-  <div id="tab-content"></div>
+<div class="card">
+<h4>Study Time</h4>
+<input id="h" placeholder="Hours">
+<input id="m" placeholder="Minutes">
+<input id="s" placeholder="Seconds">
+<button onclick="addTime()">Add</button>
 </div>
-<div class="toast" id="toast"></div>
+
+<div class="card">
+<h4>Routine</h4>
+<textarea id="did" placeholder="What I did"></textarea>
+<textarea id="will" placeholder="What I will do"></textarea>
+<textarea id="achieved" placeholder="What I achieved"></textarea>
+<textarea id="regret" placeholder="What I regret"></textarea>
+<button onclick="saveRoutine()">Save</button>
+</div>
+
+<div class="card">
+<h4>Timetable</h4>
+<input id="days" placeholder="Days left">
+<button onclick="genPlan()">Generate</button>
+<div id="plan"></div>
+</div>
+
+<div class="card">
+<h4>Analytics</h4>
+<canvas id="chart"></canvas>
+</div>
+
+</div>
 
 <script type="module">
-import { initializeApp }       from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-/* ── Firebase init ───────────────────────────────────────── */
+/* 🔥 FIREBASE */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
 const firebaseConfig = {
-  apiKey:            "AIzaSyATu-GbL7KzwRCQzmqwBJCH8brDdhUiAK8",
-  authDomain:        "students-roi-tracker.firebaseapp.com",
-  projectId:         "students-roi-tracker",
-  storageBucket:     "students-roi-tracker.firebasestorage.app",
-  messagingSenderId: "1028064018046",
-  appId:             "1:1028064018046:web:8c9123d5c48eb4f77b622f",
-  measurementId:     "G-RVJ8CPN3V7"
+apiKey:"YOUR_API_KEY",
+authDomain:"YOUR_DOMAIN",
+projectId:"YOUR_PROJECT_ID"
 };
-const app      = initializeApp(firebaseConfig);
-const auth     = getAuth(app);
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-/* ── Auth UI ─────────────────────────────────────────────── */
-function doSignIn() {
-  document.getElementById("auth-err").textContent = "";
-  signInWithPopup(auth, provider).catch(function(e) {
-    document.getElementById("auth-err").textContent = e.message;
-  });
+/* STATE */
+let data = JSON.parse(localStorage.getItem("data")) || {
+hours:0,points:0,streak:0
+};
+
+/* QUOTES (30+) */
+const quotes=[
+"Push yourself, because no one else will",
+"Consistency beats motivation",
+"Success is daily habits",
+"Discipline > Motivation",
+"Small progress is progress",
+"Focus on your goal",
+"Hard work pays off",
+"Never quit",
+"Stay hungry stay foolish",
+"Be better every day",
+"Dream big work hard",
+"Your future needs you",
+"Study now shine later",
+"Pain is temporary",
+"Effort creates success",
+"Believe in yourself",
+"Stay consistent",
+"Work smarter",
+"Keep going",
+"Don’t stop",
+"Make it happen",
+"You can do it",
+"Push limits",
+"Level up",
+"Stay focused",
+"Grind daily",
+"Keep learning",
+"Stay strong",
+"No excuses",
+"Be unstoppable"
+];
+
+/* INIT */
+window.onload=()=>{
+let name=localStorage.getItem("name");
+if(name){
+startApp();
 }
-function doSignOut() { signOut(auth); }
+showQuote();
+};
 
-document.getElementById("btn-login").addEventListener("click", doSignIn);
-document.getElementById("btn-google").addEventListener("click", doSignIn);
-document.getElementById("btn-logout").addEventListener("click", doSignOut);
+/* LOGIN */
+window.saveUser=()=>{
+localStorage.setItem("name",name.value);
+localStorage.setItem("exam",exam.value);
+startApp();
+};
 
-onAuthStateChanged(auth, function(user) {
-  if (user) {
-    document.getElementById("user-info").style.display  = "flex";
-    document.getElementById("btn-login").style.display  = "none";
-    document.getElementById("login-wall").style.display = "none";
-    document.getElementById("app").style.display        = "block";
-    document.getElementById("user-name").textContent    = (user.displayName || "Student").split(" ")[0];
-    document.getElementById("user-avatar").src          = user.photoURL || "";
-    currentUser = user;
-    loadData();
-  } else {
-    document.getElementById("user-info").style.display  = "none";
-    document.getElementById("btn-login").style.display  = "flex";
-    document.getElementById("login-wall").style.display = "flex";
-    document.getElementById("app").style.display        = "none";
-    currentUser = null;
-  }
+window.googleLogin=()=>signInWithPopup(auth,provider);
+window.logout=()=>signOut(auth);
+
+/* START */
+function startApp(){
+login.style.display="none";
+app.style.display="block";
+userText.innerText="Hello "+localStorage.getItem("name");
+update();
+}
+
+/* QUOTE */
+function showQuote(){
+let day=new Date().getDate();
+quote.innerText=quotes[day%quotes.length];
+}
+
+/* STUDY TIME */
+window.addTime=()=>{
+let sec=(+h.value*3600)+(+m.value*60)+(+s.value);
+if(sec<=0)return;
+
+data.hours += sec/3600;
+data.points += Math.floor(sec/60);
+data.streak += 1;
+
+localStorage.setItem("data",JSON.stringify(data));
+update();
+};
+
+/* ROUTINE */
+window.saveRoutine=()=>{
+localStorage.setItem("routine",JSON.stringify({
+did:did.value,
+will:will.value,
+achieved:achieved.value,
+regret:regret.value
+}));
+};
+
+/* TIMETABLE */
+window.genPlan=()=>{
+let d=+days.value;
+let hrs=d>60?6:d>30?8:10;
+plan.innerText="Study "+hrs+" hrs/day";
+};
+
+/* UPDATE */
+function update(){
+hoursT.innerText=data.hours.toFixed(1);
+points.innerText=data.points;
+streak.innerText=data.streak;
+drawChart();
+}
+
+/* CHART */
+let chart;
+function drawChart(){
+if(chart)chart.destroy();
+chart=new Chart(chartCanvas,{
+type:"bar",
+data:{
+labels:["Hours","Points"],
+datasets:[{data:[data.hours,data.points]}]
+}
 });
-
-/* ── App constants ───────────────────────────────────────── */
-var currentUser = null;
-var charts      = {};
-var activeTab   = "Dashboard";
-var TABS     = ["Dashboard","Study Input","Mock Tests","Log & Topics","Revisions","Analytics"];
-var EXAMS    = ["NEET","JEE","CUET","SSC","Other"];
-var SUBJECTS = ["Physics","Chemistry","Biology/Math","Other"];
-var COLS     = ["#3266ad","#1D9E75","#D85A30","#7F77DD"];
-var RD       = [1,3,7,21];
-var data = {
-  exam:"NEET", examDate:"", studyHours:0,
-  subjectTime:{Physics:0,Chemistry:0,"Biology/Math":0,Other:0},
-  questionsSolved:0, lecturesAttended:0, dppAttempted:0, dppCompleted:0,
-  productiveTime:0, wastedTime:0, readingTime:0, revisionTime:0,
-  todayLog:"", mockTests:[], streak:0, bestStreak:0,
-  lastStudyDate:"", topics:[], mockMarks:"", mockTotal:"100"
-};
-
-/* ── Storage ─────────────────────────────────────────────── */
-function loadData() {
-  var saved = localStorage.getItem("roi_" + currentUser.uid);
-  if (saved) { try { data = Object.assign({}, data, JSON.parse(saved)); } catch(e) {} }
-  renderApp();
-}
-function save() {
-  if (currentUser) localStorage.setItem("roi_" + currentUser.uid, JSON.stringify(data));
 }
 
-/* ── Helpers ─────────────────────────────────────────────── */
-function showToast(msg) {
-  var t = document.getElementById("toast");
-  t.textContent = msg; t.classList.add("show");
-  setTimeout(function() { t.classList.remove("show"); }, 2500);
-}
-function calcROI() {
-  var inp = data.studyHours || 1;
-  var am  = data.mockTests.length
-    ? data.mockTests.reduce(function(a,t){return a+(t.marks/t.total)*100;},0)/data.mockTests.length : 0;
-  return Math.min(100, Math.round(((data.questionsSolved*0.5+am+data.lecturesAttended*2)/(inp*5))*100));
-}
-function calcProd() {
-  var tot = (data.productiveTime||0)+(data.wastedTime||0);
-  return tot ? Math.round(((data.productiveTime||0)/tot)*100) : 0;
-}
-function daysLeft() {
-  if (!data.examDate) return null;
-  return Math.ceil((new Date(data.examDate)-new Date())/86400000);
-}
-function urgCol(d)   { return d===null?"#3266ad":d>60?"#1D9E75":d>21?"#EF9F27":"#E24B4A"; }
-function bdg(l,c,bg) { return '<span class="badge" style="background:'+bg+';color:'+c+'">'+l+'</span>'; }
-function tod()       { return new Date().toISOString().slice(0,10); }
-function avgMock()   {
-  return data.mockTests.length
-    ? Math.round(data.mockTests.reduce(function(a,t){return a+(t.marks/t.total)*100;},0)/data.mockTests.length)
-    : null;
-}
-function pendRevs() {
-  var td = tod();
-  return (data.topics||[]).filter(function(t) {
-    return t.revisions.some(function(r){return r<=td && t.done.indexOf(r)<0;});
-  });
-}
-
-/* ── Render ──────────────────────────────────────────────── */
-function renderApp() {
-  var bar = document.getElementById("tabs");
-  if (!bar) return;
-  bar.innerHTML = TABS.map(function(t) {
-    return '<button class="tab-btn'+(t===activeTab?" active":"")+'" onclick="window.__tab(\''+t+'\')">'+t+'</button>';
-  }).join("");
-  renderTab();
-}
-window.__tab = function(t) { activeTab=t; renderApp(); };
-
-function renderTab() {
-  var el = document.getElementById("tab-content");
-  if (!el) return;
-  var fns = {
-    "Dashboard":rDash,"Study Input":rInput,"Mock Tests":rMocks,
-    "Log & Topics":rLog,"Revisions":rRevs,"Analytics":rAnalytics
-  };
-  el.innerHTML = fns[activeTab]();
-  if (activeTab==="Dashboard")  dDash();
-  if (activeTab==="Analytics")  dAnalytics();
-}
-
-/* ── Dashboard ───────────────────────────────────────────── */
-function rDash() {
-  var r=calcROI(), p=calcProd(), d=daysLeft(), am=avgMock(), pr=pendRevs().length;
-  var rc = r>70?"#1D9E75":r>40?"#EF9F27":"#E24B4A";
-  var sm = data.streak>=30?"🏆 30-day legend!":data.streak>=7?"🔥 7-day warrior!":data.streak>=3?"⚡ On a roll!":"";
-  var mt = r<30?"Start strong — every hour counts!":r<60?"Reduce wasted time by 1 hour.":r<80?"Focus on your weakest subject.":"Outstanding ROI! Keep going.";
-  var h = "";
-  if (d!==null) {
-    var uc=urgCol(d), ul=d>60?"On track":d>21?"Stay focused":"Urgent!";
-    h += '<div class="banner" style="background:'+uc+'18;border:1px solid '+uc+'44"><span style="color:'+uc+';font-weight:500">'+data.exam+' Exam in '+d+' days</span>'+bdg(ul,uc,uc+"22")+'</div>';
-  }
-  h += '<div class="metrics">';
-  h += '<div class="metric"><div class="lbl">ROI Score</div><div class="val" style="color:'+rc+'">'+r+'<span style="font-size:14px">/100</span></div><div class="sub">Output / Input</div></div>';
-  h += '<div class="metric"><div class="lbl">Productivity</div><div class="val" style="color:'+(p>70?"#1D9E75":"#EF9F27")+'">'+p+'<span style="font-size:14px">%</span></div><div class="sub">Efficiency</div></div>';
-  h += '<div class="metric"><div class="lbl">Streak</div><div class="val" style="color:#3266ad">'+(data.streak||0)+'<span style="font-size:14px">d</span></div><div class="sub">Best: '+(data.bestStreak||0)+'</div></div>';
-  h += '<div class="metric"><div class="lbl">Questions</div><div class="val">'+(data.questionsSolved||0)+'</div><div class="sub">Today</div></div>';
-  h += '<div class="metric"><div class="lbl">Mock avg</div><div class="val">'+(am!==null?am+'<span style="font-size:14px">%</span>':"—")+'</div><div class="sub">'+data.mockTests.length+' tests</div></div>';
-  h += '<div class="metric"><div class="lbl">Revisions due</div><div class="val" style="color:'+(pr>0?"#E24B4A":"#1D9E75")+'">'+pr+'</div><div class="sub">Today</div></div>';
-  h += '</div>';
-  if (sm) h += '<div style="background:#FAEEDA;color:#854F0B;border-radius:10px;padding:10px 16px;margin-bottom:14px;font-size:13px;font-weight:500">'+sm+'</div>';
-  h += '<div class="tip"><strong>Tip: </strong>'+mt+'</div>';
-  h += '<div class="card"><div class="ctitle">Time breakdown</div><div style="position:relative;height:200px"><canvas id="timeChart"></canvas></div></div>';
-  if (data.mockTests.length>1) h += '<div class="card"><div class="ctitle">Mock performance</div><div style="position:relative;height:180px"><canvas id="mockChart"></canvas></div></div>';
-  return h;
-}
-function dDash() {
-  if(charts.time){charts.time.destroy();charts.time=null;}
-  if(charts.mock){charts.mock.destroy();charts.mock=null;}
-  var tc=document.getElementById("timeChart");
-  if(tc) charts.time=new Chart(tc,{type:"bar",data:{labels:["Productive","Wasted","Reading","Revision"],datasets:[{data:[data.productiveTime||0,data.wastedTime||0,data.readingTime||0,data.revisionTime||0],backgroundColor:["#1D9E75","#E24B4A","#3266ad","#7F77DD"],borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
-  var mc=document.getElementById("mockChart");
-  if(mc&&data.mockTests.length>1) charts.mock=new Chart(mc,{type:"line",data:{labels:data.mockTests.map(function(_,i){return "T"+(i+1);}),datasets:[{data:data.mockTests.map(function(t){return Math.round((t.marks/t.total)*100);}),borderColor:"#3266ad",backgroundColor:"#3266ad22",tension:0.3,fill:true,pointRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100}}}});
-}
-
-/* ── Study Input ─────────────────────────────────────────── */
-function rInput() {
-  var h='<div class="card"><div class="ctitle">Exam setup</div>';
-  h+='<div class="field"><label>Select exam</label><select onchange="window.__set(\'exam\',this.value)">'+EXAMS.map(function(e){return '<option'+(data.exam===e?" selected":"")+'>'+e+'</option>';}).join("")+'</select></div>';
-  h+='<div class="field"><label>Exam date</label><input type="date" value="'+(data.examDate||"")+'" onchange="window.__set(\'examDate\',this.value)"/></div></div>';
-  h+='<div class="card"><div class="ctitle">Daily study</div>';
-  h+='<div class="field"><label>Hours studied today</label><input type="number" min="0" value="'+(data.studyHours||"")+'" onchange="window.__setN(\'studyHours\',this.value)"/></div>';
-  h+='<div style="font-size:12px;color:#6b7280;margin:-6px 0 12px">Weekly: '+Math.round((data.studyHours||0)*7)+'h | Monthly: '+Math.round((data.studyHours||0)*30)+'h</div>';
-  h+='<div class="field"><label>Questions solved</label><input type="number" min="0" value="'+(data.questionsSolved||"")+'" onchange="window.__setN(\'questionsSolved\',this.value)"/></div>';
-  h+='<div class="field"><label>Lectures attended</label><input type="number" min="0" value="'+(data.lecturesAttended||"")+'" onchange="window.__setN(\'lecturesAttended\',this.value)"/></div>';
-  h+='<div class="g2"><div class="field"><label>DPP attempted</label><input type="number" min="0" value="'+(data.dppAttempted||"")+'" onchange="window.__setN(\'dppAttempted\',this.value)"/></div>';
-  h+='<div class="field"><label>DPP completed</label><input type="number" min="0" value="'+(data.dppCompleted||"")+'" onchange="window.__setN(\'dppCompleted\',this.value)"/></div></div></div>';
-  h+='<div class="card"><div class="ctitle">Subject-wise time (hours)</div><div class="g2">';
-  SUBJECTS.forEach(function(s){h+='<div class="field"><label>'+s+'</label><input type="number" min="0" value="'+(data.subjectTime[s]||"")+'" onchange="window.__setSub(\''+s+'\',this.value)"/></div>';});
-  h+='</div></div>';
-  h+='<div class="card"><div class="ctitle">Time usage (hours)</div><div class="g2">';
-  [["productiveTime","Productive"],["wastedTime","Wasted"],["readingTime","Reading"],["revisionTime","Revision"]].forEach(function(pair){
-    h+='<div class="field"><label>'+pair[1]+' time</label><input type="number" min="0" value="'+(data[pair[0]]||"")+'" onchange="window.__setN(\''+pair[0]+'\',this.value)"/></div>';
-  });
-  h+='</div></div>';
-  return h;
-}
-window.__set    = function(k,v){data[k]=v;save();};
-window.__setN   = function(k,v){data[k]=parseFloat(v)||0;save();};
-window.__setSub = function(s,v){data.subjectTime[s]=parseFloat(v)||0;save();};
-
-/* ── Mock Tests ──────────────────────────────────────────── */
-function rMocks() {
-  var h='<div class="card"><div class="ctitle">Add mock test result</div><div class="g2">';
-  h+='<div class="field"><label>Marks scored</label><input type="number" id="mmarks" value="'+(data.mockMarks||"")+'" placeholder="e.g. 540"/></div>';
-  h+='<div class="field"><label>Total marks</label><input type="number" id="mtotal" value="'+(data.mockTotal||100)+'"/></div>';
-  h+='</div><button class="btn btnp" onclick="window.__addMock()">Add test result</button></div>';
-  if(data.mockTests.length>0){
-    h+='<div class="card"><div class="ctitle">Test history</div><table><thead><tr><th>#</th><th>Date</th><th>Marks</th><th>Accuracy</th></tr></thead><tbody>';
-    data.mockTests.forEach(function(t,i){
-      var ac=t.accuracy,c=ac>=70?"#1D9E75":ac>=50?"#854F0B":"#A32D2D",bg=ac>=70?"#EAF3DE":ac>=50?"#FAEEDA":"#FCEBEB";
-      h+='<tr><td>T'+(i+1)+'</td><td>'+t.date+'</td><td>'+t.marks+'/'+t.total+'</td><td>'+bdg(ac+'%',c,bg)+'</td></tr>';
-    });
-    h+='</tbody></table></div>';
-  }
-  return h;
-}
-window.__addMock=function(){
-  var m=parseFloat(document.getElementById("mmarks").value),t=parseFloat(document.getElementById("mtotal").value||100);
-  if(!m||!t)return;
-  data.mockTests.push({marks:m,total:t,accuracy:Math.round((m/t)*100),date:tod()});
-  data.mockMarks="";save();showToast("Mock test added!");renderApp();
-};
-
-/* ── Log & Topics ────────────────────────────────────────── */
-function rLog() {
-  var h='<div class="card"><div class="ctitle">What did you study today?</div>';
-  h+='<div class="field"><textarea id="logInput" rows="3" placeholder="e.g. Cell division – Mitosis and Meiosis" style="resize:vertical;padding:8px;border:1px solid #e2e4e9;border-radius:8px;font-family:inherit;font-size:13px;width:100%;background:#fff;color:#111">'+(data.todayLog||"")+'</textarea></div>';
-  h+='<button class="btn btnp" onclick="window.__saveLog()">Save topic + set revision reminders</button></div>';
-  if(data.topics&&data.topics.length>0){
-    h+='<div class="card"><div class="ctitle">Saved topics ('+data.topics.length+')</div>';
-    data.topics.slice().reverse().forEach(function(t){
-      h+='<div class="trow"><div style="font-weight:500;font-size:13px">'+t.topic+'</div><div style="font-size:11px;color:#6b7280;margin-top:3px">Saved: '+t.date+' | Revisions: '+t.revisions.join(", ")+'</div></div>';
-    });
-    h+='</div>';
-  }
-  return h;
-}
-window.__saveLog=function(){
-  var el=document.getElementById("logInput"),val=el?el.value.trim():"";
-  if(!val)return;
-  var td=tod(),revs=RD.map(function(n){var r=new Date();r.setDate(r.getDate()+n);return r.toISOString().slice(0,10);});
-  data.topics=(data.topics||[]).concat([{topic:val,date:td,revisions:revs,done:[]}]);
-  var streak=data.streak||0,best=data.bestStreak||0,yest=new Date(Date.now()-86400000).toISOString().slice(0,10);
-  if(data.lastStudyDate===yest)streak++;else if(data.lastStudyDate!==td)streak=1;
-  best=Math.max(best,streak);
-  data.todayLog="";data.lastStudyDate=td;data.streak=streak;data.bestStreak=best;
-  save();showToast("Saved! Revision reminders set.");renderApp();
-};
-
-/* ── Revisions ───────────────────────────────────────────── */
-function rRevs() {
-  var td=tod(),pend=pendRevs();
-  var h='<div style="font-size:13px;color:#6b7280;margin-bottom:14px">Spaced repetition: 1 → 3 → 7 → 21 day system</div>';
-  if(pend.length===0){
-    h+='<div class="card" style="color:#6b7280;font-size:13px">No pending revisions today. Great job!</div>';
-  } else {
-    pend.forEach(function(t){
-      var due=t.revisions.filter(function(r){return r<=td&&t.done.indexOf(r)<0;});
-      h+='<div class="card" style="border-left:3px solid #E24B4A"><div style="font-weight:500;font-size:13px;margin-bottom:4px">'+t.topic+'</div>';
-      h+='<div style="font-size:11px;color:#6b7280;margin-bottom:10px">Saved on '+t.date+'</div><div style="display:flex;gap:8px;flex-wrap:wrap">';
-      due.forEach(function(r){
-        h+='<button class="btn" style="width:auto;padding:5px 14px;font-size:12px;color:#A32D2D;border-color:#E24B4A44;background:#FCEBEB" onclick="window.__markDone(\''+t.topic+'\',\''+t.date+'\',\''+r+'\')">Mark '+r+' done</button>';
-      });
-      h+='</div></div>';
-    });
-  }
-  h+='<div class="card"><div class="ctitle">Full schedule</div>';
-  (data.topics||[]).forEach(function(t){
-    h+='<div class="trow"><div style="font-weight:500;font-size:13px;margin-bottom:6px">'+t.topic+'</div><div style="display:flex;gap:6px;flex-wrap:wrap">';
-    t.revisions.forEach(function(r,j){
-      var done=t.done.indexOf(r)>=0,past=r<=td;
-      h+=bdg("D"+RD[j]+": "+r,done?"#1D9E75":past?"#A32D2D":"#185FA5",done?"#EAF3DE":past?"#FCEBEB":"#E6F1FB");
-    });
-    h+='</div></div>';
-  });
-  h+='</div>';
-  return h;
-}
-window.__markDone=function(topic,date,rev){
-  data.topics=data.topics.map(function(t){
-    if(t.topic===topic&&t.date===date)return Object.assign({},t,{done:t.done.concat([rev])});
-    return t;
-  });
-  save();showToast("Revision marked done!");renderApp();
-};
-
-/* ── Analytics ───────────────────────────────────────────── */
-function rAnalytics() {
-  var r=calcROI(),p=calcProd(),am=avgMock(),dpp=data.dppAttempted?Math.round((data.dppCompleted/data.dppAttempted)*100):null;
-  var total=SUBJECTS.reduce(function(a,s){return a+(data.subjectTime[s]||0);},0)||1;
-  var h='<div class="metrics">';
-  h+='<div class="metric"><div class="lbl">Monthly hrs</div><div class="val">'+Math.round((data.studyHours||0)*30)+'</div><div class="sub">Estimate</div></div>';
-  h+='<div class="metric"><div class="lbl">Avg mock</div><div class="val">'+(am!==null?am+'<span style="font-size:14px">%</span>':"—")+'</div></div>';
-  h+='<div class="metric"><div class="lbl">DPP done</div><div class="val">'+(dpp!==null?dpp+'<span style="font-size:14px">%</span>':"—")+'</div></div>';
-  h+='<div class="metric"><div class="lbl">ROI Score</div><div class="val" style="color:'+(r>70?"#1D9E75":"#E24B4A")+'">'+r+'<span style="font-size:14px">/100</span></div></div>';
-  h+='</div>';
-  h+='<div class="card"><div class="ctitle">Subject time allocation</div><div style="position:relative;height:220px"><canvas id="subChart"></canvas></div></div>';
-  h+='<div class="card"><div class="ctitle">Smart study plan</div>';
-  SUBJECTS.forEach(function(s,i){
-    var hrs=data.subjectTime[s]||0,pct=Math.round((hrs/total)*100);
-    var lbl=pct<20?"Increase — weak":pct>45?"Reduce — too much":"Good balance";
-    var lc=pct<20?"#A32D2D":pct>45?"#854F0B":"#3B6D11",lb=pct<20?"#FCEBEB":pct>45?"#FAEEDA":"#EAF3DE";
-    h+='<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px"><span style="font-weight:500">'+s+'</span><span>'+pct+'% '+bdg(lbl,lc,lb)+'</span></div>';
-    h+='<div class="pbar"><div class="pfill" style="width:'+pct+'%;background:'+COLS[i]+'"></div></div></div>';
-  });
-  h+='</div>';
-  h+='<div class="card"><div class="ctitle">ROI formula</div><div style="font-size:12px;color:#6b7280;line-height:1.8">ROI = (Questions x 0.5 + Avg Mock% + Lectures x 2) / (Study hrs x 5) x 100<br>Score: <strong style="color:#111">'+r+'/100</strong> | Productivity: <strong style="color:#111">'+p+'%</strong></div></div>';
-  return h;
-}
-function dAnalytics(){
-  if(charts.sub){charts.sub.destroy();charts.sub=null;}
-  var sc=document.getElementById("subChart");
-  if(sc) charts.sub=new Chart(sc,{type:"doughnut",data:{labels:SUBJECTS,datasets:[{data:SUBJECTS.map(function(s){return data.subjectTime[s]||0;}),backgroundColor:COLS,borderWidth:2,borderColor:"#fff"}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{font:{size:12},padding:12}}}}});
-}
 </script>
+
 </body>
 </html>
