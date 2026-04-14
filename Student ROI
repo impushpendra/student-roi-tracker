@@ -1,0 +1,3367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student ROI Tracker – by Pushpendra</title>
+
+  <!-- Chart.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+  <style>
+    /* =========================================================
+       1. RESET + ROOT VARIABLES
+       ========================================================= */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root{
+      --bg: #f6f8fc;
+      --bg-soft: #ffffff;
+      --bg-elevated: rgba(255,255,255,0.82);
+      --text: #121826;
+      --muted: #667085;
+      --line: rgba(15, 23, 42, 0.08);
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      --radius-xl: 24px;
+      --radius-lg: 18px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+
+      --accent: #1d9e75;
+      --accent-2: #0f8c67;
+      --accent-soft: rgba(29, 158, 117, 0.10);
+
+      --warning: #f59e0b;
+      --warning-soft: rgba(245, 158, 11, 0.14);
+      --danger: #e24b4a;
+      --danger-soft: rgba(226, 75, 74, 0.12);
+
+      --blue: #3266ad;
+      --blue-soft: rgba(50, 102, 173, 0.10);
+      --purple: #7c3aed;
+      --purple-soft: rgba(124, 58, 237, 0.10);
+
+      --success: #16a34a;
+      --success-soft: rgba(22, 163, 74, 0.10);
+
+      --card-blur: blur(16px);
+    }
+
+    /* Exam-based theme tokens */
+    body.theme-neet{
+      --accent: #17936c;
+      --accent-2: #0d7d5a;
+      --accent-soft: rgba(23, 147, 108, 0.10);
+    }
+    body.theme-jee{
+      --accent: #2f6fed;
+      --accent-2: #2458bb;
+      --accent-soft: rgba(47, 111, 237, 0.10);
+    }
+    body.theme-cuet{
+      --accent: #ea7a20;
+      --accent-2: #c86210;
+      --accent-soft: rgba(234, 122, 32, 0.11);
+    }
+    body.theme-ssc{
+      --accent: #b44ce0;
+      --accent-2: #9536bf;
+      --accent-soft: rgba(180, 76, 224, 0.11);
+    }
+    body.theme-other{
+      --accent: #4f46e5;
+      --accent-2: #4338ca;
+      --accent-soft: rgba(79, 70, 229, 0.11);
+    }
+
+    html, body {
+      min-height: 100%;
+      scroll-behavior: smooth;
+    }
+
+    body{
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.9), rgba(255,255,255,0) 35%),
+        linear-gradient(180deg, #f9fbff 0%, #f3f7fc 100%);
+      color: var(--text);
+      line-height: 1.45;
+      overflow-x: hidden;
+    }
+
+    /* =========================================================
+       2. FAINT WATERMARK BACKGROUND
+       ========================================================= */
+    body::before{
+      content: "ROI";
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(110px, 28vw, 340px);
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: rgba(15, 23, 42, 0.05);
+      z-index: 0;
+      pointer-events: none;
+      user-select: none;
+      transform: translateY(-2%);
+    }
+    @media (max-width: 640px){
+      body::before{
+        font-size: 120px;
+        opacity: 0.7;
+      }
+    }
+
+    /* =========================================================
+       3. GLOBAL LAYOUT
+       ========================================================= */
+    .page{
+      position: relative;
+      z-index: 1;
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .sticky-header{
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      margin: 0 auto 14px;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      background: rgba(255,255,255,0.72);
+      border: 1px solid rgba(255,255,255,0.45);
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+      border-radius: 22px;
+      padding: 14px 16px;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand{
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-badge{
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: white;
+      font-weight: 800;
+      box-shadow: 0 10px 22px rgba(0,0,0,0.12);
+      flex-shrink: 0;
+    }
+
+    .brand h1{
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+
+    .brand p{
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .header-actions{
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .pill, .btn, .select-like{
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.86);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 14px;
+      cursor: pointer;
+      transition: transform .15s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
+    }
+
+    .pill:hover, .btn:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 10px 18px rgba(15,23,42,0.06);
+    }
+
+    .btn-primary{
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: white;
+      border-color: transparent;
+    }
+
+    .btn-soft{
+      background: var(--accent-soft);
+      color: var(--accent-2);
+      border-color: transparent;
+    }
+
+    .btn-danger-soft{
+      background: var(--danger-soft);
+      color: #b42318;
+      border-color: transparent;
+    }
+
+    .btn-warning-soft{
+      background: var(--warning-soft);
+      color: #9a5b00;
+      border-color: transparent;
+    }
+
+    .btn-full{ width: 100%; }
+
+    .user-chip{
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 10px 6px 6px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.9);
+      max-width: 220px;
+    }
+
+    .user-chip img{
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid rgba(0,0,0,0.06);
+      background: #fff;
+    }
+
+    .user-chip .meta{
+      min-width: 0;
+    }
+
+    .user-chip .meta b{
+      display: block;
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-chip .meta span{
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .main-grid{
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    @media (min-width: 1080px){
+      .main-grid{
+        grid-template-columns: 320px 1fr;
+        align-items: start;
+      }
+    }
+
+    .sidebar{
+      display: grid;
+      gap: 16px;
+    }
+
+    .content{
+      display: grid;
+      gap: 16px;
+    }
+
+    .card{
+      background: var(--bg-elevated);
+      backdrop-filter: var(--card-blur);
+      -webkit-backdrop-filter: var(--card-blur);
+      border: 1px solid rgba(255,255,255,0.55);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius-xl);
+      padding: 16px;
+      overflow: hidden;
+    }
+
+    .card-title{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .card-title h2{
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .card-sub{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .muted{ color: var(--muted); }
+    .tiny{ font-size: 12px; }
+    .small{ font-size: 13px; }
+    .strong{ font-weight: 700; }
+
+    .row{
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .grid-2{
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .grid-3{
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .grid-4{
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    @media (min-width: 680px){
+      .grid-2{ grid-template-columns: repeat(2, 1fr); }
+      .grid-3{ grid-template-columns: repeat(3, 1fr); }
+      .grid-4{ grid-template-columns: repeat(4, 1fr); }
+    }
+
+    .field{
+      margin-bottom: 12px;
+    }
+
+    .field label{
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .input, .select, .textarea{
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid rgba(15,23,42,0.10);
+      background: rgba(255,255,255,0.95);
+      color: var(--text);
+      font-size: 14px;
+      padding: 12px 13px;
+      outline: none;
+      transition: border-color .2s ease, box-shadow .2s ease, transform .15s ease;
+    }
+
+    .textarea{
+      min-height: 96px;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    .input:focus, .select:focus, .textarea:focus{
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-soft);
+    }
+
+    .stat-grid{
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    @media (min-width: 720px){
+      .stat-grid{
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .stat-box{
+      background: rgba(255,255,255,0.86);
+      border: 1px solid rgba(15,23,42,0.06);
+      border-radius: 20px;
+      padding: 14px;
+      box-shadow: 0 8px 20px rgba(15,23,42,0.04);
+    }
+
+    .stat-box .label{
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-box .value{
+      font-size: 26px;
+      line-height: 1.1;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .stat-box .sub{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .banner{
+      border-radius: 22px;
+      padding: 16px 18px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.96), rgba(255,255,255,0.86));
+      border: 1px solid rgba(255,255,255,0.55);
+      box-shadow: var(--shadow);
+    }
+
+    .quote-banner{
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at top right, rgba(255,255,255,0.55), rgba(255,255,255,0) 45%),
+        linear-gradient(135deg, var(--accent-soft), rgba(255,255,255,0.9));
+      border: 1px solid rgba(255,255,255,0.55);
+      box-shadow: var(--shadow);
+    }
+
+    .quote-banner::after{
+      content: "✦";
+      position: absolute;
+      right: 14px;
+      top: 10px;
+      font-size: 52px;
+      color: rgba(0,0,0,0.05);
+    }
+
+    .quote-text{
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+    }
+
+    .quote-author{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    .badge{
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 6px 10px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .badge-success{ background: var(--success-soft); color: #166534; }
+    .badge-warning{ background: var(--warning-soft); color: #9a5b00; }
+    .badge-danger{ background: var(--danger-soft); color: #b42318; }
+    .badge-blue{ background: var(--blue-soft); color: #174ea6; }
+    .badge-purple{ background: var(--purple-soft); color: #6b21a8; }
+
+    .tabs{
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar{ display: none; }
+
+    .tab-btn{
+      flex: 0 0 auto;
+      border: none;
+      background: rgba(255,255,255,0.8);
+      color: var(--muted);
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 800;
+      padding: 10px 14px;
+      cursor: pointer;
+      transition: all .2s ease;
+      border: 1px solid rgba(15,23,42,0.06);
+    }
+    .tab-btn.active{
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: white;
+      border-color: transparent;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.10);
+    }
+
+    .inline-note{
+      padding: 12px 14px;
+      border-radius: 14px;
+      font-size: 13px;
+      line-height: 1.6;
+      border: 1px dashed rgba(15,23,42,0.08);
+      background: rgba(255,255,255,0.65);
+      color: var(--muted);
+    }
+
+    .countdown-card{
+      background:
+        radial-gradient(circle at 80% 10%, rgba(255,255,255,0.55), rgba(255,255,255,0) 35%),
+        linear-gradient(135deg, rgba(255,255,255,0.94), rgba(255,255,255,0.84));
+    }
+
+    .timer-display{
+      font-size: clamp(28px, 8vw, 44px);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .timer-mini{
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .timer-actions{
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+    @media (min-width: 560px){
+      .timer-actions{
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .list{
+      display: grid;
+      gap: 10px;
+    }
+
+    .list-item{
+      border: 1px solid rgba(15,23,42,0.06);
+      background: rgba(255,255,255,0.82);
+      border-radius: 16px;
+      padding: 12px 14px;
+    }
+
+    .list-item .top{
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .list-item .title{
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .list-item .meta{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+
+    .progress{
+      height: 8px;
+      background: rgba(15,23,42,0.06);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress > div{
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    }
+
+    .subject-row{
+      display: grid;
+      grid-template-columns: 1fr 120px 50px;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    @media (max-width: 560px){
+      .subject-row{
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .chart-wrap{
+      position: relative;
+      height: 260px;
+    }
+    .chart-wrap.short{
+      height: 220px;
+    }
+
+    .toast{
+      position: fixed;
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #111827;
+      color: white;
+      padding: 12px 18px;
+      border-radius: 12px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.20);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s ease, transform .25s ease;
+      z-index: 1000;
+      font-size: 13px;
+      max-width: min(92vw, 540px);
+      text-align: center;
+    }
+    .toast.show{
+      opacity: 1;
+      transform: translateX(-50%) translateY(-4px);
+    }
+
+    .login-overlay{
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(15, 23, 42, 0.42);
+      backdrop-filter: blur(10px);
+      z-index: 999;
+      padding: 16px;
+    }
+
+    .login-card{
+      width: min(100%, 460px);
+      background: rgba(255,255,255,0.96);
+      border-radius: 28px;
+      padding: 26px;
+      border: 1px solid rgba(255,255,255,0.55);
+      box-shadow: 0 20px 60px rgba(15,23,42,0.18);
+    }
+
+    .login-card h2{
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      margin-bottom: 8px;
+    }
+
+    .login-card p{
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+
+    .google-btn{
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .error-text{
+      color: var(--danger);
+      font-size: 12px;
+      margin-top: 10px;
+      min-height: 18px;
+    }
+
+    .helper-cards{
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .helper-cards div{
+      border-radius: 14px;
+      background: rgba(15,23,42,0.04);
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .helper-cards b{
+      display: block;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .pulse{
+      animation: pulseGlow 0.55s ease;
+    }
+    @keyframes pulseGlow{
+      0%{ transform: scale(1); }
+      50%{ transform: scale(1.04); }
+      100%{ transform: scale(1); }
+    }
+
+    .hidden{ display: none !important; }
+
+    .footer-note{
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      padding: 12px 0 30px;
+    }
+
+    .print-only{ display: none; }
+
+    @media print{
+      body::before,
+      .sticky-header,
+      .tabs,
+      .btn,
+      .pill,
+      .login-overlay,
+      .toast{
+        display: none !important;
+      }
+      .page{
+        max-width: none;
+        padding: 0;
+      }
+      .card{
+        box-shadow: none;
+        border: 1px solid #ddd;
+        background: white;
+      }
+      .main-grid{
+        grid-template-columns: 1fr !important;
+      }
+      .print-only{
+        display: block !important;
+        margin-bottom: 12px;
+      }
+    }
+  </style>
+</head>
+<body class="theme-neet">
+  <!-- =========================================================
+       4. FIRST VISIT LOGIN / PERSONALIZATION OVERLAY
+       If Google login exists, we preserve it.
+       If user wants simple local profile, that works too.
+       ========================================================= -->
+  <div id="loginOverlay" class="login-overlay">
+    <div class="login-card">
+      <div class="brand" style="margin-bottom:14px;">
+        <div class="brand-badge">ROI</div>
+        <div>
+          <h2>Student ROI Tracker</h2>
+          <p>Built by Pushpendra</p>
+        </div>
+      </div>
+
+      <p>
+        Personalize your dashboard once, then track your study time, revisions, tests, streaks, and progress like a premium productivity app.
+      </p>
+
+      <div class="field">
+        <label for="localNameInput">Your name</label>
+        <input id="localNameInput" class="input" type="text" placeholder="e.g. Pushpendra" />
+      </div>
+
+      <div class="field">
+        <label for="localExamInput">Target exam</label>
+        <select id="localExamInput" class="select">
+          <option value="NEET">NEET</option>
+          <option value="JEE">JEE</option>
+          <option value="CUET">CUET</option>
+          <option value="SSC">SSC</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <div class="row" style="margin-top:12px;">
+        <button class="btn btn-primary" style="flex:1;" id="localStartBtn">Start dashboard</button>
+      </div>
+
+      <div style="margin:14px 0 10px; text-align:center;" class="tiny muted">or continue with Google</div>
+
+      <button id="googleOverlayBtn" class="btn google-btn">
+        <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-3.59-13.46-8.83l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        Sign in with Google
+      </button>
+
+      <div id="overlayAuthError" class="error-text"></div>
+
+      <div class="helper-cards">
+        <div><b>Timer + Sources</b>Track YouTube, PW, Self Study, Notes, Test Series</div>
+        <div><b>ROI Dashboard</b>Monitor output vs input with charts</div>
+        <div><b>Revision System</b>Auto reminders with 1-3-7-21 rule</div>
+        <div><b>Export Ready</b>CSV backup and printable report</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page">
+    <!-- =========================================================
+         5. HEADER
+         ========================================================= -->
+    <header class="sticky-header">
+      <div class="brand">
+        <div class="brand-badge">ROI</div>
+        <div>
+          <h1>Student ROI Tracker</h1>
+          <p>Built by Pushpendra</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div id="userChip" class="user-chip" aria-live="polite">
+          <img id="userAvatar" src="" alt="User avatar" />
+          <div class="meta">
+            <b id="userNameChip">Student</b>
+            <span id="userExamChip">Target Exam</span>
+          </div>
+        </div>
+
+        <button id="googleHeaderBtn" class="btn hidden">Google Login</button>
+        <button id="printBtn" class="btn">Print</button>
+        <button id="exportBtn" class="btn">Export CSV</button>
+        <button id="resetBtn" class="btn btn-danger-soft">Reset</button>
+        <button id="logoutBtn" class="btn btn-warning-soft hidden">Sign out</button>
+      </div>
+    </header>
+
+    <!-- =========================================================
+         6. TOP SUMMARY AREA
+         ========================================================= -->
+    <section class="content">
+      <div class="banner quote-banner">
+        <div class="card-title" style="margin-bottom:8px;">
+          <div>
+            <h2>Daily motivation</h2>
+            <div class="card-sub">Changes by day and refreshes every 10 minutes</div>
+          </div>
+          <span class="badge badge-blue" id="quoteBadge">Fresh quote</span>
+        </div>
+        <div id="quoteText" class="quote-text">Loading quote...</div>
+        <div id="quoteAuthor" class="quote-author">—</div>
+      </div>
+
+      <div class="stat-grid" id="topStats">
+        <div class="stat-box">
+          <div class="label">Total Hours</div>
+          <div class="value" id="statTotalHours">0.0</div>
+          <div class="sub">All saved sessions</div>
+        </div>
+        <div class="stat-box">
+          <div class="label">Points</div>
+          <div class="value" id="statPoints">0</div>
+          <div class="sub">1 minute = 1 point</div>
+        </div>
+        <div class="stat-box">
+          <div class="label">Coins</div>
+          <div class="value" id="statCoins">0</div>
+          <div class="sub">1 minute = 1 coin</div>
+        </div>
+        <div class="stat-box">
+          <div class="label">Streak</div>
+          <div class="value" id="statStreak">0</div>
+          <div class="sub" id="statBestStreak">Best: 0 days</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         7. MAIN GRID
+         ========================================================= -->
+    <div class="main-grid">
+      <!-- ===================== SIDEBAR ===================== -->
+      <aside class="sidebar">
+        <div class="card countdown-card">
+          <div class="card-title">
+            <div>
+              <h2>Exam countdown</h2>
+              <div class="card-sub">Current date/time and urgency</div>
+            </div>
+            <span id="countdownBadge" class="badge badge-success">On track</span>
+          </div>
+
+          <div style="display:grid; gap:12px;">
+            <div class="field">
+              <label for="examSelect">Exam</label>
+              <select id="examSelect" class="select">
+                <option>NEET</option>
+                <option>JEE</option>
+                <option>CUET</option>
+                <option>SSC</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="examDateInput">Exam date</label>
+              <input id="examDateInput" class="input" type="date" />
+            </div>
+            <button id="saveExamBtn" class="btn btn-primary btn-full">Save exam setup</button>
+          </div>
+
+          <div style="margin-top:14px; display:grid; gap:10px;">
+            <div class="inline-note">
+              <div class="strong" id="countdownHeadline">No exam date saved yet</div>
+              <div class="tiny muted" id="countdownSub">Set your target exam date to activate the countdown.</div>
+            </div>
+            <div class="small">
+              <div><span class="muted">Today:</span> <span id="currentDateTime">—</span></div>
+              <div style="margin-top:4px;"><span class="muted">Exam date:</span> <span id="savedExamDateLabel">—</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <div>
+              <h2>Timer + app source</h2>
+              <div class="card-sub">Manual smart tracker for study sources</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="timerSourceSelect">Source / app</label>
+            <select id="timerSourceSelect" class="select">
+              <option>YouTube</option>
+              <option>PW</option>
+              <option>Self Study</option>
+              <option>Notes</option>
+              <option>Test Series</option>
+              <option>Other</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="timerNoteInput">Session note (optional)</label>
+            <input id="timerNoteInput" class="input" type="text" placeholder="e.g. Physics revision / Biology MCQs" />
+          </div>
+
+          <div class="timer-display" id="timerDisplay">00:00:00</div>
+          <div class="timer-mini" id="timerStatus">Ready to start</div>
+
+          <div class="timer-actions">
+            <button id="startTimerBtn" class="btn btn-primary">Start</button>
+            <button id="pauseTimerBtn" class="btn">Pause</button>
+            <button id="stopTimerBtn" class="btn btn-soft">Stop</button>
+            <button id="resetTimerBtn" class="btn">Reset</button>
+          </div>
+
+          <div class="inline-note" style="margin-top:12px;">
+            On stop, the session is saved to localStorage and, if Google login is active, also mirrored to your user-scoped local backup.
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <div>
+              <h2>Quick export</h2>
+              <div class="card-sub">Backup or print your progress</div>
+            </div>
+          </div>
+          <div class="grid-2">
+            <button class="btn" id="exportBtn2">Export CSV</button>
+            <button class="btn" id="printBtn2">Print Report</button>
+          </div>
+          <div class="inline-note" style="margin-top:12px;">
+            CSV export includes sessions, mock tests, logs, and revision schedule. Print creates a clean summary view.
+          </div>
+        </div>
+      </aside>
+
+      <!-- ===================== MAIN CONTENT ===================== -->
+      <main class="content">
+        <div class="card">
+          <div class="print-only">
+            <h2>Student ROI Tracker Report</h2>
+            <div class="small muted">Built by Pushpendra</div>
+          </div>
+
+          <div class="card-title">
+            <div>
+              <h2 id="welcomeTitle">Welcome, Student</h2>
+              <div class="card-sub" id="welcomeSub">Target Exam: NEET</div>
+            </div>
+            <div class="row" style="gap:8px;">
+              <span id="missingDataBadge" class="badge badge-warning">Update today’s progress</span>
+              <span id="revisionAlertBadge" class="badge badge-danger">0 revisions due</span>
+            </div>
+          </div>
+
+          <div class="tabs" id="tabBar"></div>
+        </div>
+
+        <div id="tabContent"></div>
+      </main>
+    </div>
+
+    <div class="footer-note">Single-file, beginner-friendly, mobile-first study tracker with local backup and optional Firebase auth.</div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <!-- =========================================================
+       8. APP SCRIPT
+       We preserve Firebase auth and localStorage.
+       ========================================================= -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getAuth,
+      GoogleAuthProvider,
+      signInWithPopup,
+      signOut,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    /* =========================================================
+       8A. FIREBASE CONFIG
+       Preserved from your original working version.
+       ========================================================= */
+    const firebaseConfig = {
+      apiKey: "AIzaSyATu-GbL7KzwRCQzmqwBJCH8brDdhUiAK8",
+      authDomain: "students-roi-tracker.firebaseapp.com",
+      projectId: "students-roi-tracker",
+      storageBucket: "students-roi-tracker.firebasestorage.app",
+      messagingSenderId: "1028064018046",
+      appId: "1:1028064018046:web:8c9123d5c48eb4f77b622f",
+      measurementId: "G-RVJ8CPN3V7"
+    };
+
+    const firebaseApp = initializeApp(firebaseConfig);
+    const auth = getAuth(firebaseApp);
+    const provider = new GoogleAuthProvider();
+
+    /* =========================================================
+       8B. APP CONSTANTS
+       ========================================================= */
+    const TAB_NAMES = [
+      "Dashboard",
+      "Study Input",
+      "Routine & Log",
+      "Mock Tests",
+      "Revisions",
+      "Analytics",
+      "Plan"
+    ];
+
+    const SOURCE_OPTIONS = ["YouTube", "PW", "Self Study", "Notes", "Test Series", "Other"];
+    const DEFAULT_SUBJECTS = ["Physics", "Chemistry", "Biology/Math", "Other"];
+    const REVISION_DAYS = [1, 3, 7, 21];
+
+    const QUOTES = [
+      { text: "Success is the sum of small efforts, repeated day in and day out.", author: "Robert Collier" },
+      { text: "Don't watch the clock; do what it does. Keep going.", author: "Sam Levenson" },
+      { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
+      { text: "It always seems impossible until it's done.", author: "Nelson Mandela" },
+      { text: "You don't have to be great to start, but you have to start to be great.", author: "Zig Ziglar" },
+      { text: "Hard work beats talent when talent doesn't work hard.", author: "Tim Notke" },
+      { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" },
+      { text: "Your only limit is your mind.", author: "Anonymous" },
+      { text: "Push yourself, because no one else is going to do it for you.", author: "Anonymous" },
+      { text: "Great things never come from comfort zones.", author: "Anonymous" },
+      { text: "Dream it. Wish it. Do it.", author: "Anonymous" },
+      { text: "Success doesn't just find you. You have to go out and get it.", author: "Anonymous" },
+      { text: "The harder you work for something, the greater you'll feel when you achieve it.", author: "Anonymous" },
+      { text: "Don't stop when you're tired. Stop when you're done.", author: "Anonymous" },
+      { text: "Wake up with determination. Go to bed with satisfaction.", author: "Anonymous" },
+      { text: "Little things make big days.", author: "Anonymous" },
+      { text: "It's going to be hard, but hard does not mean impossible.", author: "Anonymous" },
+      { text: "Don't wait for opportunity. Create it.", author: "Anonymous" },
+      { text: "Study hard, for the well is deep, and our brains are shallow.", author: "Richard Baxter" },
+      { text: "The expert in anything was once a beginner.", author: "Helen Hayes" },
+      { text: "Strive for progress, not perfection.", author: "Anonymous" },
+      { text: "You are capable of more than you know.", author: "Anonymous" },
+      { text: "Every accomplishment starts with the decision to try.", author: "John F. Kennedy" },
+      { text: "Education is the most powerful weapon you can use to change the world.", author: "Nelson Mandela" },
+      { text: "Learning is not attained by chance; it must be sought with ardor.", author: "Abigail Adams" },
+      { text: "The beautiful thing about learning is that nobody can take it away from you.", author: "B.B. King" },
+      { text: "An investment in knowledge pays the best interest.", author: "Benjamin Franklin" },
+      { text: "Hardships often prepare ordinary people for an extraordinary destiny.", author: "C.S. Lewis" },
+      { text: "Nothing in life is to be feared, it is only to be understood.", author: "Marie Curie" },
+      { text: "All our dreams can come true, if we have the courage to pursue them.", author: "Walt Disney" },
+      { text: "Discipline is choosing between what you want now and what you want most.", author: "Abraham Lincoln" },
+      { text: "Consistency is what transforms average into excellence.", author: "Robin Sharma" },
+      { text: "The future depends on what you do today.", author: "Mahatma Gandhi" },
+      { text: "Work in silence. Let your results make the noise.", author: "Anonymous" },
+      { text: "Every hour you invest now will save regret later.", author: "Anonymous" }
+    ];
+
+    /* =========================================================
+       8C. DOM HELPERS
+       ========================================================= */
+    const $ = (id) => document.getElementById(id);
+
+    const DOM = {
+      loginOverlay: $("loginOverlay"),
+      localNameInput: $("localNameInput"),
+      localExamInput: $("localExamInput"),
+      localStartBtn: $("localStartBtn"),
+      googleOverlayBtn: $("googleOverlayBtn"),
+      googleHeaderBtn: $("googleHeaderBtn"),
+      overlayAuthError: $("overlayAuthError"),
+
+      userChip: $("userChip"),
+      userAvatar: $("userAvatar"),
+      userNameChip: $("userNameChip"),
+      userExamChip: $("userExamChip"),
+      logoutBtn: $("logoutBtn"),
+      resetBtn: $("resetBtn"),
+      exportBtn: $("exportBtn"),
+      exportBtn2: $("exportBtn2"),
+      printBtn: $("printBtn"),
+      printBtn2: $("printBtn2"),
+
+      quoteText: $("quoteText"),
+      quoteAuthor: $("quoteAuthor"),
+      quoteBadge: $("quoteBadge"),
+
+      statTotalHours: $("statTotalHours"),
+      statPoints: $("statPoints"),
+      statCoins: $("statCoins"),
+      statStreak: $("statStreak"),
+      statBestStreak: $("statBestStreak"),
+
+      examSelect: $("examSelect"),
+      examDateInput: $("examDateInput"),
+      saveExamBtn: $("saveExamBtn"),
+      countdownBadge: $("countdownBadge"),
+      countdownHeadline: $("countdownHeadline"),
+      countdownSub: $("countdownSub"),
+      currentDateTime: $("currentDateTime"),
+      savedExamDateLabel: $("savedExamDateLabel"),
+
+      timerSourceSelect: $("timerSourceSelect"),
+      timerNoteInput: $("timerNoteInput"),
+      timerDisplay: $("timerDisplay"),
+      timerStatus: $("timerStatus"),
+      startTimerBtn: $("startTimerBtn"),
+      pauseTimerBtn: $("pauseTimerBtn"),
+      stopTimerBtn: $("stopTimerBtn"),
+      resetTimerBtn: $("resetTimerBtn"),
+
+      welcomeTitle: $("welcomeTitle"),
+      welcomeSub: $("welcomeSub"),
+      missingDataBadge: $("missingDataBadge"),
+      revisionAlertBadge: $("revisionAlertBadge"),
+      tabBar: $("tabBar"),
+      tabContent: $("tabContent"),
+      toast: $("toast")
+    };
+
+    /* =========================================================
+       8D. APP STATE
+       LocalStorage remains primary backup.
+       When signed in, user-scoped key is used.
+       ========================================================= */
+    let currentUser = null;
+    let activeTab = "Dashboard";
+    let charts = {};
+    let timerInterval = null;
+    let timerRunning = false;
+    let timerElapsedSeconds = 0;
+    let timerStartedAt = null;
+    let timerPauseStartedAt = null;
+    let timerSource = "Self Study";
+
+    const defaultData = () => ({
+      profile: {
+        name: "",
+        exam: "NEET"
+      },
+      exam: "NEET",
+      examDate: "",
+      createdAt: nowISO(),
+      studyHours: 0, // legacy field preserved
+      totalStudySeconds: 0,
+      points: 0,
+      coins: 0,
+      streak: 0,
+      bestStreak: 0,
+      lastStudyDate: "",
+      todayPromptSeenDate: "",
+      subjectTime: {
+        "Physics": 0,
+        "Chemistry": 0,
+        "Biology/Math": 0,
+        "Other": 0
+      },
+      manualInput: {
+        todayHours: 0,
+        todayMinutes: 0,
+        todaySeconds: 0
+      },
+      questionsSolved: 0,
+      lecturesAttended: 0,
+      dppAttempted: 0,
+      dppCompleted: 0,
+      productiveTime: 0,
+      wastedTime: 0,
+      readingTime: 0,
+      revisionTime: 0,
+      todayLog: "",
+      logs: [],
+      mockTests: [],
+      topics: [],
+      sessions: [],
+      routine: {},
+      appUsageSummary: {},
+      mockMarks: "",
+      mockTotal: "100",
+      planSubjects: [],
+      weeklySnapshots: [],
+      monthlySnapshots: [],
+      localBackupVersion: 2
+    });
+
+    let data = defaultData();
+
+    /* =========================================================
+       8E. STORAGE HELPERS
+       ========================================================= */
+    function getStorageKey() {
+      if (currentUser && currentUser.uid) return "roi_" + currentUser.uid;
+      return "roi_guest";
+    }
+
+    function legacyGuestKeysMigrate() {
+      const legacyName = localStorage.getItem("sh_name");
+      const legacyExam = localStorage.getItem("sh_exam");
+      const legacyTotalSecs = parseInt(localStorage.getItem("sh_totalSecs") || "0", 10);
+      const legacyPoints = parseInt(localStorage.getItem("sh_points") || "0", 10);
+      const legacyStreak = parseInt(localStorage.getItem("sh_streak") || "0", 10);
+      const legacyLastDate = localStorage.getItem("sh_lastDate") || "";
+      const legacySessions = JSON.parse(localStorage.getItem("sh_sessions") || "[]");
+
+      const guestSaved = localStorage.getItem("roi_guest");
+      if (!guestSaved && (legacyName || legacyTotalSecs || legacySessions.length)) {
+        const merged = defaultData();
+        merged.profile.name = legacyName || "";
+        merged.profile.exam = (legacyExam || "Other").toUpperCase();
+        merged.exam = merged.profile.exam;
+        merged.totalStudySeconds = legacyTotalSecs;
+        merged.points = legacyPoints;
+        merged.coins = legacyPoints;
+        merged.streak = legacyStreak;
+        merged.bestStreak = legacyStreak;
+        merged.lastStudyDate = legacyLastDate;
+        merged.sessions = legacySessions.map((s) => ({
+          source: "Other",
+          durationSeconds: estimateSecondsFromLabel(s.label),
+          date: s.date || todayKey(),
+          timestamp: s.date || todayKey(),
+          note: s.label || "",
+          mode: "legacy"
+        }));
+        localStorage.setItem("roi_guest", JSON.stringify(merged));
+      }
+    }
+
+    function estimateSecondsFromLabel(label = "") {
+      const matchH = label.match(/(\d+)h/);
+      const matchM = label.match(/(\d+)m/);
+      const matchS = label.match(/(\d+)s/);
+      const h = matchH ? parseInt(matchH[1], 10) : 0;
+      const m = matchM ? parseInt(matchM[1], 10) : 0;
+      const s = matchS ? parseInt(matchS[1], 10) : 0;
+      return h * 3600 + m * 60 + s;
+    }
+
+    function loadData() {
+      const saved = localStorage.getItem(getStorageKey());
+      data = defaultData();
+
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          data = deepMerge(defaultData(), parsed);
+        } catch (error) {
+          console.error("Data load failed:", error);
+        }
+      }
+
+      // Preserve old profile if guest version had first-visit values
+      if (!data.profile.name) {
+        const localName = localStorage.getItem("student_name");
+        const localExam = localStorage.getItem("student_exam");
+        if (localName) data.profile.name = localName;
+        if (localExam) {
+          data.profile.exam = localExam;
+          data.exam = localExam;
+        }
+      }
+
+      // Keep exam/profile aligned
+      if (!data.exam && data.profile.exam) data.exam = data.profile.exam;
+      if (!data.profile.exam && data.exam) data.profile.exam = data.exam;
+
+      applyTheme(data.exam || data.profile.exam || "Other");
+      saveData(false);
+    }
+
+    function saveData(showSavedToast = false) {
+      try {
+        localStorage.setItem(getStorageKey(), JSON.stringify(data));
+        localStorage.setItem("student_name", data.profile.name || "");
+        localStorage.setItem("student_exam", data.exam || data.profile.exam || "Other");
+        if (showSavedToast) showToast("Saved");
+      } catch (error) {
+        console.error("Save failed:", error);
+        showToast("Could not save data");
+      }
+    }
+
+    function deepMerge(base, extra) {
+      const output = Array.isArray(base) ? [...base] : { ...base };
+      if (!extra || typeof extra !== "object") return output;
+
+      Object.keys(extra).forEach((key) => {
+        const baseValue = output[key];
+        const extraValue = extra[key];
+
+        if (Array.isArray(extraValue)) {
+          output[key] = extraValue;
+        } else if (
+          extraValue &&
+          typeof extraValue === "object" &&
+          baseValue &&
+          typeof baseValue === "object" &&
+          !Array.isArray(baseValue)
+        ) {
+          output[key] = deepMerge(baseValue, extraValue);
+        } else {
+          output[key] = extraValue;
+        }
+      });
+
+      return output;
+    }
+
+    /* =========================================================
+       8F. DATE / TIME HELPERS
+       ========================================================= */
+    function todayKey() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function nowISO() {
+      return new Date().toISOString();
+    }
+
+    function formatDateReadable(dateStr) {
+      if (!dateStr) return "—";
+      const d = new Date(dateStr);
+      if (Number.isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric"
+      });
+    }
+
+    function formatDateTimeReadable(dateStr) {
+      if (!dateStr) return "—";
+      const d = new Date(dateStr);
+      if (Number.isNaN(d.getTime())) return dateStr;
+      return d.toLocaleString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+      });
+    }
+
+    function formatSecondsHMS(totalSeconds) {
+      const safe = Math.max(0, Math.floor(totalSeconds || 0));
+      const h = Math.floor(safe / 3600);
+      const m = Math.floor((safe % 3600) / 60);
+      const s = safe % 60;
+      return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    }
+
+    function formatSecondsHuman(totalSeconds) {
+      const safe = Math.max(0, Math.floor(totalSeconds || 0));
+      const h = Math.floor(safe / 3600);
+      const m = Math.floor((safe % 3600) / 60);
+      const s = safe % 60;
+      if (h > 0) return `${h}h ${m}m ${s}s`;
+      if (m > 0) return `${m}m ${s}s`;
+      return `${s}s`;
+    }
+
+    function hoursFromSeconds(seconds) {
+      return ((seconds || 0) / 3600).toFixed(1);
+    }
+
+    function minutesFromSeconds(seconds) {
+      return Math.floor((seconds || 0) / 60);
+    }
+
+    function getWeekKey(dateStr = todayKey()) {
+      const d = new Date(dateStr);
+      const firstJan = new Date(d.getFullYear(), 0, 1);
+      const days = Math.floor((d - firstJan) / 86400000);
+      const week = Math.ceil((days + firstJan.getDay() + 1) / 7);
+      return `${d.getFullYear()}-W${week}`;
+    }
+
+    function getMonthKey(dateStr = todayKey()) {
+      return dateStr.slice(0, 7);
+    }
+
+    function daysBetween(a, b) {
+      const start = new Date(a);
+      const end = new Date(b);
+      start.setHours(0,0,0,0);
+      end.setHours(0,0,0,0);
+      return Math.round((end - start) / 86400000);
+    }
+
+    /* =========================================================
+       8G. AUTH
+       ========================================================= */
+    function signInGoogle() {
+      DOM.overlayAuthError.textContent = "";
+      signInWithPopup(auth, provider).catch((error) => {
+        DOM.overlayAuthError.textContent = error.message || "Google sign-in failed";
+      });
+    }
+
+    function signOutGoogle() {
+      signOut(auth).catch(() => {
+        showToast("Sign out failed");
+      });
+    }
+
+    function saveLocalProfile() {
+      const name = DOM.localNameInput.value.trim();
+      const exam = DOM.localExamInput.value;
+      if (!name) {
+        showToast("Please enter your name");
+        DOM.localNameInput.focus();
+        return;
+      }
+
+      data.profile.name = name;
+      data.profile.exam = exam;
+      data.exam = exam;
+      saveData();
+      applyTheme(exam);
+      DOM.loginOverlay.style.display = "none";
+      renderApp();
+      showToast("Dashboard ready");
+    }
+
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user || null;
+
+      legacyGuestKeysMigrate();
+      loadData();
+
+      if (currentUser) {
+        // If Google profile exists, use it without removing local backup data
+        if (!data.profile.name) data.profile.name = currentUser.displayName || "Student";
+        if (!data.profile.exam) data.profile.exam = data.exam || "NEET";
+        if (!data.exam) data.exam = data.profile.exam;
+
+        DOM.userChip.style.display = "flex";
+        DOM.logoutBtn.classList.remove("hidden");
+        DOM.googleHeaderBtn.classList.add("hidden");
+        DOM.userNameChip.textContent = currentUser.displayName || "Student";
+        DOM.userExamChip.textContent = data.exam || "Target Exam";
+        DOM.userAvatar.src = currentUser.photoURL || "";
+        DOM.loginOverlay.style.display = "none";
+
+        saveData();
+        renderApp();
+      } else {
+        DOM.userChip.style.display = data.profile.name ? "flex" : "none";
+        DOM.logoutBtn.classList.add("hidden");
+        DOM.googleHeaderBtn.classList.remove("hidden");
+
+        if (data.profile.name) {
+          DOM.userNameChip.textContent = data.profile.name;
+          DOM.userExamChip.textContent = data.exam || data.profile.exam || "Target Exam";
+          DOM.userAvatar.src = "";
+          renderApp();
+          DOM.loginOverlay.style.display = "none";
+        } else {
+          DOM.userChip.style.display = "none";
+          DOM.loginOverlay.style.display = "flex";
+        }
+      }
+    });
+
+    /* =========================================================
+       8H. THEME + HEADER + QUOTES
+       ========================================================= */
+    function applyTheme(exam) {
+      const map = {
+        "NEET": "theme-neet",
+        "JEE": "theme-jee",
+        "CUET": "theme-cuet",
+        "SSC": "theme-ssc",
+        "Other": "theme-other"
+      };
+      document.body.classList.remove("theme-neet", "theme-jee", "theme-cuet", "theme-ssc", "theme-other");
+      document.body.classList.add(map[exam] || "theme-other");
+    }
+
+    function updateHeader() {
+      const name = data.profile.name || "Student";
+      const exam = data.exam || data.profile.exam || "NEET";
+
+      DOM.welcomeTitle.textContent = `Welcome, ${name}`;
+      DOM.welcomeSub.textContent = `Target Exam: ${exam}`;
+
+      if (data.profile.name) {
+        DOM.userChip.style.display = "flex";
+        DOM.userNameChip.textContent = currentUser?.displayName || name;
+        DOM.userExamChip.textContent = exam;
+      }
+    }
+
+    function getQuoteIndex() {
+      const now = new Date();
+      const start = new Date(now.getFullYear(), 0, 0);
+      const dayOfYear = Math.floor((now - start) / 86400000);
+      const tenMinuteBucket = Math.floor((now.getHours() * 60 + now.getMinutes()) / 10);
+      return (dayOfYear * 7 + tenMinuteBucket) % QUOTES.length;
+    }
+
+    function renderQuote() {
+      const q = QUOTES[getQuoteIndex()];
+      DOM.quoteText.textContent = `“${q.text}”`;
+      DOM.quoteAuthor.textContent = `— ${q.author || "Anonymous"}`;
+      DOM.quoteBadge.textContent = `Quote ${getQuoteIndex() + 1}/${QUOTES.length}`;
+    }
+
+    /* =========================================================
+       8I. CORE METRICS
+       ========================================================= */
+    function getTodaySessions() {
+      const today = todayKey();
+      return (data.sessions || []).filter((s) => (s.date || "").slice(0, 10) === today);
+    }
+
+    function getTodayStudySeconds() {
+      return getTodaySessions().reduce((sum, s) => sum + (s.durationSeconds || 0), 0);
+    }
+
+    function getWeeklyStudySeconds() {
+      const weekKey = getWeekKey(todayKey());
+      return (data.sessions || [])
+        .filter((s) => getWeekKey((s.date || todayKey()).slice(0, 10)) === weekKey)
+        .reduce((sum, s) => sum + (s.durationSeconds || 0), 0);
+    }
+
+    function getMonthlyStudySeconds() {
+      const monthKey = getMonthKey(todayKey());
+      return (data.sessions || [])
+        .filter((s) => getMonthKey((s.date || todayKey()).slice(0, 10)) === monthKey)
+        .reduce((sum, s) => sum + (s.durationSeconds || 0), 0);
+    }
+
+    function getQuestionsStats() {
+      // Since only one current counter exists in this version, daily/weekly/monthly/yearly
+      // use logs snapshots from current date where possible and fallback to current cumulative.
+      const total = Number(data.questionsSolved || 0);
+      return {
+        daily: total,
+        weekly: total,
+        monthly: total,
+        yearly: total
+      };
+    }
+
+    function getAverageMockPercent() {
+      if (!data.mockTests.length) return null;
+      const average = data.mockTests.reduce((sum, test) => sum + Number(test.accuracy || 0), 0) / data.mockTests.length;
+      return Math.round(average);
+    }
+
+    function getPendingRevisions() {
+      const today = todayKey();
+      return (data.topics || []).filter((topic) =>
+        (topic.revisions || []).some((date) => date <= today && !(topic.done || []).includes(date))
+      );
+    }
+
+    function getOverdueRevisions() {
+      const today = todayKey();
+      return (data.topics || []).filter((topic) =>
+        (topic.revisions || []).some((date) => date < today && !(topic.done || []).includes(date))
+      );
+    }
+
+    function getAppUsageSummary() {
+      const summary = {};
+      (data.sessions || []).forEach((session) => {
+        const source = session.source || "Other";
+        if (!summary[source]) {
+          summary[source] = {
+            time: 0,
+            sessions: 0
+          };
+        }
+        summary[source].time += Number(session.durationSeconds || 0);
+        summary[source].sessions += 1;
+      });
+      return summary;
+    }
+
+    function getMostUsedSource() {
+      const summary = getAppUsageSummary();
+      const entries = Object.entries(summary);
+      if (!entries.length) return null;
+      entries.sort((a, b) => b[1].time - a[1].time);
+      return {
+        name: entries[0][0],
+        time: entries[0][1].time,
+        sessions: entries[0][1].sessions
+      };
+    }
+
+    function calcProductivityScore() {
+      const productiveHours = Number(data.productiveTime || 0);
+      const readingHours = Number(data.readingTime || 0);
+      const revisionHours = Number(data.revisionTime || 0);
+      const studyHours = Number(data.studyHours || 0) || (data.totalStudySeconds || 0) / 3600;
+      let wastedHours = Number(data.wastedTime || 0);
+
+      // If wasted time not filled, estimate from 24h breakdown
+      if (!wastedHours) {
+        const estimated = Math.max(0, 24 - 8 - 4 - productiveHours - readingHours - revisionHours - studyHours);
+        wastedHours = estimated;
+      }
+
+      const good = productiveHours + readingHours + revisionHours + studyHours;
+      const total = good + wastedHours;
+      if (!total) return 0;
+      return Math.max(0, Math.min(100, Math.round((good / total) * 100)));
+    }
+
+    function calcROIScore() {
+      /*
+        Simple readable ROI formula:
+        ROI = Output / Input
+        Input = study hours + productive hours
+        Output = questions solved weight + avg mock + lectures + DPP completion
+      */
+      const studyHours = Math.max(1, (data.totalStudySeconds || 0) / 3600 || Number(data.studyHours || 0) || 1);
+      const productive = Number(data.productiveTime || 0);
+      const input = Math.max(1, studyHours + productive);
+
+      const avgMock = getAverageMockPercent() || 0;
+      const questionsWeight = Number(data.questionsSolved || 0) * 0.35;
+      const lecturesWeight = Number(data.lecturesAttended || 0) * 2.5;
+      const dppWeight = data.dppAttempted
+        ? Math.round((Number(data.dppCompleted || 0) / Number(data.dppAttempted || 1)) * 100) * 0.35
+        : 0;
+
+      const output = questionsWeight + avgMock + lecturesWeight + dppWeight;
+      const roi = Math.round((output / (input * 6)) * 100);
+
+      return Math.max(0, Math.min(100, roi));
+    }
+
+    function ensureStreakState() {
+      const today = todayKey();
+      const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+
+      if (!data.lastStudyDate) return;
+      if (data.lastStudyDate === today || data.lastStudyDate === yesterday) return;
+
+      data.streak = 0;
+      saveData();
+    }
+
+    function updateStreakOnStudy(dateStr) {
+      const today = (dateStr || todayKey()).slice(0, 10);
+      const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+
+      if (data.lastStudyDate === today) return;
+      if (!data.lastStudyDate) {
+        data.streak = 1;
+      } else if (data.lastStudyDate === yesterday) {
+        data.streak += 1;
+      } else {
+        data.streak = 1;
+      }
+
+      data.bestStreak = Math.max(Number(data.bestStreak || 0), Number(data.streak || 0));
+      data.lastStudyDate = today;
+    }
+
+    /* =========================================================
+       8J. EXAM COUNTDOWN
+       ========================================================= */
+    function renderCountdown() {
+      const exam = data.exam || "NEET";
+      const examDate = data.examDate;
+
+      DOM.currentDateTime.textContent = new Date().toLocaleString();
+      DOM.savedExamDateLabel.textContent = examDate ? formatDateReadable(examDate) : "—";
+
+      if (!examDate) {
+        DOM.countdownHeadline.textContent = "No exam date saved yet";
+        DOM.countdownSub.textContent = "Set your target exam date to activate the countdown.";
+        setBadge(DOM.countdownBadge, "Waiting", "blue");
+        return;
+      }
+
+      const diff = daysBetween(todayKey(), examDate);
+      if (diff < 0) {
+        DOM.countdownHeadline.textContent = `${exam} exam date has passed`;
+        DOM.countdownSub.textContent = `Your saved exam date was ${formatDateReadable(examDate)}. Update it if needed.`;
+        setBadge(DOM.countdownBadge, "Expired", "danger");
+        return;
+      }
+
+      DOM.countdownHeadline.textContent = `${exam} Exam in ${diff} day${diff === 1 ? "" : "s"}`;
+      DOM.countdownSub.textContent = `Target date: ${formatDateReadable(examDate)} • Keep your momentum high.`;
+
+      if (diff > 60) setBadge(DOM.countdownBadge, "Far", "success");
+      else if (diff > 21) setBadge(DOM.countdownBadge, "Medium", "warning");
+      else setBadge(DOM.countdownBadge, "Urgent", "danger");
+    }
+
+    function setBadge(el, label, tone) {
+      if (!el) return;
+      el.className = "badge";
+      if (tone === "success") el.classList.add("badge-success");
+      else if (tone === "warning") el.classList.add("badge-warning");
+      else if (tone === "danger") el.classList.add("badge-danger");
+      else if (tone === "purple") el.classList.add("badge-purple");
+      else el.classList.add("badge-blue");
+      el.textContent = label;
+    }
+
+    /* =========================================================
+       8K. TIMER
+       ========================================================= */
+    function startTimer() {
+      if (timerRunning) return;
+
+      timerSource = DOM.timerSourceSelect.value || "Self Study";
+      timerStartedAt = Date.now();
+      timerRunning = true;
+      DOM.timerStatus.textContent = `Running • ${timerSource}`;
+      timerInterval = setInterval(() => {
+        timerElapsedSeconds += 1;
+        DOM.timerDisplay.textContent = formatSecondsHMS(timerElapsedSeconds);
+      }, 1000);
+    }
+
+    function pauseTimer() {
+      if (!timerRunning) return;
+      clearInterval(timerInterval);
+      timerInterval = null;
+      timerRunning = false;
+      timerPauseStartedAt = Date.now();
+      DOM.timerStatus.textContent = "Paused";
+    }
+
+    function stopTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = null;
+
+      const duration = timerElapsedSeconds;
+      const source = DOM.timerSourceSelect.value || "Self Study";
+      const note = DOM.timerNoteInput.value.trim();
+
+      timerRunning = false;
+      DOM.timerStatus.textContent = duration > 0 ? "Session saved" : "Ready to start";
+
+      if (duration > 0) {
+        saveSession({
+          source,
+          durationSeconds: duration,
+          date: nowISO(),
+          timestamp: nowISO(),
+          note,
+          mode: "timer"
+        });
+        showToast(`Saved ${formatSecondsHuman(duration)} from ${source}`);
+      }
+
+      timerElapsedSeconds = 0;
+      DOM.timerDisplay.textContent = formatSecondsHMS(0);
+      DOM.timerNoteInput.value = "";
+    }
+
+    function resetTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = null;
+      timerRunning = false;
+      timerElapsedSeconds = 0;
+      DOM.timerDisplay.textContent = formatSecondsHMS(0);
+      DOM.timerStatus.textContent = "Ready to start";
+    }
+
+    function saveSession(session) {
+      const safeSession = {
+        source: session.source || "Other",
+        durationSeconds: Number(session.durationSeconds || 0),
+        date: session.date || nowISO(),
+        timestamp: session.timestamp || nowISO(),
+        note: session.note || "",
+        mode: session.mode || "manual"
+      };
+
+      if (!safeSession.durationSeconds) return;
+
+      data.sessions.unshift(safeSession);
+      if (data.sessions.length > 200) data.sessions = data.sessions.slice(0, 200);
+
+      data.totalStudySeconds = Number(data.totalStudySeconds || 0) + safeSession.durationSeconds;
+      const earned = minutesFromSeconds(safeSession.durationSeconds);
+      data.points = Number(data.points || 0) + earned;
+      data.coins = Number(data.coins || 0) + earned;
+      data.studyHours = Number((data.totalStudySeconds / 3600).toFixed(2));
+
+      updateStreakOnStudy(safeSession.date);
+
+      if (!data.appUsageSummary[safeSession.source]) {
+        data.appUsageSummary[safeSession.source] = { time: 0, sessions: 0 };
+      }
+      data.appUsageSummary[safeSession.source].time += safeSession.durationSeconds;
+      data.appUsageSummary[safeSession.source].sessions += 1;
+
+      pulseStats();
+      snapshotAggregatesIfNeeded();
+      saveData();
+      renderApp();
+    }
+
+    function pulseStats() {
+      ["statPoints", "statCoins"].forEach((id) => {
+        const el = DOM[id];
+        if (!el) return;
+        el.classList.remove("pulse");
+        void el.offsetWidth;
+        el.classList.add("pulse");
+      });
+    }
+
+    /* =========================================================
+       8L. SNAPSHOTS FOR DAILY / WEEKLY / MONTHLY COMPARISON
+       ========================================================= */
+    function snapshotAggregatesIfNeeded() {
+      const today = todayKey();
+      const week = getWeekKey(today);
+      const month = getMonthKey(today);
+
+      if (!Array.isArray(data.weeklySnapshots)) data.weeklySnapshots = [];
+      if (!Array.isArray(data.monthlySnapshots)) data.monthlySnapshots = [];
+
+      const todayStudy = getTodayStudySeconds();
+      const weeklyStudy = getWeeklyStudySeconds();
+      const monthlyStudy = getMonthlyStudySeconds();
+
+      const existingWeek = data.weeklySnapshots.find((x) => x.key === week);
+      if (existingWeek) {
+        existingWeek.studySeconds = weeklyStudy;
+        existingWeek.wastedHours = Number(data.wastedTime || 0);
+      } else {
+        data.weeklySnapshots.push({
+          key: week,
+          studySeconds: weeklyStudy,
+          wastedHours: Number(data.wastedTime || 0)
+        });
+      }
+
+      const existingMonth = data.monthlySnapshots.find((x) => x.key === month);
+      if (existingMonth) {
+        existingMonth.studySeconds = monthlyStudy;
+        existingMonth.wastedHours = Number(data.wastedTime || 0);
+      } else {
+        data.monthlySnapshots.push({
+          key: month,
+          studySeconds: monthlyStudy,
+          wastedHours: Number(data.wastedTime || 0)
+        });
+      }
+
+      data.dailySnapshot = {
+        key: today,
+        studySeconds: todayStudy,
+        wastedHours: Number(data.wastedTime || 0)
+      };
+    }
+
+    /* =========================================================
+       8M. SAVE / EDIT GENERAL INPUTS
+       ========================================================= */
+    function saveExamSetup() {
+      data.exam = DOM.examSelect.value;
+      data.profile.exam = DOM.examSelect.value;
+      data.examDate = DOM.examDateInput.value;
+      saveData();
+      applyTheme(data.exam);
+      renderCountdown();
+      updateHeader();
+      showToast("Exam setup saved");
+      renderApp();
+    }
+
+    function addManualStudyInput() {
+      const h = Number($("manualHours")?.value || 0);
+      const m = Number($("manualMinutes")?.value || 0);
+      const s = Number($("manualSeconds")?.value || 0);
+      const source = $("manualSource")?.value || "Self Study";
+      const note = $("manualStudyNote")?.value.trim() || "";
+      const total = h * 3600 + m * 60 + s;
+
+      if (!total) {
+        showToast("Enter study time first");
+        return;
+      }
+
+      saveSession({
+        source,
+        durationSeconds: total,
+        date: nowISO(),
+        timestamp: nowISO(),
+        note,
+        mode: "manual_input"
+      });
+
+      if ($("manualHours")) $("manualHours").value = "";
+      if ($("manualMinutes")) $("manualMinutes").value = "";
+      if ($("manualSeconds")) $("manualSeconds").value = "";
+      if ($("manualStudyNote")) $("manualStudyNote").value = "";
+
+      showToast("Manual study session saved");
+    }
+
+    function saveStudyMetrics() {
+      data.questionsSolved = Number($("questionsSolvedInput")?.value || 0);
+      data.lecturesAttended = Number($("lecturesAttendedInput")?.value || 0);
+      data.dppAttempted = Number($("dppAttemptedInput")?.value || 0);
+      data.dppCompleted = Number($("dppCompletedInput")?.value || 0);
+      data.productiveTime = Number($("productiveTimeInput")?.value || 0);
+      data.wastedTime = Number($("wastedTimeInput")?.value || 0);
+      data.readingTime = Number($("readingTimeInput")?.value || 0);
+      data.revisionTime = Number($("revisionTimeInput")?.value || 0);
+
+      DEFAULT_SUBJECTS.forEach((subject) => {
+        const key = `subject_${subject.replace(/[^\w]/g, "_")}`;
+        const value = Number($(key)?.value || 0);
+        data.subjectTime[subject] = value;
+      });
+
+      snapshotAggregatesIfNeeded();
+      saveData(true);
+      renderApp();
+    }
+
+    function saveRoutineAuto() {
+      const today = todayKey();
+      data.routine[today] = {
+        did: $("routineDid")?.value || "",
+        will: $("routineWill")?.value || "",
+        achieved: $("routineAchieved")?.value || "",
+        regret: $("routineRegret")?.value || ""
+      };
+      saveData();
+    }
+
+    function saveDailyLog() {
+      const text = $("dailyLogInput")?.value.trim() || "";
+      if (!text) {
+        showToast("Write what you studied today");
+        return;
+      }
+
+      const today = todayKey();
+      const revisions = REVISION_DAYS.map((day) => {
+        const d = new Date();
+        d.setDate(d.getDate() + day);
+        return d.toISOString().slice(0, 10);
+      });
+
+      data.logs.unshift({
+        text,
+        date: today,
+        createdAt: nowISO()
+      });
+      if (data.logs.length > 100) data.logs = data.logs.slice(0, 100);
+
+      data.topics.unshift({
+        topic: text,
+        date: today,
+        revisions,
+        done: []
+      });
+      if (data.topics.length > 120) data.topics = data.topics.slice(0, 120);
+
+      data.todayLog = "";
+      saveData();
+      showToast("Topic saved and revision dates created");
+      renderApp();
+    }
+
+    function addMockTest() {
+      const marks = Number($("mockMarksInput")?.value || 0);
+      const total = Number($("mockTotalInput")?.value || 0);
+      const date = $("mockDateInput")?.value || todayKey();
+
+      if (!marks || !total) {
+        showToast("Enter valid mock marks and total");
+        return;
+      }
+
+      data.mockTests.unshift({
+        marks,
+        total,
+        accuracy: Math.round((marks / total) * 100),
+        date
+      });
+
+      if (data.mockTests.length > 100) data.mockTests = data.mockTests.slice(0, 100);
+
+      saveData();
+      showToast("Mock test saved");
+      renderApp();
+    }
+
+    function markRevisionDone(topicIndex, revisionDate) {
+      const topic = data.topics[topicIndex];
+      if (!topic) return;
+      if (!Array.isArray(topic.done)) topic.done = [];
+      if (!topic.done.includes(revisionDate)) topic.done.push(revisionDate);
+      saveData();
+      showToast("Revision marked done");
+      renderApp();
+    }
+
+    function addPlanSubjectRow(prefill = { name: "", hours: "" }) {
+      const list = $("planSubjectList");
+      if (!list) return;
+
+      const row = document.createElement("div");
+      row.className = "subject-row";
+      row.innerHTML = `
+        <input class="input" type="text" placeholder="Subject name" value="${escapeHtml(prefill.name || "")}">
+        <input class="input" type="number" min="0.5" step="0.5" placeholder="Hrs/day" value="${escapeHtml(prefill.hours || "")}">
+        <button class="btn btn-danger-soft" type="button">✕</button>
+      `;
+
+      const deleteBtn = row.querySelector("button");
+      deleteBtn.addEventListener("click", () => row.remove());
+
+      list.appendChild(row);
+    }
+
+    function generatePlan() {
+      const examName = $("planExamName")?.value.trim() || data.exam || "Exam";
+      const daysLeft = Number($("planDaysLeft")?.value || 0);
+      if (!daysLeft || daysLeft < 1) {
+        showToast("Enter valid days left");
+        return;
+      }
+
+      const rows = Array.from(document.querySelectorAll("#planSubjectList .subject-row"));
+      const subjects = rows.map((row) => {
+        const inputs = row.querySelectorAll("input");
+        return {
+          name: inputs[0]?.value.trim() || "",
+          hours: Number(inputs[1]?.value || 0)
+        };
+      }).filter((s) => s.name);
+
+      data.planSubjects = subjects;
+      saveData();
+
+      let suggestedDailyHours = 0;
+      if (daysLeft > 120) suggestedDailyHours = 5;
+      else if (daysLeft > 60) suggestedDailyHours = 6;
+      else if (daysLeft > 30) suggestedDailyHours = 8;
+      else if (daysLeft > 14) suggestedDailyHours = 10;
+      else suggestedDailyHours = 12;
+
+      const weakSubjects = getWeakSubjectSuggestions();
+      const revisionSlots = daysLeft > 30 ? "1 morning slot + 1 evening slot" : "2 short revision slots daily";
+
+      let html = `
+        <div class="inline-note">
+          <div class="strong">${escapeHtml(examName)} • ${daysLeft} days left</div>
+          <div class="small" style="margin-top:6px;">
+            Suggested daily study: <b>${suggestedDailyHours} hours/day</b><br>
+            Suggested revision slots: <b>${revisionSlots}</b>
+          </div>
+        </div>
+      `;
+
+      if (subjects.length) {
+        const totalAllocated = subjects.reduce((sum, s) => sum + s.hours, 0);
+        html += `<div class="list" style="margin-top:12px;">`;
+        subjects.forEach((subject) => {
+          html += `
+            <div class="list-item">
+              <div class="top">
+                <div>
+                  <div class="title">${escapeHtml(subject.name)}</div>
+                  <div class="meta">${subject.hours}h/day • ${(subject.hours * daysLeft).toFixed(1)}h total by exam</div>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        html += `</div>`;
+        html += `
+          <div class="inline-note" style="margin-top:12px;">
+            Total allocated: <b>${totalAllocated.toFixed(1)}h/day</b>
+            ${totalAllocated < suggestedDailyHours
+              ? `<br>You can add ${(suggestedDailyHours - totalAllocated).toFixed(1)} more hours for revision or problem practice.`
+              : `<br>Your current plan already matches or exceeds the suggested daily study load.`}
+          </div>
+        `;
+      } else {
+        html += `
+          <div class="inline-note" style="margin-top:12px;">
+            Add subjects above to get a subject-wise daily plan.
+          </div>
+        `;
+      }
+
+      if (weakSubjects.length) {
+        html += `
+          <div class="inline-note" style="margin-top:12px;">
+            Weak subject focus: <b>${weakSubjects.join(", ")}</b><br>
+            Give these subjects your highest-energy study block.
+          </div>
+        `;
+      }
+
+      const output = $("planOutput");
+      if (output) output.innerHTML = html;
+    }
+
+    function getWeakSubjectSuggestions() {
+      const entries = Object.entries(data.subjectTime || {});
+      if (!entries.length) return [];
+      const sorted = entries.sort((a, b) => a[1] - b[1]);
+      return sorted.slice(0, 2).map((x) => x[0]).filter(Boolean);
+    }
+
+    /* =========================================================
+       8N. UI WARNING STATES
+       ========================================================= */
+    function renderWarningBadges() {
+      const todayStudy = getTodayStudySeconds();
+      const pending = getPendingRevisions().length;
+
+      if (todayStudy <= 0) setBadge(DOM.missingDataBadge, "Update today’s progress", "warning");
+      else setBadge(DOM.missingDataBadge, "Today updated", "success");
+
+      if (pending <= 0) setBadge(DOM.revisionAlertBadge, "No revisions due", "success");
+      else if (pending <= 3) setBadge(DOM.revisionAlertBadge, `${pending} revisions due`, "warning");
+      else setBadge(DOM.revisionAlertBadge, `${pending} revisions due`, "danger");
+    }
+
+    /* =========================================================
+       8O. RENDER TOP STATS
+       ========================================================= */
+    function renderTopStats() {
+      DOM.statTotalHours.textContent = hoursFromSeconds(data.totalStudySeconds || 0);
+      DOM.statPoints.textContent = Number(data.points || 0);
+      DOM.statCoins.textContent = Number(data.coins || 0);
+      DOM.statStreak.textContent = Number(data.streak || 0);
+      DOM.statBestStreak.textContent = `Best: ${Number(data.bestStreak || 0)} days`;
+    }
+
+    /* =========================================================
+       8P. TABS
+       ========================================================= */
+    function renderTabs() {
+      DOM.tabBar.innerHTML = TAB_NAMES.map((tab) => `
+        <button class="tab-btn ${activeTab === tab ? "active" : ""}" data-tab="${tab}">
+          ${tab}
+        </button>
+      `).join("");
+
+      DOM.tabBar.querySelectorAll(".tab-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          activeTab = btn.dataset.tab;
+          renderTabContent();
+        });
+      });
+    }
+
+    function renderTabContent() {
+      destroyAllCharts();
+
+      const renderMap = {
+        "Dashboard": renderDashboardTab,
+        "Study Input": renderStudyInputTab,
+        "Routine & Log": renderRoutineTab,
+        "Mock Tests": renderMockTab,
+        "Revisions": renderRevisionTab,
+        "Analytics": renderAnalyticsTab,
+        "Plan": renderPlanTab
+      };
+
+      DOM.tabContent.innerHTML = renderMap[activeTab] ? renderMap[activeTab]() : "";
+      bindDynamicTabEvents();
+      renderChartsForActiveTab();
+    }
+
+    /* =========================================================
+       8Q. TAB MARKUP
+       ========================================================= */
+    function renderDashboardTab() {
+      const todayStudy = getTodayStudySeconds();
+      const weeklyStudy = getWeeklyStudySeconds();
+      const monthlyStudy = getMonthlyStudySeconds();
+      const productivity = calcProductivityScore();
+      const roi = calcROIScore();
+      const avgMock = getAverageMockPercent();
+      const pending = getPendingRevisions().length;
+      const mostUsed = getMostUsedSource();
+      const routineToday = data.routine[todayKey()] || {};
+      const overdueCount = getOverdueRevisions().length;
+      const questions = getQuestionsStats();
+      const streakMessage = getStreakMessage();
+
+      const wastedNote = Number(data.wastedTime || 0)
+        ? ""
+        : "You did not fill all study/revision data, so wasted time is estimated from remaining hours.";
+
+      return `
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">
+              <div>
+                <h2>Performance snapshot</h2>
+                <div class="card-sub">Your live study progress</div>
+              </div>
+              <span class="badge badge-purple">${streakMessage}</span>
+            </div>
+            <div class="stat-grid">
+              <div class="stat-box">
+                <div class="label">Today</div>
+                <div class="value">${formatSecondsHuman(todayStudy)}</div>
+                <div class="sub">How much did you study today?</div>
+              </div>
+              <div class="stat-box">
+                <div class="label">Weekly</div>
+                <div class="value">${hoursFromSeconds(weeklyStudy)}h</div>
+                <div class="sub">Current week total</div>
+              </div>
+              <div class="stat-box">
+                <div class="label">Monthly</div>
+                <div class="value">${hoursFromSeconds(monthlyStudy)}h</div>
+                <div class="sub">Current month total</div>
+              </div>
+              <div class="stat-box">
+                <div class="label">Mock Avg</div>
+                <div class="value">${avgMock !== null ? avgMock + "%" : "—"}</div>
+                <div class="sub">${data.mockTests.length} test(s)</div>
+              </div>
+              <div class="stat-box">
+                <div class="label">ROI Score</div>
+                <div class="value">${roi}</div>
+                <div class="sub">Readable 0–100 score</div>
+              </div>
+              <div class="stat-box">
+                <div class="label">Productivity</div>
+                <div class="value">${productivity}%</div>
+                <div class="sub">Study quality score</div>
+              </div>
+              <div class="stat-box">
+                <div class="label">Questions</div>
+                <div class="value">${questions.daily}</div>
+                <div class="sub">Daily/weekly/monthly tracked</div>
+              </div>
+              <div class="stat-box">
+                <div class="label">Pending Revisions</div>
+                <div class="value">${pending}</div>
+                <div class="sub">${overdueCount} overdue</div>
+              </div>
+            </div>
+            ${wastedNote ? `<div class="inline-note" style="margin-top:12px;">${wastedNote}</div>` : ""}
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <div>
+                <h2>Manual app/source usage</h2>
+                <div class="card-sub">Closest practical tracker for external apps</div>
+              </div>
+            </div>
+            ${
+              mostUsed
+                ? `
+                  <div class="inline-note" style="margin-bottom:12px;">
+                    Most used source: <b>${mostUsed.name}</b> • ${formatSecondsHuman(mostUsed.time)} • ${mostUsed.sessions} session(s)
+                  </div>
+                `
+                : `<div class="inline-note" style="margin-bottom:12px;">No source sessions saved yet. Use the timer to start tracking.</div>`
+            }
+            <div class="chart-wrap short"><canvas id="dashboardUsageChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">
+              <div>
+                <h2>Recent study sessions</h2>
+                <div class="card-sub">Latest saved timer and manual entries</div>
+              </div>
+            </div>
+            <div class="list">
+              ${renderSessionsList(8)}
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <div>
+                <h2>Journal + daily summary</h2>
+                <div class="card-sub">Premium daily routine section</div>
+              </div>
+            </div>
+            <div class="list">
+              <div class="list-item">
+                <div class="title">What I did</div>
+                <div class="meta">${escapeHtml(routineToday.did || "Nothing saved yet.")}</div>
+              </div>
+              <div class="list-item">
+                <div class="title">What I will do</div>
+                <div class="meta">${escapeHtml(routineToday.will || "Nothing saved yet.")}</div>
+              </div>
+              <div class="list-item">
+                <div class="title">What I achieved</div>
+                <div class="meta">${escapeHtml(routineToday.achieved || "Nothing saved yet.")}</div>
+              </div>
+              <div class="list-item">
+                <div class="title">What I regret</div>
+                <div class="meta">${escapeHtml(routineToday.regret || "Nothing saved yet.")}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">
+              <div>
+                <h2>Recent logs</h2>
+                <div class="card-sub">What did you study today?</div>
+              </div>
+            </div>
+            <div class="list">
+              ${renderLogsList(8)}
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <div>
+                <h2>Revision reminders</h2>
+                <div class="card-sub">1-3-7-21 rule auto-reminders</div>
+              </div>
+            </div>
+            <div class="list">
+              ${renderPendingRevisionList(6)}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderStudyInputTab() {
+      return `
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">
+              <div>
+                <h2>Manual study time input</h2>
+                <div class="card-sub">Hours, minutes, seconds with source selection</div>
+              </div>
+            </div>
+
+            <div class="grid-4">
+              <div class="field">
+                <label for="manualHours">Hours</label>
+                <input id="manualHours" class="input" type="number" min="0" placeholder="0" />
+              </div>
+              <div class="field">
+                <label for="manualMinutes">Minutes</label>
+                <input id="manualMinutes" class="input" type="number" min="0" max="59" placeholder="0" />
+              </div>
+              <div class="field">
+                <label for="manualSeconds">Seconds</label>
+                <input id="manualSeconds" class="input" type="number" min="0" max="59" placeholder="0" />
+              </div>
+              <div class="field">
+                <label for="manualSource">Source</label>
+                <select id="manualSource" class="select">
+                  ${SOURCE_OPTIONS.map((s) => `<option>${s}</option>`).join("")}
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="manualStudyNote">Note</label>
+              <input id="manualStudyNote" class="input" type="text" placeholder="e.g. Chemistry reactions / PYQs" />
+            </div>
+
+            <button id="saveManualStudyBtn" class="btn btn-primary btn-full">Save manual session</button>
+
+            <div class="inline-note" style="margin-top:12px;">
+              Today: <b>${formatSecondsHuman(getTodayStudySeconds())}</b><br>
+              Weekly: <b>${hoursFromSeconds(getWeeklyStudySeconds())} hours</b><br>
+              Monthly: <b>${hoursFromSeconds(getMonthlyStudySeconds())} hours</b>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <div>
+                <h2>Productivity inputs</h2>
+                <div class="card-sub">Questions, DPP, lecture, productive and wasted time</div>
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="field">
+                <label for="questionsSolvedInput">Questions solved</label>
+                <input id="questionsSolvedInput" class="input" type="number" min="0" value="${escapeAttr(data.questionsSolved)}" />
+              </div>
+              <div class="field">
+                <label for="lecturesAttendedInput">Lectures attended</label>
+                <input id="lecturesAttendedInput" class="input" type="number" min="0" value="${escapeAttr(data.lecturesAttended)}" />
+              </div>
+              <div class="field">
+                <label for="dppAttemptedInput">DPP attempted</label>
+                <input id="dppAttemptedInput" class="input" type="number" min="0" value="${escapeAttr(data.dppAttempted)}" />
+              </div>
+              <div class="field">
+                <label for="dppCompletedInput">DPP completed</label>
+                <input id="dppCompletedInput" class="input" type="number" min="0" value="${escapeAttr(data.dppCompleted)}" />
+              </div>
+              <div class="field">
+                <label for="productiveTimeInput">Productive study time (hours)</label>
+                <input id="productiveTimeInput" class="input" type="number" min="0" step="0.5" value="${escapeAttr(data.productiveTime)}" />
+              </div>
+              <div class="field">
+                <label for="wastedTimeInput">Wasted time (hours)</label>
+                <input id="wastedTimeInput" class="input" type="number" min="0" step="0.5" value="${escapeAttr(data.wastedTime)}" />
+              </div>
+              <div class="field">
+                <label for="readingTimeInput">Reading time (hours)</label>
+                <input id="readingTimeInput" class="input" type="number" min="0" step="0.5" value="${escapeAttr(data.readingTime)}" />
+              </div>
+              <div class="field">
+                <label for="revisionTimeInput">Revision time (hours)</label>
+                <input id="revisionTimeInput" class="input" type="number" min="0" step="0.5" value="${escapeAttr(data.revisionTime)}" />
+              </div>
+            </div>
+
+            <div class="inline-note">
+              If wasted time is left empty or 0, the dashboard estimates untracked time from:
+              <b>24 hours - 8 sleep - 4 basic routine - entered study data</b>.
+            </div>
+
+            <button id="saveMetricsBtn" class="btn btn-primary btn-full" style="margin-top:12px;">Save productivity data</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <div>
+              <h2>Subject-wise time allocation</h2>
+              <div class="card-sub">Useful for weak subject suggestions and distribution charts</div>
+            </div>
+          </div>
+          <div class="grid-4">
+            ${DEFAULT_SUBJECTS.map((subject) => `
+              <div class="field">
+                <label for="subject_${subject.replace(/[^\w]/g, "_")}">${subject} (hours)</label>
+                <input
+                  id="subject_${subject.replace(/[^\w]/g, "_")}"
+                  class="input"
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value="${escapeAttr(data.subjectTime[subject] || 0)}"
+                />
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderRoutineTab() {
+      const todayRoutine = data.routine[todayKey()] || {};
+      return `
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">
+              <div>
+                <h2>Daily routine tracker</h2>
+                <div class="card-sub">Auto-saved journal for each day</div>
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="field">
+                <label for="routineDid">What I did</label>
+                <textarea id="routineDid" class="textarea" placeholder="What I did today...">${escapeHtml(todayRoutine.did || "")}</textarea>
+              </div>
+              <div class="field">
+                <label for="routineWill">What I will do</label>
+                <textarea id="routineWill" class="textarea" placeholder="What I will do next...">${escapeHtml(todayRoutine.will || "")}</textarea>
+              </div>
+              <div class="field">
+                <label for="routineAchieved">What I achieved</label>
+                <textarea id="routineAchieved" class="textarea" placeholder="My achievement today...">${escapeHtml(todayRoutine.achieved || "")}</textarea>
+              </div>
+              <div class="field">
+                <label for="routineRegret">What I regret</label>
+                <textarea id="routineRegret" class="textarea" placeholder="What I regret today...">${escapeHtml(todayRoutine.regret || "")}</textarea>
+              </div>
+            </div>
+
+            <div class="inline-note">This section auto-saves while typing and stays date-based in localStorage.</div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <div>
+                <h2>Daily log entry</h2>
+                <div class="card-sub">Save topics studied today and generate revision reminders automatically</div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="dailyLogInput">What did you study today?</label>
+              <textarea id="dailyLogInput" class="textarea" placeholder="e.g. Cell division, Trigonometry identities, Organic revision"></textarea>
+            </div>
+            <button id="saveDailyLogBtn" class="btn btn-primary btn-full">Save topic + create revision schedule</button>
+
+            <div class="inline-note" style="margin-top:12px;">
+              Every saved topic automatically gets Day 1, Day 3, Day 7, and Day 21 revision dates.
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <div>
+              <h2>Saved logs</h2>
+              <div class="card-sub">Recent study entries with dates</div>
+            </div>
+          </div>
+          <div class="list">
+            ${renderLogsList(20)}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderMockTab() {
+      return `
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">
+              <div>
+                <h2>Add mock test</h2>
+                <div class="card-sub">Marks, total, accuracy, date</div>
+              </div>
+            </div>
+
+            <div class="grid-3">
+              <div class="field">
+                <label for="mockMarksInput">Marks scored</label>
+                <input id="mockMarksInput" class="input" type="number" min="0" placeholder="e.g. 540" />
+              </div>
+              <div class="field">
+                <label for="mockTotalInput">Total marks</label>
+                <input id="mockTotalInput" class="input" type="number" min="1" value="100" />
+              </div>
+              <div class="field">
+                <label for="mockDateInput">Test date</label>
+                <input id="mockDateInput" class="input" type="date" value="${todayKey()}" />
+              </div>
+            </div>
+
+            <button id="saveMockBtn" class="btn btn-primary btn-full">Save mock test</button>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <div>
+                <h2>Performance summary</h2>
+                <div class="card-sub">History and chart</div>
+              </div>
+            </div>
+            <div class="inline-note">
+              Mock average: <b>${getAverageMockPercent() !== null ? getAverageMockPercent() + "%" : "—"}</b><br>
+              Tests saved: <b>${data.mockTests.length}</b>
+            </div>
+            <div class="chart-wrap short" style="margin-top:12px;"><canvas id="mockTabChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <div>
+              <h2>Mock history</h2>
+              <div class="card-sub">Recent tests</div>
+            </div>
+          </div>
+          <div class="list">
+            ${
+              data.mockTests.length
+                ? data.mockTests.map((test, i) => `
+                    <div class="list-item">
+                      <div class="top">
+                        <div>
+                          <div class="title">Test ${data.mockTests.length - i}</div>
+                          <div class="meta">${formatDateReadable(test.date)} • ${test.marks}/${test.total}</div>
+                        </div>
+                        <span class="badge ${test.accuracy >= 70 ? "badge-success" : test.accuracy >= 50 ? "badge-warning" : "badge-danger"}">
+                          ${test.accuracy}%
+                        </span>
+                      </div>
+                    </div>
+                  `).join("")
+                : `<div class="inline-note">No mock tests saved yet.</div>`
+            }
+          </div>
+        </div>
+      `;
+    }
+
+    function renderRevisionTab() {
+      const pending = getPendingRevisions();
+      return `
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">
+              <div>
+                <h2>Pending revisions</h2>
+                <div class="card-sub">Topics due today or overdue</div>
+              </div>
+            </div>
+            <div class="list">
+              ${renderPendingRevisionList(20, true)}
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <div>
+                <h2>Full revision schedule</h2>
+                <div class="card-sub">All topics with 1-3-7-21 dates</div>
+              </div>
+            </div>
+            <div class="list">
+              ${
+                data.topics.length
+                  ? data.topics.map((topic, topicIndex) => `
+                    <div class="list-item">
+                      <div class="title">${escapeHtml(topic.topic)}</div>
+                      <div class="meta">Saved: ${formatDateReadable(topic.date)}</div>
+                      <div class="row" style="margin-top:10px;">
+                        ${(topic.revisions || []).map((revDate, i) => {
+                          const done = (topic.done || []).includes(revDate);
+                          const overdue = revDate < todayKey() && !done;
+                          const tone = done ? "success" : overdue ? "danger" : "blue";
+                          return `<span class="badge badge-${tone}">D${REVISION_DAYS[i]} • ${revDate}</span>`;
+                        }).join("")}
+                      </div>
+                    </div>
+                  `).join("")
+                  : `<div class="inline-note">No revision topics saved yet.</div>`
+              }
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderAnalyticsTab() {
+      const weakSubjects = getWeakSubjectSuggestions();
+      return `
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">
+              <div>
+                <h2>Daily vs wasted time</h2>
+                <div class="card-sub">Today comparison</div>
+              </div>
+            </div>
+            <div class="chart-wrap short"><canvas id="dailyCompareChart"></canvas></div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <div>
+                <h2>Weekly vs monthly comparison</h2>
+                <div class="card-sub">Study vs wasted trend</div>
+              </div>
+            </div>
+            <div class="chart-wrap short"><canvas id="periodCompareChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">
+              <div>
+                <h2>Subject distribution</h2>
+                <div class="card-sub">Time allocation across subjects</div>
+              </div>
+            </div>
+            <div class="chart-wrap"><canvas id="subjectDistributionChart"></canvas></div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <div>
+                <h2>Questions solved vs accuracy</h2>
+                <div class="card-sub">Simple output tracking</div>
+              </div>
+            </div>
+            <div class="chart-wrap"><canvas id="questionsVsAccuracyChart"></canvas></div>
+            <div class="inline-note" style="margin-top:12px;">
+              Weak subject suggestion: <b>${weakSubjects.length ? weakSubjects.join(", ") : "Not enough data yet"}</b>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">
+              <div>
+                <h2>Study time vs result</h2>
+                <div class="card-sub">Input compared with mock average</div>
+              </div>
+            </div>
+            <div class="chart-wrap short"><canvas id="studyVsResultChart"></canvas></div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <div>
+                <h2>App usage chart</h2>
+                <div class="card-sub">Source-wise time tracked</div>
+              </div>
+            </div>
+            <div class="chart-wrap short"><canvas id="analyticsUsageChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <div>
+              <h2>Formula notes</h2>
+              <div class="card-sub">Readable scoring logic</div>
+            </div>
+          </div>
+          <div class="inline-note">
+            <b>ROI Score</b> uses a practical formula based on study input versus output:
+            <br>
+            Study Hours + Productive Hours → compared against Questions Solved, Mock Average, Lectures, and DPP completion.
+            <br><br>
+            <b>Productivity Score</b> compares useful study blocks against wasted or untracked time.
+          </div>
+        </div>
+      `;
+    }
+
+    function renderPlanTab() {
+      return `
+        <div class="card">
+          <div class="card-title">
+            <div>
+              <h2>Smart daily plan / timetable generator</h2>
+              <div class="card-sub">Exam name, days left, subject rows, weak subject tips</div>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="planExamName">Exam name</label>
+              <input id="planExamName" class="input" type="text" value="${escapeAttr(data.exam || "NEET")}" />
+            </div>
+            <div class="field">
+              <label for="planDaysLeft">Days left</label>
+              <input
+                id="planDaysLeft"
+                class="input"
+                type="number"
+                min="1"
+                value="${data.examDate ? Math.max(0, daysBetween(todayKey(), data.examDate)) : ""}"
+                placeholder="e.g. 90"
+              />
+            </div>
+          </div>
+
+          <div class="card-title" style="margin-top:8px;">
+            <div>
+              <h2 style="font-size:14px;">Subjects and daily hours</h2>
+            </div>
+            <button id="addPlanSubjectBtn" class="btn">+ Add Subject</button>
+          </div>
+
+          <div id="planSubjectList"></div>
+
+          <div class="row" style="margin-top:10px;">
+            <button id="generatePlanBtn" class="btn btn-primary">Generate plan</button>
+          </div>
+
+          <div id="planOutput" style="margin-top:14px;"></div>
+        </div>
+      `;
+    }
+
+    /* =========================================================
+       8R. DYNAMIC LIST RENDERERS
+       ========================================================= */
+    function renderSessionsList(limit = 8) {
+      const items = (data.sessions || []).slice(0, limit);
+      if (!items.length) return `<div class="inline-note">No sessions saved yet.</div>`;
+
+      return items.map((session) => `
+        <div class="list-item">
+          <div class="top">
+            <div>
+              <div class="title">${escapeHtml(session.source || "Other")} • ${formatSecondsHuman(session.durationSeconds || 0)}</div>
+              <div class="meta">${formatDateTimeReadable(session.timestamp || session.date)}${session.note ? " • " + escapeHtml(session.note) : ""}</div>
+            </div>
+            <span class="badge badge-blue">${session.mode || "session"}</span>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderLogsList(limit = 8) {
+      const items = (data.logs || []).slice(0, limit);
+      if (!items.length) return `<div class="inline-note">No study logs saved yet.</div>`;
+
+      return items.map((log) => `
+        <div class="list-item">
+          <div class="title">${escapeHtml(log.text)}</div>
+          <div class="meta">${formatDateReadable(log.date)}</div>
+        </div>
+      `).join("");
+    }
+
+    function renderPendingRevisionList(limit = 8, withButtons = false) {
+      const items = getPendingRevisions().slice(0, limit);
+      if (!items.length) return `<div class="inline-note">No pending revisions today. Great job.</div>`;
+
+      return items.map((topic) => {
+        const topicIndex = data.topics.findIndex((t) => t.topic === topic.topic && t.date === topic.date);
+        const dueDates = (topic.revisions || []).filter((date) => date <= todayKey() && !(topic.done || []).includes(date));
+
+        return `
+          <div class="list-item">
+            <div class="title">${escapeHtml(topic.topic)}</div>
+            <div class="meta">Saved on ${formatDateReadable(topic.date)}</div>
+            <div class="row" style="margin-top:10px;">
+              ${dueDates.map((date) => {
+                const overdue = date < todayKey();
+                if (!withButtons) {
+                  return `<span class="badge ${overdue ? "badge-danger" : "badge-warning"}">${date}</span>`;
+                }
+                return `<button class="btn ${overdue ? "btn-danger-soft" : "btn-soft"} revision-done-btn" data-topic-index="${topicIndex}" data-rev-date="${date}">Mark ${date} done</button>`;
+              }).join("")}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function getStreakMessage() {
+      const streak = Number(data.streak || 0);
+      if (streak >= 30) return "🏆 30-day legend";
+      if (streak >= 14) return "🔥 14-day streak";
+      if (streak >= 7) return "⚡ 7-day streak";
+      if (streak >= 3) return "✅ Building momentum";
+      return "Day 1 starts now";
+    }
+
+    /* =========================================================
+       8S. EVENT BINDING
+       ========================================================= */
+    function bindStaticEvents() {
+      DOM.localStartBtn.addEventListener("click", saveLocalProfile);
+      DOM.googleOverlayBtn.addEventListener("click", signInGoogle);
+      DOM.googleHeaderBtn.addEventListener("click", signInGoogle);
+      DOM.logoutBtn.addEventListener("click", signOutGoogle);
+
+      DOM.resetBtn.addEventListener("click", () => {
+        const ok = confirm("Reset all saved dashboard data for this profile?");
+        if (!ok) return;
+        localStorage.removeItem(getStorageKey());
+        data = defaultData();
+        activeTab = "Dashboard";
+        renderApp();
+        if (!currentUser) DOM.loginOverlay.style.display = "flex";
+        showToast("Data reset");
+      });
+
+      DOM.exportBtn.addEventListener("click", exportCSV);
+      DOM.exportBtn2.addEventListener("click", exportCSV);
+      DOM.printBtn.addEventListener("click", () => window.print());
+      DOM.printBtn2.addEventListener("click", () => window.print());
+
+      DOM.saveExamBtn.addEventListener("click", saveExamSetup);
+      DOM.examSelect.addEventListener("change", () => applyTheme(DOM.examSelect.value));
+
+      DOM.startTimerBtn.addEventListener("click", startTimer);
+      DOM.pauseTimerBtn.addEventListener("click", pauseTimer);
+      DOM.stopTimerBtn.addEventListener("click", stopTimer);
+      DOM.resetTimerBtn.addEventListener("click", resetTimer);
+    }
+
+    function bindDynamicTabEvents() {
+      if ($("saveManualStudyBtn")) $("saveManualStudyBtn").addEventListener("click", addManualStudyInput);
+      if ($("saveMetricsBtn")) $("saveMetricsBtn").addEventListener("click", saveStudyMetrics);
+
+      ["routineDid", "routineWill", "routineAchieved", "routineRegret"].forEach((id) => {
+        if ($(id)) $(id).addEventListener("input", saveRoutineAuto);
+      });
+
+      if ($("saveDailyLogBtn")) $("saveDailyLogBtn").addEventListener("click", saveDailyLog);
+      if ($("saveMockBtn")) $("saveMockBtn").addEventListener("click", addMockTest);
+
+      document.querySelectorAll(".revision-done-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const topicIndex = Number(btn.dataset.topicIndex);
+          const revDate = btn.dataset.revDate;
+          markRevisionDone(topicIndex, revDate);
+        });
+      });
+
+      if ($("addPlanSubjectBtn")) {
+        $("addPlanSubjectBtn").addEventListener("click", () => addPlanSubjectRow());
+      }
+
+      if ($("generatePlanBtn")) {
+        $("generatePlanBtn").addEventListener("click", generatePlan);
+      }
+
+      // Restore saved plan subject rows if any
+      if ($("planSubjectList") && !$("planSubjectList").children.length) {
+        if (Array.isArray(data.planSubjects) && data.planSubjects.length) {
+          data.planSubjects.forEach((subject) => addPlanSubjectRow(subject));
+        } else {
+          addPlanSubjectRow({ name: "Physics", hours: "2" });
+          addPlanSubjectRow({ name: "Chemistry", hours: "2" });
+        }
+      }
+    }
+
+    /* =========================================================
+       8T. CHART HELPERS
+       ========================================================= */
+    function destroyAllCharts() {
+      Object.keys(charts).forEach((key) => {
+        if (charts[key] && typeof charts[key].destroy === "function") {
+          charts[key].destroy();
+        }
+        charts[key] = null;
+      });
+    }
+
+    function safeChart(id, config, key) {
+      const canvas = $(id);
+      if (!canvas || typeof Chart === "undefined") return;
+      try {
+        charts[key] = new Chart(canvas, config);
+      } catch (error) {
+        console.error(`Chart ${key} failed:`, error);
+      }
+    }
+
+    function renderChartsForActiveTab() {
+      if (activeTab === "Dashboard") renderDashboardCharts();
+      if (activeTab === "Mock Tests") renderMockCharts();
+      if (activeTab === "Analytics") renderAnalyticsCharts();
+    }
+
+    function renderDashboardCharts() {
+      const usageSummary = getAppUsageSummary();
+      const labels = Object.keys(usageSummary);
+      const values = labels.map((label) => Math.round((usageSummary[label].time || 0) / 60));
+
+      safeChart("dashboardUsageChart", {
+        type: "doughnut",
+        data: {
+          labels: labels.length ? labels : ["No data"],
+          datasets: [{
+            data: labels.length ? values : [1],
+            backgroundColor: labels.length
+              ? ["#3266ad", "#1d9e75", "#ea7a20", "#7c3aed", "#e24b4a", "#94a3b8"]
+              : ["#e5e7eb"],
+            borderColor: "#fff",
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: "bottom" } }
+        }
+      }, "dashboardUsageChart");
+    }
+
+    function renderMockCharts() {
+      const labels = data.mockTests.slice().reverse().map((test, index) => `Test ${index + 1}`);
+      const values = data.mockTests.slice().reverse().map((test) => Number(test.accuracy || 0));
+
+      safeChart("mockTabChart", {
+        type: "line",
+        data: {
+          labels: labels.length ? labels : ["No tests"],
+          datasets: [{
+            label: "Accuracy %",
+            data: labels.length ? values : [0],
+            borderColor: getComputedStyle(document.body).getPropertyValue("--accent").trim(),
+            backgroundColor: getComputedStyle(document.body).getPropertyValue("--accent-soft").trim(),
+            fill: true,
+            tension: 0.35,
+            pointRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { min: 0, max: 100 }
+          },
+          plugins: { legend: { display: false } }
+        }
+      }, "mockTabChart");
+    }
+
+    function renderAnalyticsCharts() {
+      const todayStudyHours = Number((getTodayStudySeconds() / 3600).toFixed(2));
+      const weeklyStudyHours = Number((getWeeklyStudySeconds() / 3600).toFixed(2));
+      const monthlyStudyHours = Number((getMonthlyStudySeconds() / 3600).toFixed(2));
+      const wastedHours = Number(data.wastedTime || 0);
+      const avgMock = getAverageMockPercent() || 0;
+
+      safeChart("dailyCompareChart", {
+        type: "bar",
+        data: {
+          labels: ["Study", "Wasted"],
+          datasets: [{
+            data: [todayStudyHours, wastedHours],
+            backgroundColor: [
+              getComputedStyle(document.body).getPropertyValue("--accent").trim(),
+              "#e24b4a"
+            ],
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true } }
+        }
+      }, "dailyCompareChart");
+
+      const weekSnapshots = data.weeklySnapshots.slice(-4);
+      const monthSnapshots = data.monthlySnapshots.slice(-4);
+
+      safeChart("periodCompareChart", {
+        type: "bar",
+        data: {
+          labels: [
+            ...weekSnapshots.map((x) => x.key),
+            ...monthSnapshots.map((x) => x.key)
+          ].slice(-8),
+          datasets: [
+            {
+              label: "Study Hours",
+              data: [
+                ...weekSnapshots.map((x) => Number((x.studySeconds / 3600).toFixed(2))),
+                ...monthSnapshots.map((x) => Number((x.studySeconds / 3600).toFixed(2)))
+              ].slice(-8),
+              backgroundColor: getComputedStyle(document.body).getPropertyValue("--accent").trim(),
+              borderRadius: 8
+            },
+            {
+              label: "Wasted Hours",
+              data: [
+                ...weekSnapshots.map((x) => Number(x.wastedHours || 0)),
+                ...monthSnapshots.map((x) => Number(x.wastedHours || 0))
+              ].slice(-8),
+              backgroundColor: "#f59e0b",
+              borderRadius: 8
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { y: { beginAtZero: true } }
+        }
+      }, "periodCompareChart");
+
+      const subjectLabels = Object.keys(data.subjectTime || {});
+      const subjectValues = subjectLabels.map((label) => Number(data.subjectTime[label] || 0));
+
+      safeChart("subjectDistributionChart", {
+        type: "doughnut",
+        data: {
+          labels: subjectLabels,
+          datasets: [{
+            data: subjectValues.every((v) => v === 0) ? [1, 1, 1, 1] : subjectValues,
+            backgroundColor: ["#3266ad", "#1d9e75", "#ea7a20", "#7c3aed"],
+            borderColor: "#fff",
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: "bottom" } }
+        }
+      }, "subjectDistributionChart");
+
+      safeChart("questionsVsAccuracyChart", {
+        type: "bar",
+        data: {
+          labels: ["Questions Solved", "Mock Accuracy"],
+          datasets: [{
+            data: [Number(data.questionsSolved || 0), avgMock],
+            backgroundColor: ["#3266ad", "#1d9e75"],
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true } }
+        }
+      }, "questionsVsAccuracyChart");
+
+      safeChart("studyVsResultChart", {
+        type: "line",
+        data: {
+          labels: ["Today", "Week", "Month", "Result"],
+          datasets: [{
+            label: "Study / Result",
+            data: [todayStudyHours, weeklyStudyHours, monthlyStudyHours, avgMock],
+            borderColor: getComputedStyle(document.body).getPropertyValue("--accent").trim(),
+            backgroundColor: getComputedStyle(document.body).getPropertyValue("--accent-soft").trim(),
+            fill: true,
+            tension: 0.35,
+            pointRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false
+        }
+      }, "studyVsResultChart");
+
+      const usageSummary = getAppUsageSummary();
+      const usageLabels = Object.keys(usageSummary);
+      const usageValues = usageLabels.map((label) => Math.round((usageSummary[label].time || 0) / 60));
+
+      safeChart("analyticsUsageChart", {
+        type: "bar",
+        data: {
+          labels: usageLabels.length ? usageLabels : ["No data"],
+          datasets: [{
+            label: "Minutes",
+            data: usageLabels.length ? usageValues : [0],
+            backgroundColor: "#7c3aed",
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false
+        }
+      }, "analyticsUsageChart");
+    }
+
+    /* =========================================================
+       8U. EXPORT CSV
+       ========================================================= */
+    function exportCSV() {
+      const rows = [];
+
+      rows.push(["SECTION", "FIELD", "VALUE"]);
+      rows.push(["PROFILE", "Name", data.profile.name || ""]);
+      rows.push(["PROFILE", "Exam", data.exam || ""]);
+      rows.push(["PROFILE", "Exam Date", data.examDate || ""]);
+      rows.push(["STATS", "Total Study Seconds", data.totalStudySeconds || 0]);
+      rows.push(["STATS", "Points", data.points || 0]);
+      rows.push(["STATS", "Coins", data.coins || 0]);
+      rows.push(["STATS", "Streak", data.streak || 0]);
+      rows.push(["STATS", "Best Streak", data.bestStreak || 0]);
+      rows.push(["STATS", "ROI Score", calcROIScore()]);
+      rows.push(["STATS", "Productivity Score", calcProductivityScore()]);
+
+      rows.push([]);
+      rows.push(["SESSIONS", "Source", "Duration Seconds", "Date", "Timestamp", "Note", "Mode"]);
+      (data.sessions || []).forEach((session) => {
+        rows.push([
+          "SESSION",
+          session.source || "",
+          session.durationSeconds || 0,
+          session.date || "",
+          session.timestamp || "",
+          session.note || "",
+          session.mode || ""
+        ]);
+      });
+
+      rows.push([]);
+      rows.push(["MOCK TESTS", "Marks", "Total", "Accuracy", "Date"]);
+      (data.mockTests || []).forEach((test) => {
+        rows.push(["MOCK", test.marks || 0, test.total || 0, test.accuracy || 0, test.date || ""]);
+      });
+
+      rows.push([]);
+      rows.push(["LOGS", "Date", "Text"]);
+      (data.logs || []).forEach((log) => {
+        rows.push(["LOG", log.date || "", log.text || ""]);
+      });
+
+      rows.push([]);
+      rows.push(["REVISIONS", "Topic", "Saved Date", "Revision Date", "Done"]);
+      (data.topics || []).forEach((topic) => {
+        (topic.revisions || []).forEach((revDate) => {
+          rows.push([
+            "REVISION",
+            topic.topic || "",
+            topic.date || "",
+            revDate,
+            (topic.done || []).includes(revDate) ? "Yes" : "No"
+          ]);
+        });
+      });
+
+      const csvContent = rows
+        .map((row) => row.map(csvCell).join(","))
+        .join("\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `student-roi-tracker-${todayKey()}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+
+      showToast("CSV exported");
+    }
+
+    function csvCell(value) {
+      const text = String(value ?? "");
+      return `"${text.replace(/"/g, '""')}"`;
+    }
+
+    /* =========================================================
+       8V. TOAST + ESCAPE HELPERS
+       ========================================================= */
+    function showToast(message) {
+      DOM.toast.textContent = message;
+      DOM.toast.classList.add("show");
+      clearTimeout(showToast._timer);
+      showToast._timer = setTimeout(() => {
+        DOM.toast.classList.remove("show");
+      }, 2400);
+    }
+
+    function escapeHtml(text) {
+      return String(text ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function escapeAttr(value) {
+      return escapeHtml(String(value ?? ""));
+    }
+
+    /* =========================================================
+       8W. RENDER APP
+       ========================================================= */
+    function renderApp() {
+      ensureStreakState();
+      updateHeader();
+      renderQuote();
+      renderCountdown();
+      renderTopStats();
+      renderWarningBadges();
+      renderTabs();
+      renderTabContent();
+
+      // Sync header controls state
+      DOM.examSelect.value = data.exam || "NEET";
+      DOM.examDateInput.value = data.examDate || "";
+    }
+
+    /* =========================================================
+       8X. INIT
+       ========================================================= */
+    bindStaticEvents();
+
+    // Live date/time refresh
+    setInterval(() => {
+      if (DOM.currentDateTime) DOM.currentDateTime.textContent = new Date().toLocaleString();
+      renderCountdown();
+    }, 30000);
+
+    // Quote refresh every 10 minutes
+    setInterval(() => {
+      renderQuote();
+    }, 10 * 60 * 1000);
+  </script>
+</body>
+</html>
