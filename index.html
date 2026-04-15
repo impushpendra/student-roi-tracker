@@ -1,0 +1,3151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Rank Rise – by Pushpendra</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+  <style>
+    /* =========================================================
+       1) RESET + DESIGN TOKENS
+    ========================================================= */
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#f6f8fc;
+      --panel:#ffffff;
+      --panel-2:#f9fbff;
+      --text:#0f172a;
+      --sub:#64748b;
+      --line:#e5e7eb;
+      --shadow:0 10px 30px rgba(15,23,42,.08);
+      --radius:18px;
+      --radius-sm:12px;
+
+      --primary:#2563eb;
+      --primary-2:#1d4ed8;
+      --success:#16a34a;
+      --warning:#d97706;
+      --danger:#dc2626;
+      --purple:#7c3aed;
+
+      --accent-soft:rgba(37,99,235,.08);
+      --success-soft:rgba(22,163,74,.10);
+      --warning-soft:rgba(217,119,6,.10);
+      --danger-soft:rgba(220,38,38,.10);
+      --purple-soft:rgba(124,58,237,.10);
+    }
+
+    body.theme-neet{
+      --primary:#1d9e75;
+      --primary-2:#147b5b;
+      --accent-soft:rgba(29,158,117,.10);
+    }
+    body.theme-jee{
+      --primary:#2563eb;
+      --primary-2:#1d4ed8;
+      --accent-soft:rgba(37,99,235,.10);
+    }
+    body.theme-cuet{
+      --primary:#ea7a20;
+      --primary-2:#c85f0b;
+      --accent-soft:rgba(234,122,32,.10);
+    }
+    body.theme-ssc{
+      --primary:#a855f7;
+      --primary-2:#7e22ce;
+      --accent-soft:rgba(168,85,247,.10);
+    }
+    body.theme-other{
+      --primary:#4f46e5;
+      --primary-2:#4338ca;
+      --accent-soft:rgba(79,70,229,.10);
+    }
+
+    body{
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,.7), transparent 35%),
+        linear-gradient(180deg,#fbfcff 0%, var(--bg) 100%);
+      color:var(--text);
+      min-height:100vh;
+      line-height:1.45;
+      overflow-x:hidden;
+    }
+
+    /* Very faint configurable logo watermark */
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      background-image:var(--brand-watermark, none);
+      background-repeat:no-repeat;
+      background-position:center center;
+      background-size:min(42vw, 420px);
+      opacity:.04;
+      pointer-events:none;
+      z-index:0;
+      filter:grayscale(1);
+    }
+    @media (max-width:640px){
+      body::before{
+        background-size:200px;
+        opacity:.03;
+      }
+    }
+
+    .app{
+      position:relative;
+      z-index:1;
+      max-width:1180px;
+      margin:0 auto;
+      padding:12px 12px 96px;
+    }
+
+    /* =========================================================
+       2) GLOBAL UI HELPERS
+    ========================================================= */
+    .card{
+      background:rgba(255,255,255,.94);
+      border:1px solid rgba(255,255,255,.55);
+      box-shadow:var(--shadow);
+      border-radius:var(--radius);
+      padding:16px;
+    }
+    .card + .card{margin-top:14px}
+
+    .section-title{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:12px;
+    }
+    .section-title h2{
+      font-size:15px;
+      font-weight:800;
+      letter-spacing:-.02em;
+    }
+    .section-sub{
+      font-size:12px;
+      color:var(--sub);
+      margin-top:2px;
+    }
+
+    .grid-2,.grid-3,.grid-4{
+      display:grid;
+      gap:12px;
+    }
+    .grid-2{grid-template-columns:1fr}
+    .grid-3{grid-template-columns:1fr}
+    .grid-4{grid-template-columns:repeat(2,1fr)}
+    @media(min-width:760px){
+      .grid-2{grid-template-columns:repeat(2,1fr)}
+      .grid-3{grid-template-columns:repeat(3,1fr)}
+      .grid-4{grid-template-columns:repeat(4,1fr)}
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .field{margin-bottom:12px}
+    .field label{
+      display:block;
+      font-size:12px;
+      font-weight:700;
+      color:var(--sub);
+      margin-bottom:6px;
+    }
+
+    .input,.select,.textarea{
+      width:100%;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:11px 12px;
+      font-size:14px;
+      background:#fff;
+      color:var(--text);
+      outline:none;
+      transition:border-color .2s, box-shadow .2s, transform .15s;
+    }
+    .input:focus,.select:focus,.textarea:focus{
+      border-color:var(--primary);
+      box-shadow:0 0 0 4px var(--accent-soft);
+    }
+    .textarea{
+      resize:vertical;
+      min-height:94px;
+      font-family:inherit;
+    }
+
+    .btn{
+      border:none;
+      border-radius:14px;
+      padding:11px 14px;
+      font-size:13px;
+      font-weight:700;
+      cursor:pointer;
+      transition:transform .15s, box-shadow .2s, opacity .2s;
+      background:#eef2f7;
+      color:var(--text);
+    }
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 8px 18px rgba(15,23,42,.07);
+    }
+    .btn-primary{
+      background:linear-gradient(135deg,var(--primary),var(--primary-2));
+      color:#fff;
+    }
+    .btn-soft{
+      background:var(--accent-soft);
+      color:var(--primary-2);
+    }
+    .btn-danger{
+      background:var(--danger-soft);
+      color:var(--danger);
+    }
+    .btn-success{
+      background:var(--success-soft);
+      color:var(--success);
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:11px;
+      font-weight:800;
+      white-space:nowrap;
+    }
+    .b-primary{background:var(--accent-soft);color:var(--primary-2)}
+    .b-success{background:var(--success-soft);color:var(--success)}
+    .b-warning{background:var(--warning-soft);color:var(--warning)}
+    .b-danger{background:var(--danger-soft);color:var(--danger)}
+    .b-purple{background:var(--purple-soft);color:var(--purple)}
+
+    .note{
+      font-size:12px;
+      color:var(--sub);
+      line-height:1.6;
+      background:#f8fafc;
+      border:1px dashed var(--line);
+      border-radius:14px;
+      padding:12px;
+    }
+
+    .list{
+      display:grid;
+      gap:10px;
+    }
+    .list-item{
+      border:1px solid #eef2f7;
+      background:#fff;
+      border-radius:14px;
+      padding:12px;
+    }
+    .list-item .title{
+      font-size:13px;
+      font-weight:800;
+      margin-bottom:4px;
+    }
+    .list-item .meta{
+      font-size:12px;
+      color:var(--sub);
+      line-height:1.6;
+    }
+
+    .stat-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:10px;
+    }
+    @media(min-width:760px){
+      .stat-grid{grid-template-columns:repeat(4,1fr)}
+    }
+    .stat{
+      background:linear-gradient(180deg,#fff,#fbfcff);
+      border:1px solid #edf2f7;
+      border-radius:16px;
+      padding:14px;
+    }
+    .stat .label{
+      font-size:11px;
+      color:var(--sub);
+      font-weight:700;
+      margin-bottom:6px;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+    }
+    .stat .value{
+      font-size:26px;
+      font-weight:900;
+      line-height:1.05;
+      letter-spacing:-.03em;
+    }
+    .stat .sub{
+      margin-top:5px;
+      color:var(--sub);
+      font-size:12px;
+    }
+
+    .pill-tabs{
+      position:sticky;
+      top:76px;
+      z-index:40;
+      display:flex;
+      gap:8px;
+      overflow:auto;
+      padding:8px 2px 2px;
+      margin-bottom:14px;
+      scrollbar-width:none;
+    }
+    .pill-tabs::-webkit-scrollbar{display:none}
+    .tab-btn{
+      flex:0 0 auto;
+      padding:11px 14px;
+      border-radius:999px;
+      border:1px solid #e8edf5;
+      background:rgba(255,255,255,.92);
+      font-size:13px;
+      font-weight:800;
+      color:var(--sub);
+      cursor:pointer;
+    }
+    .tab-btn.active{
+      background:linear-gradient(135deg,var(--primary),var(--primary-2));
+      border-color:transparent;
+      color:#fff;
+      box-shadow:0 8px 18px rgba(15,23,42,.10);
+    }
+
+    .chart-wrap{
+      position:relative;
+      height:240px;
+    }
+    .chart-wrap.sm{
+      height:200px;
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:18px;
+      transform:translateX(-50%);
+      background:#111827;
+      color:#fff;
+      border-radius:12px;
+      padding:11px 16px;
+      font-size:13px;
+      box-shadow:0 12px 24px rgba(0,0,0,.22);
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .22s, transform .22s;
+      z-index:9999;
+      max-width:min(92vw,560px);
+      text-align:center;
+    }
+    .toast.show{
+      opacity:1;
+      transform:translateX(-50%) translateY(-4px);
+    }
+
+    /* =========================================================
+       3) HEADER
+    ========================================================= */
+    .header{
+      position:sticky;
+      top:0;
+      z-index:50;
+      background:rgba(255,255,255,.82);
+      backdrop-filter:blur(18px);
+      border:1px solid rgba(255,255,255,.6);
+      box-shadow:var(--shadow);
+      border-radius:22px;
+      padding:12px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:14px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+    .brand-logo{
+      width:40px;
+      height:40px;
+      border-radius:12px;
+      overflow:hidden;
+      background:linear-gradient(135deg,var(--primary),var(--primary-2));
+      display:grid;
+      place-items:center;
+      color:#fff;
+      font-size:14px;
+      font-weight:900;
+      flex-shrink:0;
+    }
+    .brand-logo img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    .brand h1{
+      font-size:16px;
+      font-weight:900;
+      line-height:1.05;
+      letter-spacing:-.03em;
+    }
+    .brand p{
+      color:var(--sub);
+      font-size:12px;
+      margin-top:2px;
+    }
+
+    .header-right{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .user-chip{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      background:#f8fafc;
+      border:1px solid #edf2f7;
+      border-radius:999px;
+      padding:6px 10px 6px 6px;
+      max-width:220px;
+    }
+    .user-chip img{
+      width:30px;height:30px;border-radius:50%;object-fit:cover;background:#fff;border:1px solid #eef2f7;
+    }
+    .user-meta{
+      min-width:0;
+    }
+    .user-meta b,.user-meta span{
+      display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    }
+    .user-meta b{font-size:12px}
+    .user-meta span{font-size:11px;color:var(--sub)}
+
+    /* =========================================================
+       4) HERO COUNTDOWN
+    ========================================================= */
+    .hero{
+      background:
+        radial-gradient(circle at top right, rgba(255,255,255,.25), transparent 30%),
+        linear-gradient(135deg,var(--primary),var(--primary-2));
+      color:#fff;
+      border-radius:24px;
+      box-shadow:var(--shadow);
+      padding:18px;
+      margin-bottom:14px;
+    }
+    .hero-top{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:start;
+      margin-bottom:14px;
+    }
+    .hero h2{
+      font-size:14px;
+      opacity:.9;
+      font-weight:700;
+      margin-bottom:6px;
+    }
+    .hero-title{
+      font-size:28px;
+      font-weight:900;
+      line-height:1;
+      letter-spacing:-.04em;
+    }
+    .hero-sub{
+      margin-top:8px;
+      font-size:13px;
+      opacity:.92;
+      line-height:1.55;
+    }
+    .count-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:10px;
+      margin:14px 0 10px;
+    }
+    .count-box{
+      background:rgba(255,255,255,.14);
+      border:1px solid rgba(255,255,255,.18);
+      border-radius:16px;
+      padding:12px 10px;
+      text-align:center;
+      backdrop-filter:blur(6px);
+    }
+    .count-box .num{
+      font-size:26px;
+      font-weight:900;
+      line-height:1;
+      letter-spacing:-.04em;
+    }
+    .count-box .lbl{
+      margin-top:4px;
+      font-size:11px;
+      opacity:.88;
+      text-transform:uppercase;
+      letter-spacing:.05em;
+    }
+
+    /* =========================================================
+       5) LOGIN OVERLAY
+    ========================================================= */
+    .overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(15,23,42,.48);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:200;
+      padding:16px;
+      backdrop-filter:blur(10px);
+    }
+    .overlay-card{
+      width:min(100%,460px);
+      background:#fff;
+      border-radius:28px;
+      padding:24px;
+      box-shadow:0 24px 60px rgba(15,23,42,.24);
+    }
+    .overlay-head{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      margin-bottom:14px;
+    }
+    .overlay-card h3{
+      font-size:22px;
+      font-weight:900;
+      letter-spacing:-.03em;
+    }
+    .overlay-card p{
+      color:var(--sub);
+      font-size:14px;
+      line-height:1.6;
+      margin-bottom:16px;
+    }
+    .google-btn{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      width:100%;
+    }
+    .error{
+      color:var(--danger);
+      font-size:12px;
+      margin-top:10px;
+      min-height:18px;
+    }
+
+    /* =========================================================
+       6) DIGITAL TIME PICKER
+    ========================================================= */
+    .digital-time{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:10px;
+    }
+    .time-slot{
+      background:#0f172a;
+      color:#fff;
+      border-radius:18px;
+      padding:12px;
+      text-align:center;
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);
+    }
+    .time-slot .slot-label{
+      font-size:11px;
+      opacity:.75;
+      margin-bottom:8px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+    .time-slot select{
+      width:100%;
+      background:#111827;
+      color:#fff;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:12px;
+      padding:10px;
+      font-size:16px;
+      font-weight:800;
+      text-align:center;
+      outline:none;
+    }
+
+    /* =========================================================
+       7) TASKS / ROUTINE
+    ========================================================= */
+    .task-list{
+      display:grid;
+      gap:8px;
+      margin-top:10px;
+    }
+    .task-row{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      background:#fff;
+      border:1px solid #eef2f7;
+      border-radius:14px;
+      padding:10px 12px;
+      transition:transform .18s, background .18s, border-color .18s;
+    }
+    .task-row.done{
+      background:#f0fdf4;
+      border-color:#bbf7d0;
+      transform:scale(.995);
+    }
+    .task-row input[type="checkbox"]{
+      width:18px;height:18px;accent-color:var(--success);cursor:pointer;
+    }
+    .task-row .txt{
+      font-size:13px;
+      line-height:1.45;
+      flex:1;
+    }
+    .task-row.done .txt{
+      text-decoration:line-through;
+      color:var(--sub);
+    }
+
+    /* =========================================================
+       8) UTILITIES CARD
+    ========================================================= */
+    .tools-grid{
+      display:grid;
+      gap:10px;
+      grid-template-columns:repeat(2,1fr);
+    }
+    @media(min-width:760px){
+      .tools-grid{
+        grid-template-columns:repeat(4,1fr);
+      }
+    }
+
+    /* =========================================================
+       9) PRINT
+    ========================================================= */
+    .print-report{
+      display:none;
+    }
+    @media print{
+      body{
+        background:#fff;
+      }
+      body::before,
+      .header,
+      .pill-tabs,
+      .btn,
+      .tools-grid,
+      .toast,
+      .overlay{
+        display:none !important;
+      }
+      .app{
+        max-width:none;
+        padding:0;
+      }
+      .hero,
+      .card{
+        box-shadow:none !important;
+        border:1px solid #ddd !important;
+        background:#fff !important;
+        color:#111 !important;
+      }
+      .print-report{
+        display:block !important;
+        margin-bottom:14px;
+      }
+      .count-box{
+        color:#111 !important;
+        background:#f8fafc !important;
+        border:1px solid #eee !important;
+      }
+      canvas{
+        max-height:260px !important;
+      }
+    }
+  </style>
+</head>
+<body class="theme-neet">
+  <div class="overlay" id="loginOverlay">
+    <div class="overlay-card">
+      <div class="overlay-head">
+        <div class="brand-logo" id="loginBrandLogo">RR</div>
+        <div>
+          <h3>Rank Rise</h3>
+          <div style="font-size:12px;color:#64748b;margin-top:2px;">by Pushpendra</div>
+        </div>
+      </div>
+
+      <p>Personalize your dashboard once. Then track study sessions, streaks, revisions, mock tests, smart insights, and monthly reports in one place.</p>
+
+      <div class="field">
+        <label for="localName">Your name</label>
+        <input id="localName" class="input" type="text" placeholder="e.g. Pushpendra"/>
+      </div>
+      <div class="field">
+        <label for="localExam">Target exam</label>
+        <select id="localExam" class="select">
+          <option>NEET</option>
+          <option>JEE</option>
+          <option>CUET</option>
+          <option>SSC</option>
+          <option>Other</option>
+        </select>
+      </div>
+
+      <div class="row" style="margin-top:4px;">
+        <button id="startLocalBtn" class="btn btn-primary" style="flex:1;">Start Dashboard</button>
+      </div>
+
+      <div style="text-align:center;font-size:12px;color:#64748b;margin:14px 0 10px;">or continue with Google</div>
+
+      <button id="overlayGoogleBtn" class="btn google-btn">
+        <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-3.59-13.46-8.83l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        Sign in with Google
+      </button>
+
+      <div class="error" id="authError"></div>
+    </div>
+  </div>
+
+  <div class="app">
+    <header class="header">
+      <div class="brand">
+        <div class="brand-logo" id="brandLogo">RR</div>
+        <div>
+          <h1>Rank Rise</h1>
+          <p>by Pushpendra</p>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="badge b-primary" id="miniExamBadge">Exam not set</div>
+
+        <div class="user-chip" id="userChip" style="display:none;">
+          <img id="userAvatar" src="" alt="avatar"/>
+          <div class="user-meta">
+            <b id="userChipName">Student</b>
+            <span id="userChipExam">Target exam</span>
+          </div>
+        </div>
+
+        <button id="headerGoogleBtn" class="btn" style="display:none;">Google Login</button>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <h2 id="heroExamLabel">Target Exam</h2>
+          <div class="hero-title" id="heroExamName">NEET</div>
+          <div class="hero-sub" id="heroSubLine">Set your exam date to unlock live countdown and urgency insights.</div>
+        </div>
+        <div class="badge b-success" id="heroUrgencyBadge">On Track</div>
+      </div>
+
+      <div class="count-grid">
+        <div class="count-box">
+          <div class="num" id="cdDays">0</div>
+          <div class="lbl">Days</div>
+        </div>
+        <div class="count-box">
+          <div class="num" id="cdHours">0</div>
+          <div class="lbl">Hours</div>
+        </div>
+        <div class="count-box">
+          <div class="num" id="cdMinutes">0</div>
+          <div class="lbl">Minutes</div>
+        </div>
+        <div class="count-box">
+          <div class="num" id="cdSeconds">0</div>
+          <div class="lbl">Seconds</div>
+        </div>
+      </div>
+
+      <div class="row" style="justify-content:space-between;">
+        <div style="font-size:13px;opacity:.92;">
+          <div><b id="heroDateText">Exam Date:</b> <span id="heroSavedDate">—</span></div>
+          <div style="margin-top:4px;"><b>Now:</b> <span id="heroNowText">—</span></div>
+        </div>
+        <div class="badge b-primary" id="heroMotivationLine">Start now. Small sessions create rank-level momentum.</div>
+      </div>
+    </section>
+
+    <nav class="pill-tabs" id="tabBar"></nav>
+
+    <main id="tabContent"></main>
+
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getAuth,
+      GoogleAuthProvider,
+      signInWithPopup,
+      signOut,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    /* =========================================================
+       10) BRAND CONFIG
+    ========================================================= */
+    const BRAND_NAME = "Rank Rise";
+    const BRAND_SUBTITLE = "by Pushpendra";
+    const BRAND_LOGO = "logo.png";
+
+    /* =========================================================
+       11) FIREBASE CONFIG (PRESERVED)
+    ========================================================= */
+    const firebaseConfig = {
+      apiKey: "AIzaSyATu-GbL7KzwRCQzmqwBJCH8brDdhUiAK8",
+      authDomain: "students-roi-tracker.firebaseapp.com",
+      projectId: "students-roi-tracker",
+      storageBucket: "students-roi-tracker.firebasestorage.app",
+      messagingSenderId: "1028064018046",
+      appId: "1:1028064018046:web:8c9123d5c48eb4f77b622f",
+      measurementId: "G-RVJ8CPN3V7"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    /* =========================================================
+       12) DOM HELPERS
+    ========================================================= */
+    const $ = (id) => document.getElementById(id);
+
+    let currentUser = null;
+    let activeTab = "Dashboard";
+    let charts = {};
+
+    let timer = {
+      running:false,
+      elapsed:0,
+      interval:null
+    };
+
+    const TABS = [
+      "Dashboard",
+      "Study Input",
+      "Routine & Log",
+      "Mock Tests",
+      "Revisions",
+      "Analytics",
+      "Plan"
+    ];
+
+    const SOURCE_OPTIONS = ["YouTube","PW","Self Study","Notes","Test Series","Other"];
+    const CATEGORY_OPTIONS = ["Study","Time Waste","Entertainment"];
+    const REVISION_DAYS = [1,3,7,21];
+    const SUBJECTS = ["Physics","Chemistry","Biology/Math","Other"];
+
+    function defaultData(){
+      return {
+        profile:{name:"",exam:"NEET"},
+        exam:"NEET",
+        examDate:"",
+        totalStudySeconds:0,
+        points:0,
+        coins:0,
+        streak:0,
+        bestStreak:0,
+        lastStudyDate:"",
+        subjectTime:{Physics:0,Chemistry:0,"Biology/Math":0,Other:0},
+        questionsSolved:0,
+        lecturesAttended:0,
+        dppAttempted:0,
+        dppCompleted:0,
+        productiveTime:0,
+        wastedTime:0,
+        readingTime:0,
+        revisionTime:0,
+        logs:[],
+        mockTests:[],
+        topics:[],
+        sessions:[],
+        routineByDate:{},
+        planSubjects:[],
+        monthlyReportMonth:"",
+        localBackupVersion:3
+      };
+    }
+
+    let data = defaultData();
+
+    /* =========================================================
+       13) STORAGE
+    ========================================================= */
+    function getStorageKey(){
+      return currentUser?.uid ? "roi_" + currentUser.uid : "roi_guest";
+    }
+
+    function deepMerge(base, extra){
+      const out = Array.isArray(base) ? [...base] : {...base};
+      if(!extra || typeof extra !== "object") return out;
+      Object.keys(extra).forEach((k)=>{
+        if(Array.isArray(extra[k])) out[k] = extra[k];
+        else if(extra[k] && typeof extra[k] === "object" && out[k] && typeof out[k] === "object" && !Array.isArray(out[k])){
+          out[k] = deepMerge(out[k], extra[k]);
+        } else out[k] = extra[k];
+      });
+      return out;
+    }
+
+    function loadData(){
+      const saved = localStorage.getItem(getStorageKey());
+      data = defaultData();
+      if(saved){
+        try{
+          data = deepMerge(defaultData(), JSON.parse(saved));
+        }catch(e){
+          console.error("loadData error", e);
+        }
+      }
+      if(!data.profile.name && localStorage.getItem("student_name")){
+        data.profile.name = localStorage.getItem("student_name") || "";
+      }
+      if(!data.profile.exam && localStorage.getItem("student_exam")){
+        data.profile.exam = localStorage.getItem("student_exam") || "NEET";
+      }
+      if(!data.exam) data.exam = data.profile.exam || "NEET";
+      if(!data.profile.exam) data.profile.exam = data.exam || "NEET";
+    }
+
+    function saveData(showSavedToast=false){
+      try{
+        localStorage.setItem(getStorageKey(), JSON.stringify(data));
+        localStorage.setItem("student_name", data.profile.name || "");
+        localStorage.setItem("student_exam", data.exam || data.profile.exam || "NEET");
+        if(showSavedToast) showToast("Saved");
+      }catch(e){
+        console.error("saveData error", e);
+        showToast("Save failed");
+      }
+    }
+
+    /* =========================================================
+       14) DATE / TIME HELPERS
+    ========================================================= */
+    function nowISO(){ return new Date().toISOString(); }
+    function todayKey(){ return new Date().toISOString().slice(0,10); }
+
+    function formatDate(d){
+      if(!d) return "—";
+      const x = new Date(d);
+      if(isNaN(x)) return d;
+      return x.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"});
+    }
+    function formatDateTime(d){
+      const x = d ? new Date(d) : new Date();
+      return x.toLocaleString(undefined,{day:"numeric",month:"short",year:"numeric",hour:"numeric",minute:"2-digit",second:"2-digit"});
+    }
+    function formatSecondsHMS(sec){
+      sec = Math.max(0, Math.floor(sec || 0));
+      const h = Math.floor(sec/3600);
+      const m = Math.floor((sec%3600)/60);
+      const s = sec%60;
+      return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+    }
+    function formatSecondsHuman(sec){
+      sec = Math.max(0, Math.floor(sec || 0));
+      const h = Math.floor(sec/3600);
+      const m = Math.floor((sec%3600)/60);
+      const s = sec%60;
+      if(h > 0) return `${h}h ${m}m ${s}s`;
+      if(m > 0) return `${m}m ${s}s`;
+      return `${s}s`;
+    }
+    function hoursFromSeconds(sec){
+      return ((sec || 0)/3600).toFixed(1);
+    }
+    function minsFromSeconds(sec){
+      return Math.floor((sec || 0)/60);
+    }
+    function dayDiff(fromDate, toDate){
+      const a = new Date(fromDate); a.setHours(0,0,0,0);
+      const b = new Date(toDate); b.setHours(0,0,0,0);
+      return Math.round((b-a)/86400000);
+    }
+    function getWeekKey(dateStr=todayKey()){
+      const d = new Date(dateStr);
+      const firstJan = new Date(d.getFullYear(),0,1);
+      const days = Math.floor((d-firstJan)/86400000);
+      const week = Math.ceil((days + firstJan.getDay() + 1)/7);
+      return `${d.getFullYear()}-W${week}`;
+    }
+    function getMonthKey(dateStr=todayKey()){
+      return dateStr.slice(0,7);
+    }
+
+    function previousDateKey(days=1){
+      const d = new Date();
+      d.setDate(d.getDate() - days);
+      return d.toISOString().slice(0,10);
+    }
+
+    /* =========================================================
+       15) SAFE ESCAPE
+    ========================================================= */
+    function esc(t){
+      return String(t ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#39;");
+    }
+
+    /* =========================================================
+       16) BRAND LOGO APPLICATION
+    ========================================================= */
+    function applyBrandLogo(){
+      const setLogo = (elId)=>{
+        const el = $(elId);
+        if(!el) return;
+        const img = new Image();
+        img.onload = ()=>{
+          el.innerHTML = `<img src="${BRAND_LOGO}" alt="${BRAND_NAME} logo">`;
+        };
+        img.onerror = ()=>{
+          el.textContent = "RR";
+        };
+        img.src = BRAND_LOGO;
+      };
+      setLogo("brandLogo");
+      setLogo("loginBrandLogo");
+
+      const watermarkTest = new Image();
+      watermarkTest.onload = ()=>{
+        document.body.style.setProperty("--brand-watermark", `url("${BRAND_LOGO}")`);
+      };
+      watermarkTest.onerror = ()=>{
+        document.body.style.setProperty("--brand-watermark", "none");
+      };
+      watermarkTest.src = BRAND_LOGO;
+    }
+
+    /* =========================================================
+       17) AUTH
+    ========================================================= */
+    function doGoogleSignIn(){
+      $("authError").textContent = "";
+      signInWithPopup(auth, provider).catch((e)=>{
+        $("authError").textContent = e.message || "Google sign-in failed";
+      });
+    }
+
+    function doGoogleSignOut(){
+      signOut(auth).catch(()=>showToast("Sign out failed"));
+    }
+
+    function saveLocalProfile(){
+      const name = $("localName").value.trim();
+      const exam = $("localExam").value;
+      if(!name){
+        showToast("Enter your name");
+        $("localName").focus();
+        return;
+      }
+      data.profile.name = name;
+      data.profile.exam = exam;
+      data.exam = exam;
+      saveData();
+      applyTheme();
+      $("loginOverlay").style.display = "none";
+      renderApp();
+      showToast("Welcome to Rank Rise");
+    }
+
+    onAuthStateChanged(auth, (user)=>{
+      currentUser = user || null;
+      loadData();
+
+      if(currentUser){
+        if(!data.profile.name) data.profile.name = currentUser.displayName || "Student";
+        if(!data.profile.exam) data.profile.exam = data.exam || "NEET";
+        if(!data.exam) data.exam = data.profile.exam || "NEET";
+        saveData();
+      }
+
+      updateAuthUI();
+      renderApp();
+    });
+
+    function updateAuthUI(){
+      const showUser = !!(currentUser || data.profile.name);
+      $("userChip").style.display = showUser ? "flex" : "none";
+      $("headerGoogleBtn").style.display = currentUser ? "none" : (data.profile.name ? "none" : "inline-flex");
+
+      if(showUser){
+        $("userChipName").textContent = currentUser?.displayName || data.profile.name || "Student";
+        $("userChipExam").textContent = data.exam || data.profile.exam || "Target Exam";
+        $("userAvatar").src = currentUser?.photoURL || "";
+      }
+
+      if(currentUser || data.profile.name){
+        $("loginOverlay").style.display = "none";
+      }else{
+        $("loginOverlay").style.display = "flex";
+      }
+    }
+
+    /* =========================================================
+       18) THEME / HEADER / HERO
+    ========================================================= */
+    function applyTheme(){
+      document.body.classList.remove("theme-neet","theme-jee","theme-cuet","theme-ssc","theme-other");
+      const exam = (data.exam || "Other").toUpperCase();
+      const classMap = {
+        "NEET":"theme-neet",
+        "JEE":"theme-jee",
+        "CUET":"theme-cuet",
+        "SSC":"theme-ssc",
+        "OTHER":"theme-other"
+      };
+      document.body.classList.add(classMap[exam] || "theme-other");
+    }
+
+    function setBadge(el, text, tone){
+      if(!el) return;
+      el.className = "badge";
+      el.classList.add(
+        tone === "success" ? "b-success" :
+        tone === "warning" ? "b-warning" :
+        tone === "danger" ? "b-danger" :
+        tone === "purple" ? "b-purple" : "b-primary"
+      );
+      el.textContent = text;
+    }
+
+    function countdownData(){
+      const examDate = data.examDate;
+      if(!examDate) return null;
+      const now = new Date();
+      const target = new Date(examDate + "T00:00:00");
+      const diff = target - now;
+      const safe = Math.max(0, diff);
+      return {
+        diff,
+        totalSeconds: Math.floor(safe / 1000),
+        days: Math.floor(safe / 86400000),
+        hours: Math.floor((safe % 86400000) / 3600000),
+        minutes: Math.floor((safe % 3600000) / 60000),
+        seconds: Math.floor((safe % 60000) / 1000)
+      };
+    }
+
+    function countdownMotivation(days){
+      if(days === null) return "Set your exam date today. Clear timeline = sharper focus.";
+      if(days > 120) return "You have time. Build a deep base before speed becomes urgent.";
+      if(days > 60) return "Momentum phase. Strong weekly consistency will separate your rank.";
+      if(days > 30) return "Now precision matters. Focus on weak subjects and revision quality.";
+      if(days > 14) return "Final stretch. Protect your streak and reduce avoidable waste.";
+      if(days > 7) return "Exam is close. Prioritize revision, accuracy, and confidence.";
+      return "Stay calm. Execute your plan, revise smartly, and avoid panic.";
+    }
+
+    function renderHero(){
+      $("heroExamName").textContent = data.exam || "Exam";
+      $("heroSavedDate").textContent = data.examDate ? formatDate(data.examDate) : "—";
+      $("heroNowText").textContent = formatDateTime();
+
+      const cd = countdownData();
+      if(!cd){
+        $("cdDays").textContent = "0";
+        $("cdHours").textContent = "0";
+        $("cdMinutes").textContent = "0";
+        $("cdSeconds").textContent = "0";
+        $("heroSubLine").textContent = "Set your target exam date to unlock live countdown, urgency, and planning signals.";
+        setBadge($("heroUrgencyBadge"), "Date Needed", "warning");
+        $("heroMotivationLine").textContent = "Start now. Small sessions create rank-level momentum.";
+        $("miniExamBadge").textContent = "Exam not set";
+        return;
+      }
+
+      $("cdDays").textContent = cd.days;
+      $("cdHours").textContent = cd.hours;
+      $("cdMinutes").textContent = cd.minutes;
+      $("cdSeconds").textContent = cd.seconds;
+
+      $("heroSubLine").textContent = `${data.exam} on ${formatDate(data.examDate)} • ${cd.days} day${cd.days===1?"":"s"} left`;
+      $("heroMotivationLine").textContent = countdownMotivation(cd.days);
+      $("miniExamBadge").textContent = `${data.exam} • ${cd.days}d`;
+
+      if(cd.diff < 0){
+        setBadge($("heroUrgencyBadge"), "Passed", "danger");
+      } else if(cd.days > 60){
+        setBadge($("heroUrgencyBadge"), "On Track", "success");
+      } else if(cd.days > 21){
+        setBadge($("heroUrgencyBadge"), "Focus Window", "warning");
+      } else {
+        setBadge($("heroUrgencyBadge"), "High Urgency", "danger");
+      }
+    }
+
+    /* =========================================================
+       19) SESSION / STREAK
+    ========================================================= */
+    function updateStreakOnStudy(dateStr){
+      const today = (dateStr || todayKey()).slice(0,10);
+      const yesterday = previousDateKey(1);
+      if(data.lastStudyDate === today) return;
+
+      if(!data.lastStudyDate){
+        data.streak = 1;
+      } else if(data.lastStudyDate === yesterday){
+        data.streak += 1;
+      } else {
+        data.streak = 1;
+      }
+
+      data.bestStreak = Math.max(Number(data.bestStreak || 0), Number(data.streak || 0));
+      data.lastStudyDate = today;
+    }
+
+    function ensureStreakHealth(){
+      if(!data.lastStudyDate) return;
+      const yesterday = previousDateKey(1);
+      const today = todayKey();
+      if(data.lastStudyDate === today || data.lastStudyDate === yesterday) return;
+      data.streak = 0;
+    }
+
+    function saveSession(session){
+      const s = {
+        source: session.source || "Other",
+        category: session.category || "Study",
+        durationSeconds: Number(session.durationSeconds || 0),
+        date: session.date || nowISO(),
+        timestamp: session.timestamp || nowISO(),
+        note: session.note || "",
+        mode: session.mode || "timer"
+      };
+      if(!s.durationSeconds) return;
+
+      data.sessions.unshift(s);
+      if(data.sessions.length > 300) data.sessions = data.sessions.slice(0,300);
+
+      if(s.category === "Study"){
+        data.totalStudySeconds += s.durationSeconds;
+        const earned = minsFromSeconds(s.durationSeconds);
+        data.points += earned;
+        data.coins += earned;
+        updateStreakOnStudy(s.date);
+      }
+
+      saveData();
+      renderApp();
+    }
+
+    /* =========================================================
+       20) AGGREGATES
+    ========================================================= */
+    function sessionsByMonth(monthKey){
+      return (data.sessions || []).filter(s => getMonthKey((s.date || todayKey()).slice(0,10)) === monthKey);
+    }
+
+    function getTodayStudySeconds(){
+      return (data.sessions || [])
+        .filter(s => (s.date || "").slice(0,10) === todayKey() && s.category === "Study")
+        .reduce((a,b)=>a + (b.durationSeconds || 0), 0);
+    }
+
+    function getYesterdayStudySeconds(){
+      const y = previousDateKey(1);
+      return (data.sessions || [])
+        .filter(s => (s.date || "").slice(0,10) === y && s.category === "Study")
+        .reduce((a,b)=>a + (b.durationSeconds || 0), 0);
+    }
+
+    function getWeekStudySeconds(){
+      const wk = getWeekKey();
+      return (data.sessions || [])
+        .filter(s => getWeekKey((s.date || todayKey()).slice(0,10)) === wk && s.category === "Study")
+        .reduce((a,b)=>a + (b.durationSeconds || 0), 0);
+    }
+
+    function getMonthStudySeconds(){
+      const mk = getMonthKey();
+      return sessionsByMonth(mk)
+        .filter(s => s.category === "Study")
+        .reduce((a,b)=>a + (b.durationSeconds || 0), 0);
+    }
+
+    function sourceSummary(monthKey=null){
+      const source = {};
+      const pool = monthKey ? sessionsByMonth(monthKey) : (data.sessions || []);
+      pool.forEach(s=>{
+        const key = s.source || "Other";
+        if(!source[key]) source[key] = {time:0,count:0,study:0,waste:0,entertainment:0};
+        source[key].time += s.durationSeconds || 0;
+        source[key].count += 1;
+        if((s.category || "") === "Study") source[key].study += s.durationSeconds || 0;
+        if((s.category || "") === "Time Waste") source[key].waste += s.durationSeconds || 0;
+        if((s.category || "") === "Entertainment") source[key].entertainment += s.durationSeconds || 0;
+      });
+      return source;
+    }
+
+    function categorySummary(monthKey=null){
+      const out = {"Study":{time:0,count:0},"Time Waste":{time:0,count:0},"Entertainment":{time:0,count:0}};
+      const pool = monthKey ? sessionsByMonth(monthKey) : (data.sessions || []);
+      pool.forEach(s=>{
+        const cat = s.category || "Study";
+        if(!out[cat]) out[cat] = {time:0,count:0};
+        out[cat].time += s.durationSeconds || 0;
+        out[cat].count += 1;
+      });
+      return out;
+    }
+
+    function mostUsedSource(){
+      const entries = Object.entries(sourceSummary());
+      if(!entries.length) return null;
+      entries.sort((a,b)=>b[1].time - a[1].time);
+      return {name:entries[0][0],...entries[0][1]};
+    }
+
+    function mostUsedCategory(){
+      const entries = Object.entries(categorySummary());
+      entries.sort((a,b)=>b[1].time - a[1].time);
+      return {name:entries[0][0],...entries[0][1]};
+    }
+
+    function getAverageMockAccuracy(){
+      if(!data.mockTests.length) return null;
+      return Math.round(
+        data.mockTests.reduce((a,b)=>a + Number(b.accuracy || 0), 0) / data.mockTests.length
+      );
+    }
+
+    function pendingRevisions(){
+      const today = todayKey();
+      return (data.topics || []).filter(t =>
+        (t.revisions || []).some(r => r <= today && !(t.done || []).includes(r))
+      );
+    }
+
+    function overdueRevisions(){
+      const today = todayKey();
+      return (data.topics || []).filter(t =>
+        (t.revisions || []).some(r => r < today && !(t.done || []).includes(r))
+      );
+    }
+
+    function calcProductivityScore(){
+      const productive = Number(data.productiveTime || 0);
+      const reading = Number(data.readingTime || 0);
+      const revision = Number(data.revisionTime || 0);
+      const study = (data.totalStudySeconds || 0) / 3600;
+      let wasted = Number(data.wastedTime || 0);
+
+      if(!wasted){
+        wasted = Math.max(0, 24 - 8 - 4 - productive - reading - revision - study);
+      }
+
+      const good = productive + reading + revision + study;
+      const total = good + wasted;
+      if(!total) return 0;
+      return Math.max(0, Math.min(100, Math.round((good/total) * 100)));
+    }
+
+    function calcROIScore(){
+      const studyHours = Math.max(1, (data.totalStudySeconds || 0)/3600);
+      const productive = Number(data.productiveTime || 0);
+      const input = Math.max(1, studyHours + productive);
+
+      const avgMock = getAverageMockAccuracy() || 0;
+      const questions = Number(data.questionsSolved || 0) * 0.35;
+      const lectures = Number(data.lecturesAttended || 0) * 2.5;
+      const dpp = data.dppAttempted ? Math.round((Number(data.dppCompleted || 0) / Math.max(1, Number(data.dppAttempted || 1))) * 100) * 0.35 : 0;
+
+      const output = questions + avgMock + lectures + dpp;
+      return Math.max(0, Math.min(100, Math.round((output/(input*6))*100)));
+    }
+
+    /* =========================================================
+       21) SMART MOTIVATION + AI INSIGHTS
+    ========================================================= */
+    function getMotivationCards(){
+      const cards = [];
+      const todayStudy = getTodayStudySeconds();
+      const yesterdayStudy = getYesterdayStudySeconds();
+      const pending = pendingRevisions().length;
+      const overdue = overdueRevisions().length;
+      const avgMock = getAverageMockAccuracy();
+      const productivity = calcProductivityScore();
+      const roi = calcROIScore();
+      const mostSource = mostUsedSource();
+      const mostCategory = mostUsedCategory();
+      const cd = countdownData();
+
+      if(todayStudy === 0) cards.push("You have not logged study time today. Start with one focused session.");
+      if(todayStudy > yesterdayStudy && yesterdayStudy > 0) cards.push(`You studied ${((todayStudy-yesterdayStudy)/3600).toFixed(1)} hours more than yesterday.`);
+      if(data.streak > 0) cards.push(`Your streak is alive. Protect it today: ${data.streak} 🔥`);
+      if(data.bestStreak > 0 && data.streak === data.bestStreak) cards.push("You are matching your best streak. Keep the chain unbroken.");
+      if(pending > 0) cards.push(`Revision due today: ${pending} topic${pending===1?"":"s"}.`);
+      if(overdue > 0) cards.push(`${overdue} topic${overdue===1?" is":"s are"} overdue. Clear backlog before adding fresh load.`);
+      if(cd && cd.days <= 21) cards.push(`${cd.days} days left. Focus on weak subjects and revision precision.`);
+      if(avgMock !== null && avgMock < 50) cards.push("Mock accuracy is still low. Increase question practice and revision quality.");
+      if(avgMock !== null && avgMock >= 70) cards.push("Good mock trend. Protect accuracy while increasing speed.");
+      if(productivity < 50) cards.push("Your productivity score is low. Reduce waste and tighten session quality.");
+      if(productivity >= 75) cards.push("Strong productivity. Maintain this rhythm and compound it.");
+      if(roi >= 70) cards.push("Your ROI is strong. Keep output quality high without random switching.");
+      if(roi < 40) cards.push("Input is not converting well. Improve test analysis and focused practice.");
+      if(mostSource && mostSource.name === "YouTube") cards.push("YouTube is dominating your tracked time. Make sure that time is turning into output.");
+      if(mostSource && mostSource.name === "PW") cards.push("You used PW most. Add self-study after lectures to convert learning into marks.");
+      if(mostCategory && mostCategory.name === "Time Waste") cards.push("Time Waste category is leading. Bring control back today.");
+      if(mostCategory && mostCategory.name === "Entertainment") cards.push("Entertainment is taking a visible share. Set a stop time before it expands.");
+      if((data.questionsSolved || 0) === 0) cards.push("Questions solved is still zero. Add question practice for real score improvement.");
+      if((data.dppAttempted || 0) > 0 && (data.dppCompleted || 0) < (data.dppAttempted || 0)) cards.push("You are attempting more DPPs than you complete. Finish what you start.");
+      if((data.readingTime || 0) > (data.revisionTime || 0) * 2) cards.push("Reading is much higher than revision. Memory improves when revision catches up.");
+      if((data.revisionTime || 0) > 0 && pending === 0) cards.push("Revision is under control. That is a strong advantage near exams.");
+      if(data.sessions.length === 0) cards.push("No sessions saved yet. The first session is the easiest place to start.");
+      if(data.streak >= 3) cards.push("3-day streak unlocked. Consistency is starting to become identity.");
+      if(data.streak >= 7) cards.push("7-day streak unlocked. This is where momentum starts compounding.");
+      if(data.streak >= 14) cards.push("14-day streak unlocked. You are building a serious discipline edge.");
+      if(data.streak >= 30) cards.push("30-day streak unlocked. This is elite consistency.");
+      if(cd && cd.days > 60) cards.push("You still have runway. Build concepts deeply before panic season starts.");
+      if(cd && cd.days <= 7) cards.push("Final week mode. Stay calm, revise smartly, and avoid random topic jumps.");
+      if((data.totalStudySeconds || 0) / 3600 >= 100) cards.push("You have crossed 100 total study hours. That base matters.");
+      if((data.points || 0) >= 500) cards.push("500+ points reached. Your effort is visibly stacking up.");
+      if((data.coins || 0) >= 500) cards.push("500+ coins reached. Keep converting minutes into measurable progress.");
+
+      return cards.slice(0,4);
+    }
+
+    function getAIInsights(){
+      const insights = [];
+      const src = sourceSummary();
+      const cat = categorySummary();
+      const cd = countdownData();
+      const avgMock = getAverageMockAccuracy();
+      const pending = pendingRevisions().length;
+      const productivity = calcProductivityScore();
+
+      const yt = src["YouTube"]?.time || 0;
+      const selfStudy = src["Self Study"]?.time || 0;
+      const pw = src["PW"]?.time || 0;
+      const waste = cat["Time Waste"]?.time || 0;
+
+      // 1
+      if(yt > selfStudy * 1.5 && yt > 0){
+        insights.push({
+          title:"Smart Focus Insight",
+          text:"You spend too much time on YouTube compared to Self Study. Convert lecture time into independent practice.",
+          tone:"warning"
+        });
+      }
+
+      // 2
+      if(pending >= 3){
+        insights.push({
+          title:"Risk Alert",
+          text:"Your revision load is increasing. Clear today’s pending topics first before adding more new material.",
+          tone:"danger"
+        });
+      }
+
+      // 3
+      if(data.streak >= 5 && avgMock !== null && avgMock < 55){
+        insights.push({
+          title:"Progress Insight",
+          text:"Your streak is good but mock scores are not improving enough. Increase question practice and post-test analysis.",
+          tone:"warning"
+        });
+      }
+
+      // 4
+      if(pw > selfStudy && pw > 0){
+        insights.push({
+          title:"Suggested Action",
+          text:"You studied mostly in PW. Add more self-study after classes to strengthen retention and output.",
+          tone:"primary"
+        });
+      }
+
+      // 5
+      if((data.exam || "") === "SSC" && cd && cd.days <= 30){
+        insights.push({
+          title:"Suggested Action",
+          text:"SSC exam is close. Focus on daily accuracy, timed practice, and revision repetition.",
+          tone:"danger"
+        });
+      }
+
+      // 6
+      if(waste > cat["Study"]?.time && waste > 0){
+        insights.push({
+          title:"Risk Alert",
+          text:"Tracked waste time is larger than study time. Cut one distraction block today and recover your momentum.",
+          tone:"danger"
+        });
+      }
+
+      // 7
+      if(productivity >= 75){
+        insights.push({
+          title:"Progress Insight",
+          text:"Your productivity score is strong. Keep session quality high and avoid overcomplicating your plan.",
+          tone:"success"
+        });
+      }
+
+      // 8
+      if(productivity < 45){
+        insights.push({
+          title:"Smart Focus Insight",
+          text:"Your productivity score is low. Make your next session short, specific, and distraction-free.",
+          tone:"warning"
+        });
+      }
+
+      // fallback
+      if(!insights.length){
+        insights.push({
+          title:"Smart Focus Insight",
+          text:"Your dashboard is active. Log sessions consistently so Rank Rise can generate sharper insights.",
+          tone:"primary"
+        });
+      }
+
+      return insights.slice(0,4);
+    }
+
+    /* =========================================================
+       22) ROUTINE + PROMISE TASKS
+    ========================================================= */
+    function ensureTodayRoutine(){
+      const today = todayKey();
+      const yesterday = previousDateKey(1);
+      if(!data.routineByDate[today]){
+        data.routineByDate[today] = {
+          did:"",
+          will:"",
+          achieved:"",
+          regret:"",
+          promiseTasks:[],
+          didReferenceInserted:false
+        };
+      }
+
+      const todayObj = data.routineByDate[today];
+      const yObj = data.routineByDate[yesterday];
+
+      // Auto-shift yesterday's promises into today's "did" as reference draft only once.
+      if(yObj && !todayObj.didReferenceInserted && yObj.promiseTasks && yObj.promiseTasks.length){
+        const unfinished = yObj.promiseTasks
+          .map(t => `${t.done ? "✔" : "•"} ${t.text}`)
+          .join("\n");
+        const draft = `Reference from yesterday's plan:\n${unfinished}\n\n`;
+        if(!todayObj.did || !todayObj.did.trim()){
+          todayObj.did = draft;
+        } else if(!todayObj.did.includes("Reference from yesterday's plan:")){
+          todayObj.did = draft + todayObj.did;
+        }
+        todayObj.didReferenceInserted = true;
+      }
+    }
+
+    function saveTodayRoutineField(field, value){
+      ensureTodayRoutine();
+      const today = todayKey();
+      data.routineByDate[today][field] = value;
+      saveData();
+    }
+
+    function parsePromiseTasks(rawText){
+      return rawText
+        .split("\n")
+        .map(x=>x.trim())
+        .filter(Boolean)
+        .map(text=>({text,done:false,createdAt:nowISO()}));
+    }
+
+    function rebuildPromiseTasksFromTextarea(){
+      ensureTodayRoutine();
+      const today = todayKey();
+      const raw = $("routineWill")?.value || "";
+      data.routineByDate[today].will = raw;
+      data.routineByDate[today].promiseTasks = parsePromiseTasks(raw);
+      saveData();
+      renderApp();
+      showToast("Promise tasks created");
+    }
+
+    function togglePromiseTask(index){
+      ensureTodayRoutine();
+      const today = todayKey();
+      const task = data.routineByDate[today].promiseTasks[index];
+      if(!task) return;
+      task.done = !task.done;
+      saveData();
+      renderApp();
+    }
+
+    /* =========================================================
+       23) TABS
+    ========================================================= */
+    function renderTabs(){
+      $("tabBar").innerHTML = TABS.map(tab =>
+        `<button class="tab-btn ${activeTab===tab?"active":""}" data-tab="${esc(tab)}">${esc(tab)}</button>`
+      ).join("");
+
+      Array.from(document.querySelectorAll(".tab-btn")).forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          activeTab = btn.dataset.tab;
+          renderTab();
+        });
+      });
+    }
+
+    /* =========================================================
+       24) DASHBOARD
+    ========================================================= */
+    function streakBadgeText(){
+      if(data.streak >= 30) return "30-Day Legend 🏆";
+      if(data.streak >= 14) return "14-Day Charge ⚡";
+      if(data.streak >= 7) return "7-Day Warrior 🔥";
+      if(data.streak >= 3) return "3-Day Builder ✅";
+      return "Keep it alive";
+    }
+
+    function renderDashboard(){
+      const mostSource = mostUsedSource();
+      const mostCat = mostUsedCategory();
+      const motivations = getMotivationCards();
+      const insights = getAIInsights();
+      const pending = pendingRevisions().length;
+      const overdue = overdueRevisions().length;
+      const avgMock = getAverageMockAccuracy();
+
+      return `
+        <div class="print-report">
+          <h2 style="font-size:24px;font-weight:900;">${BRAND_NAME}</h2>
+          <div style="font-size:13px;color:#64748b;">${BRAND_SUBTITLE}</div>
+        </div>
+
+        <section class="card">
+          <div class="section-title">
+            <div>
+              <h2>Key Stats</h2>
+              <div class="section-sub">Your study engine at a glance</div>
+            </div>
+            <span class="badge b-purple">${esc(streakBadgeText())}</span>
+          </div>
+
+          <div class="stat-grid">
+            <div class="stat">
+              <div class="label">Total Hours</div>
+              <div class="value">${hoursFromSeconds(data.totalStudySeconds)}</div>
+              <div class="sub">Study category only</div>
+            </div>
+            <div class="stat">
+              <div class="label">Points</div>
+              <div class="value">${data.points}</div>
+              <div class="sub">1 minute = 1 point</div>
+            </div>
+            <div class="stat">
+              <div class="label">Coins</div>
+              <div class="value">${data.coins}</div>
+              <div class="sub">1 minute = 1 coin</div>
+            </div>
+            <div class="stat">
+              <div class="label">Streak</div>
+              <div class="value" id="streakMetric">${data.streak} 🔥</div>
+              <div class="sub">Best: ${data.bestStreak} days</div>
+            </div>
+            <div class="stat">
+              <div class="label">Productivity</div>
+              <div class="value">${calcProductivityScore()}%</div>
+              <div class="sub">Useful time quality</div>
+            </div>
+            <div class="stat">
+              <div class="label">ROI Score</div>
+              <div class="value">${calcROIScore()}</div>
+              <div class="sub">Output vs input</div>
+            </div>
+            <div class="stat">
+              <div class="label">Mock Average</div>
+              <div class="value">${avgMock !== null ? avgMock + "%" : "—"}</div>
+              <div class="sub">${data.mockTests.length} tests</div>
+            </div>
+            <div class="stat">
+              <div class="label">Pending Revisions</div>
+              <div class="value">${pending}</div>
+              <div class="sub">${overdue} overdue</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="grid-2">
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h2>Smart Motivation</h2>
+                <div class="section-sub">Useful progress signals, not random quotes</div>
+              </div>
+            </div>
+            <div class="list">
+              ${motivations.map((m,i)=>`
+                <div class="list-item">
+                  <div class="title">Signal ${i+1}</div>
+                  <div class="meta">${esc(m)}</div>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h2>AI-Style Smart Insights</h2>
+                <div class="section-sub">Rule-based focus guidance from your own data</div>
+              </div>
+            </div>
+            <div class="list">
+              ${insights.map(ins=>`
+                <div class="list-item">
+                  <div class="row" style="justify-content:space-between;">
+                    <div class="title">${esc(ins.title)}</div>
+                    <span class="badge ${
+                      ins.tone==="danger"?"b-danger":
+                      ins.tone==="warning"?"b-warning":
+                      ins.tone==="success"?"b-success":"b-primary"
+                    }">${esc(ins.tone)}</span>
+                  </div>
+                  <div class="meta">${esc(ins.text)}</div>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        </section>
+
+        <section class="grid-2">
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h2>Timer + App Source Tracker</h2>
+                <div class="section-sub">Track source, category, note, and save sessions safely</div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Source / App</label>
+              <select id="timerSource" class="select">
+                ${SOURCE_OPTIONS.map(s=>`<option ${s==="Self Study"?"selected":""}>${s}</option>`).join("")}
+              </select>
+            </div>
+
+            <div class="field" id="timerOtherWrap" style="display:none;">
+              <label>Enter app / source name</label>
+              <input id="timerOtherSource" class="input" type="text" placeholder="e.g. Telegram / Chrome / Coaching App"/>
+            </div>
+
+            <div class="field">
+              <label>Category</label>
+              <select id="timerCategory" class="select">
+                ${CATEGORY_OPTIONS.map(c=>`<option ${c==="Study"?"selected":""}>${c}</option>`).join("")}
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Session note</label>
+              <input id="timerNote" class="input" type="text" placeholder="e.g. Biology revision / YouTube PYQ video"/>
+            </div>
+
+            <div style="font-size:34px;font-weight:900;letter-spacing:-.04em;margin:8px 0 10px;" id="timerDisplay">${formatSecondsHMS(timer.elapsed)}</div>
+            <div style="font-size:12px;color:#64748b;margin-bottom:12px;" id="timerStatus">Ready to start</div>
+
+            <div class="row">
+              <button class="btn btn-primary" id="startTimerBtn">Start</button>
+              <button class="btn" id="pauseTimerBtn">Pause</button>
+              <button class="btn btn-soft" id="stopTimerBtn">Stop & Save</button>
+              <button class="btn" id="resetTimerBtn">Reset</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h2>Usage Summary</h2>
+                <div class="section-sub">Most used source, category, and share of time</div>
+              </div>
+            </div>
+
+            <div class="note" style="margin-bottom:12px;">
+              Most used source: <b>${mostSource ? esc(mostSource.name) : "—"}</b><br>
+              Most used category: <b>${mostCat ? esc(mostCat.name) : "—"}</b><br>
+              Today study time: <b>${formatSecondsHuman(getTodayStudySeconds())}</b>
+            </div>
+
+            <div class="chart-wrap sm"><canvas id="dashboardUsageChart"></canvas></div>
+          </div>
+        </section>
+
+        <section class="grid-2">
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h2>Routine Summary</h2>
+                <div class="section-sub">Today’s journal and promise flow</div>
+              </div>
+            </div>
+            ${renderRoutineSummary()}
+          </div>
+
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h2>Revision Alerts</h2>
+                <div class="section-sub">What needs review right now</div>
+              </div>
+            </div>
+            ${renderPendingRevisionsList(6, false)}
+          </div>
+        </section>
+
+        <section class="grid-2">
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h2>Performance</h2>
+                <div class="section-sub">Mock trend and study mix</div>
+              </div>
+            </div>
+            <div class="chart-wrap"><canvas id="dashboardMockChart"></canvas></div>
+          </div>
+
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h2>Utility Tools</h2>
+                <div class="section-sub">Monthly report, export, reset, and account actions</div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Select month for monthly report</label>
+              <input id="reportMonth" class="input" type="month" value="${esc(data.monthlyReportMonth || getMonthKey())}"/>
+            </div>
+
+            <div class="tools-grid">
+              <button class="btn" id="refreshMonthlyBtn">Load Month</button>
+              <button class="btn btn-soft" id="printMonthlyBtn">Print Monthly Report</button>
+              <button class="btn btn-soft" id="exportMonthlyCsvBtn">Export Monthly CSV</button>
+              <button class="btn btn-danger" id="resetDataBtn">Reset Data</button>
+              ${currentUser ? `<button class="btn" id="signOutBtn">Sign Out</button>` : `<button class="btn" id="loginAgainBtn">Google Login</button>`}
+            </div>
+
+            <div id="monthlyReportPreview" style="margin-top:12px;">
+              ${renderMonthlyReportPreview(data.monthlyReportMonth || getMonthKey())}
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderRoutineSummary(){
+      ensureTodayRoutine();
+      const t = data.routineByDate[todayKey()] || {};
+      const tasks = t.promiseTasks || [];
+
+      return `
+        <div class="list">
+          <div class="list-item">
+            <div class="title">What I did</div>
+            <div class="meta">${esc(t.did || "Nothing saved yet.")}</div>
+          </div>
+          <div class="list-item">
+            <div class="title">What I achieved</div>
+            <div class="meta">${esc(t.achieved || "Nothing saved yet.")}</div>
+          </div>
+          <div class="list-item">
+            <div class="title">What I regret</div>
+            <div class="meta">${esc(t.regret || "Nothing saved yet.")}</div>
+          </div>
+          <div class="list-item">
+            <div class="title">Promise tasks</div>
+            <div class="meta">
+              ${tasks.length
+                ? `${tasks.filter(x=>x.done).length}/${tasks.length} completed`
+                : "No tasks created yet."}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    /* =========================================================
+       25) STUDY INPUT
+    ========================================================= */
+    function renderStudyInput(){
+      return `
+        <section class="grid-2">
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h2>Exam Setup</h2>
+                <div class="section-sub">Target exam and date</div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Exam</label>
+              <select id="examSelect" class="select">
+                ${["NEET","JEE","CUET","SSC","Other"].map(e=>`<option ${data.exam===e?"selected":""}>${e}</option>`).join("")}
+              </select>
+            </div>
+            <div class="field">
+              <label>Exam date</label>
+              <input id="examDateInput" class="input" type="date" value="${esc(data.examDate || "")}"/>
+            </div>
+            <button class="btn btn-primary" id="saveExamBtn">Save Exam Setup</button>
+          </div>
+
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h2>Manual Study Input</h2>
+                <div class="section-sub">Digital-style time selector that still saves safely</div>
+              </div>
+            </div>
+
+            <div class="digital-time">
+              <div class="time-slot">
+                <div class="slot-label">Hours</div>
+                <select id="manualHours">
+                  ${Array.from({length:13},(_,i)=>`<option value="${i}">${String(i).padStart(2,"0")}</option>`).join("")}
+                </select>
+              </div>
+              <div class="time-slot">
+                <div class="slot-label">Minutes</div>
+                <select id="manualMinutes">
+                  ${Array.from({length:60},(_,i)=>`<option value="${i}">${String(i).padStart(2,"0")}</option>`).join("")}
+                </select>
+              </div>
+              <div class="time-slot">
+                <div class="slot-label">Seconds</div>
+                <select id="manualSeconds">
+                  ${Array.from({length:60},(_,i)=>`<option value="${i}">${String(i).padStart(2,"0")}</option>`).join("")}
+                </select>
+              </div>
+            </div>
+
+            <div class="field" style="margin-top:12px;">
+              <label>Source / app</label>
+              <select id="manualSource" class="select">
+                ${SOURCE_OPTIONS.map(s=>`<option ${s==="Self Study"?"selected":""}>${s}</option>`).join("")}
+              </select>
+            </div>
+
+            <div class="field" id="manualOtherWrap" style="display:none;">
+              <label>Enter app / source name</label>
+              <input id="manualOtherSource" class="input" type="text" placeholder="e.g. Coaching portal"/>
+            </div>
+
+            <div class="field">
+              <label>Category</label>
+              <select id="manualCategory" class="select">
+                ${CATEGORY_OPTIONS.map(c=>`<option ${c==="Study"?"selected":""}>${c}</option>`).join("")}
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Note</label>
+              <input id="manualNote" class="input" type="text" placeholder="e.g. Chapter practice / test analysis"/>
+            </div>
+
+            <button class="btn btn-primary" id="saveManualSessionBtn">Save Manual Session</button>
+
+            <div class="note" style="margin-top:12px;">
+              Today: <b>${formatSecondsHuman(getTodayStudySeconds())}</b><br>
+              Weekly: <b>${hoursFromSeconds(getWeekStudySeconds())} hours</b><br>
+              Monthly: <b>${hoursFromSeconds(getMonthStudySeconds())} hours</b>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="section-title">
+            <div>
+              <h2>Productivity Inputs</h2>
+              <div class="section-sub">Questions, lectures, DPP, reading, revision, productive and wasted time</div>
+            </div>
+          </div>
+
+          <div class="grid-4">
+            <div class="field">
+              <label>Questions Solved</label>
+              <input id="questionsSolvedInput" class="input" type="number" min="0" value="${esc(data.questionsSolved)}"/>
+            </div>
+            <div class="field">
+              <label>Lectures Attended</label>
+              <input id="lecturesInput" class="input" type="number" min="0" value="${esc(data.lecturesAttended)}"/>
+            </div>
+            <div class="field">
+              <label>DPP Attempted</label>
+              <input id="dppAttemptedInput" class="input" type="number" min="0" value="${esc(data.dppAttempted)}"/>
+            </div>
+            <div class="field">
+              <label>DPP Completed</label>
+              <input id="dppCompletedInput" class="input" type="number" min="0" value="${esc(data.dppCompleted)}"/>
+            </div>
+            <div class="field">
+              <label>Productive Time (hours)</label>
+              <input id="productiveInput" class="input" type="number" min="0" step="0.5" value="${esc(data.productiveTime)}"/>
+            </div>
+            <div class="field">
+              <label>Wasted Time (hours)</label>
+              <input id="wastedInput" class="input" type="number" min="0" step="0.5" value="${esc(data.wastedTime)}"/>
+            </div>
+            <div class="field">
+              <label>Reading Time (hours)</label>
+              <input id="readingInput" class="input" type="number" min="0" step="0.5" value="${esc(data.readingTime)}"/>
+            </div>
+            <div class="field">
+              <label>Revision Time (hours)</label>
+              <input id="revisionInput" class="input" type="number" min="0" step="0.5" value="${esc(data.revisionTime)}"/>
+            </div>
+          </div>
+
+          <div class="grid-4">
+            ${SUBJECTS.map(s=>`
+              <div class="field">
+                <label>${esc(s)} Time (hours)</label>
+                <input class="input subjectTimeInput" data-subject="${esc(s)}" type="number" min="0" step="0.5" value="${esc(data.subjectTime[s] || 0)}"/>
+              </div>
+            `).join("")}
+          </div>
+
+          <button class="btn btn-primary" id="saveProductivityBtn">Save Productivity Inputs</button>
+
+          <div class="note" style="margin-top:12px;">
+            If wasted time is left empty, Rank Rise estimates it from:<br>
+            <b>24 hours − 8 sleep − 4 routine − tracked useful hours</b>
+          </div>
+        </section>
+      `;
+    }
+
+    /* =========================================================
+       26) ROUTINE & LOG
+    ========================================================= */
+    function renderRoutineTab(){
+      ensureTodayRoutine();
+      const t = data.routineByDate[todayKey()] || {};
+
+      return `
+        <section class="grid-2">
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h2>Smart Study Journal</h2>
+                <div class="section-sub">Date-based auto-save with promise carry-forward</div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>What I did</label>
+              <textarea id="routineDid" class="textarea" placeholder="What I did today...">${esc(t.did || "")}</textarea>
+            </div>
+
+            <div class="field">
+              <label>What I will do (one task per line)</label>
+              <textarea id="routineWill" class="textarea" placeholder="Solve 50 Biology MCQs&#10;Revise Organic notes&#10;Watch one Physics lecture">${esc(t.will || "")}</textarea>
+            </div>
+
+            <div class="row">
+              <button class="btn btn-primary" id="buildTasksBtn">Build Promise Tasks</button>
+            </div>
+
+            <div class="task-list">
+              ${(t.promiseTasks || []).length
+                ? (t.promiseTasks || []).map((task, i)=>`
+                  <div class="task-row ${task.done ? "done" : ""}">
+                    <input type="checkbox" class="promiseCheck" data-index="${i}" ${task.done ? "checked" : ""}/>
+                    <div class="txt">${esc(task.text)}</div>
+                  </div>
+                `).join("")
+                : `<div class="note">No promise tasks yet. Write one task per line above, then build tasks.</div>`
+              }
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h2>Reflection</h2>
+                <div class="section-sub">Auto-saved daily reflection</div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>What I achieved</label>
+              <textarea id="routineAchieved" class="textarea" placeholder="What I achieved today...">${esc(t.achieved || "")}</textarea>
+            </div>
+
+            <div class="field">
+              <label>What I regret</label>
+              <textarea id="routineRegret" class="textarea" placeholder="What I regret today...">${esc(t.regret || "")}</textarea>
+            </div>
+
+            <div class="note">
+              Tomorrow, yesterday’s “What I will do” is automatically shifted into “What I did” as a reference draft if today’s entry is empty.
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="section-title">
+            <div>
+              <h2>Daily Study Log</h2>
+              <div class="section-sub">Save today’s topic and auto-create 1-3-7-21 revisions</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>What did you study today?</label>
+            <textarea id="dailyLogText" class="textarea" placeholder="e.g. Cell division, Thermodynamics PYQs, Algebra revision"></textarea>
+          </div>
+          <button class="btn btn-primary" id="saveLogBtn">Save Topic + Create Revision Schedule</button>
+
+          <div class="list" style="margin-top:14px;">
+            ${
+              data.logs.length
+                ? data.logs.slice(0,12).map(log=>`
+                  <div class="list-item">
+                    <div class="title">${esc(log.text)}</div>
+                    <div class="meta">${formatDate(log.date)}</div>
+                  </div>
+                `).join("")
+                : `<div class="note">No logs saved yet.</div>`
+            }
+          </div>
+        </section>
+      `;
+    }
+
+    /* =========================================================
+       27) MOCK TESTS
+    ========================================================= */
+    function renderMockTab(){
+      return `
+        <section class="grid-2">
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h2>Add Mock Test</h2>
+                <div class="section-sub">Score, total, date, and auto-accuracy</div>
+              </div>
+            </div>
+
+            <div class="grid-3">
+              <div class="field">
+                <label>Marks Scored</label>
+                <input id="mockMarks" class="input" type="number" min="0" placeholder="e.g. 540"/>
+              </div>
+              <div class="field">
+                <label>Total Marks</label>
+                <input id="mockTotal" class="input" type="number" min="1" value="100"/>
+              </div>
+              <div class="field">
+                <label>Test Date</label>
+                <input id="mockDate" class="input" type="date" value="${todayKey()}"/>
+              </div>
+            </div>
+
+            <button class="btn btn-primary" id="saveMockBtn">Save Mock Test</button>
+          </div>
+
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h2>Mock Summary</h2>
+                <div class="section-sub">Progress trend and average</div>
+              </div>
+            </div>
+            <div class="note" style="margin-bottom:12px;">
+              Average Accuracy: <b>${getAverageMockAccuracy() !== null ? getAverageMockAccuracy() + "%" : "—"}</b><br>
+              Total Tests: <b>${data.mockTests.length}</b>
+            </div>
+            <div class="chart-wrap sm"><canvas id="mockChart"></canvas></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="section-title">
+            <div>
+              <h2>Mock History</h2>
+              <div class="section-sub">Recent saved test records</div>
+            </div>
+          </div>
+
+          <div class="list">
+            ${
+              data.mockTests.length
+                ? data.mockTests.map((m,i)=>`
+                  <div class="list-item">
+                    <div class="row" style="justify-content:space-between;">
+                      <div>
+                        <div class="title">Test ${data.mockTests.length - i}</div>
+                        <div class="meta">${formatDate(m.date)} • ${m.marks}/${m.total}</div>
+                      </div>
+                      <span class="badge ${
+                        m.accuracy >= 70 ? "b-success" :
+                        m.accuracy >= 50 ? "b-warning" : "b-danger"
+                      }">${m.accuracy}%</span>
+                    </div>
+                  </div>
+                `).join("")
+                : `<div class="note">No mock tests saved yet.</div>`
+            }
+          </div>
+        </section>
+      `;
+    }
+
+    /* =========================================================
+       28) REVISIONS
+    ========================================================= */
+    function renderPendingRevisionsList(limit=8, withButtons=true){
+      const pool = pendingRevisions().slice(0, limit);
+      if(!pool.length) return `<div class="note">No pending revisions today. Good work.</div>`;
+
+      return `
+        <div class="list">
+          ${pool.map(topic=>{
+            const topicIndex = data.topics.findIndex(t => t.topic === topic.topic && t.date === topic.date);
+            const dueDates = (topic.revisions || []).filter(r => r <= todayKey() && !(topic.done || []).includes(r));
+            return `
+              <div class="list-item">
+                <div class="title">${esc(topic.topic)}</div>
+                <div class="meta">Saved on ${formatDate(topic.date)}</div>
+                <div class="row" style="margin-top:10px;">
+                  ${dueDates.map(d=> withButtons
+                    ? `<button class="btn btn-soft revisionDoneBtn" data-topic="${topicIndex}" data-date="${d}">Mark ${d} done</button>`
+                    : `<span class="badge ${d < todayKey() ? "b-danger" : "b-warning"}">${d}</span>`
+                  ).join("")}
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+    }
+
+    function renderRevisionTab(){
+      return `
+        <section class="grid-2">
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h2>Pending Revisions</h2>
+                <div class="section-sub">Topics due today or overdue</div>
+              </div>
+            </div>
+            ${renderPendingRevisionsList(20, true)}
+          </div>
+
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h2>Full Revision Schedule</h2>
+                <div class="section-sub">All topics with Day 1, 3, 7, 21 stages</div>
+              </div>
+            </div>
+            <div class="list">
+              ${
+                data.topics.length
+                  ? data.topics.map((t, i)=>`
+                    <div class="list-item">
+                      <div class="title">${esc(t.topic)}</div>
+                      <div class="meta">Saved on ${formatDate(t.date)}</div>
+                      <div class="row" style="margin-top:10px;">
+                        ${(t.revisions || []).map((r, idx)=>{
+                          const done = (t.done || []).includes(r);
+                          const tone = done ? "b-success" : (r < todayKey() ? "b-danger" : "b-primary");
+                          return `<span class="badge ${tone}">D${REVISION_DAYS[idx]} • ${r}</span>`;
+                        }).join("")}
+                      </div>
+                    </div>
+                  `).join("")
+                  : `<div class="note">No topics saved yet.</div>`
+              }
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    /* =========================================================
+       29) ANALYTICS
+    ========================================================= */
+    function renderAnalyticsTab(){
+      const weak = Object.entries(data.subjectTime || {})
+        .sort((a,b)=>a[1]-b[1])
+        .slice(0,2)
+        .map(x=>x[0]);
+
+      return `
+        <section class="grid-2">
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h2>Source Usage</h2>
+                <div class="section-sub">Time per source/app</div>
+              </div>
+            </div>
+            <div class="chart-wrap sm"><canvas id="sourceChart"></canvas></div>
+          </div>
+
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h2>Category Usage</h2>
+                <div class="section-sub">Study vs Waste vs Entertainment</div>
+              </div>
+            </div>
+            <div class="chart-wrap sm"><canvas id="categoryChart"></canvas></div>
+          </div>
+        </section>
+
+        <section class="grid-2">
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h2>Questions vs Accuracy</h2>
+                <div class="section-sub">Output relationship snapshot</div>
+              </div>
+            </div>
+            <div class="chart-wrap sm"><canvas id="questionAccuracyChart"></canvas></div>
+          </div>
+
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h2>Subject Distribution</h2>
+                <div class="section-sub">Weak subjects: ${esc(weak.join(", ") || "Not enough data")}</div>
+              </div>
+            </div>
+            <div class="chart-wrap sm"><canvas id="subjectChart"></canvas></div>
+          </div>
+        </section>
+
+        <section class="grid-2">
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h2>Study vs Result</h2>
+                <div class="section-sub">Study hours compared with mock average</div>
+              </div>
+            </div>
+            <div class="chart-wrap sm"><canvas id="studyVsResultChart"></canvas></div>
+          </div>
+
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h2>Formula Notes</h2>
+                <div class="section-sub">Readable beginner-friendly logic</div>
+              </div>
+            </div>
+            <div class="note">
+              <b>ROI Score</b> compares study input against output from questions solved, mock average, lectures, and DPP completion.<br><br>
+              <b>Productivity Score</b> compares useful tracked work against wasted or untracked time.<br><br>
+              This is not perfect science. It is a practical student dashboard formula.
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    /* =========================================================
+       30) PLAN
+    ========================================================= */
+    function renderPlanTab(){
+      return `
+        <section class="card">
+          <div class="section-title">
+            <div>
+              <h2>Smart Plan Generator</h2>
+              <div class="section-sub">Daily hours, subject allocation, revision slots, weak subject push</div>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label>Exam Name</label>
+              <input id="planExam" class="input" type="text" value="${esc(data.exam || "NEET")}"/>
+            </div>
+            <div class="field">
+              <label>Days Left</label>
+              <input id="planDays" class="input" type="number" min="1" value="${esc(data.examDate ? Math.max(0, dayDiff(todayKey(), data.examDate)) : "")}" placeholder="e.g. 90"/>
+            </div>
+          </div>
+
+          <div class="section-title" style="margin-top:4px;">
+            <div>
+              <h2 style="font-size:14px;">Subjects and daily hours</h2>
+            </div>
+            <button class="btn" id="addPlanSubjectBtn">+ Add Subject</button>
+          </div>
+
+          <div id="planSubjectsWrap"></div>
+
+          <div class="row" style="margin-top:10px;">
+            <button class="btn btn-primary" id="generatePlanBtn">Generate Plan</button>
+          </div>
+
+          <div id="planOutput" style="margin-top:14px;"></div>
+        </section>
+      `;
+    }
+
+    function renderPlanRows(){
+      const wrap = $("planSubjectsWrap");
+      if(!wrap) return;
+      const rows = (data.planSubjects || []).length ? data.planSubjects : [{name:"Physics",hours:"2"},{name:"Chemistry",hours:"2"}];
+      wrap.innerHTML = rows.map((row, idx)=>`
+        <div class="row" style="margin-bottom:8px;">
+          <input class="input planSubName" data-index="${idx}" type="text" placeholder="Subject name" value="${esc(row.name || "")}" style="flex:1;">
+          <input class="input planSubHours" data-index="${idx}" type="number" min="0.5" step="0.5" placeholder="Hrs/day" value="${esc(row.hours || "")}" style="width:120px;">
+          <button class="btn btn-danger planDeleteBtn" data-index="${idx}" type="button">✕</button>
+        </div>
+      `).join("");
+
+      Array.from(document.querySelectorAll(".planDeleteBtn")).forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          const idx = Number(btn.dataset.index);
+          data.planSubjects.splice(idx,1);
+          saveData();
+          renderTab();
+        });
+      });
+    }
+
+    function generatePlan(){
+      const examName = $("planExam")?.value.trim() || data.exam || "Exam";
+      const daysLeft = Number($("planDays")?.value || 0);
+
+      const names = Array.from(document.querySelectorAll(".planSubName")).map(x=>x.value.trim());
+      const hours = Array.from(document.querySelectorAll(".planSubHours")).map(x=>x.value.trim());
+
+      data.planSubjects = names.map((name, i)=>({name, hours})).filter(x=>x.name);
+      saveData();
+
+      if(!daysLeft || daysLeft < 1){
+        showToast("Enter valid days left");
+        return;
+      }
+
+      let suggested = 0;
+      if(daysLeft > 120) suggested = 5;
+      else if(daysLeft > 60) suggested = 6;
+      else if(daysLeft > 30) suggested = 8;
+      else if(daysLeft > 14) suggested = 10;
+      else suggested = 12;
+
+      const weak = Object.entries(data.subjectTime || {}).sort((a,b)=>a[1]-b[1]).slice(0,2).map(x=>x[0]);
+      const totalAllocated = data.planSubjects.reduce((a,b)=>a + Number(b.hours || 0), 0);
+
+      $("planOutput").innerHTML = `
+        <div class="note">
+          <b>${esc(examName)}</b> • ${daysLeft} days left<br>
+          Suggested daily study: <b>${suggested} hours/day</b><br>
+          Suggested revision slots: <b>${daysLeft > 30 ? "Morning + Evening" : "2 focused short slots daily"}</b><br>
+          Weak subjects to push first: <b>${esc(weak.join(", ") || "Not enough data yet")}</b>
+        </div>
+
+        <div class="list" style="margin-top:12px;">
+          ${data.planSubjects.length
+            ? data.planSubjects.map(s=>`
+              <div class="list-item">
+                <div class="title">${esc(s.name)}</div>
+                <div class="meta">${esc(s.hours)}h/day • ${(Number(s.hours || 0) * daysLeft).toFixed(1)}h total by exam</div>
+              </div>
+            `).join("")
+            : `<div class="note">Add subjects above to generate a subject-wise daily plan.</div>`
+          }
+        </div>
+
+        <div class="note" style="margin-top:12px;">
+          Total allocated: <b>${totalAllocated.toFixed(1)}h/day</b><br>
+          ${totalAllocated < suggested
+            ? `You can add ${(suggested-totalAllocated).toFixed(1)} more hours for revision, PYQs, or mock analysis.`
+            : `Your plan already meets or exceeds the recommended daily hours.`}
+        </div>
+      `;
+    }
+
+    /* =========================================================
+       31) MONTHLY REPORT / PRINT / EXPORT
+    ========================================================= */
+    function renderMonthlyReportPreview(monthKey){
+      const month = monthKey || getMonthKey();
+      const sess = sessionsByMonth(month);
+      const studySec = sess.filter(s=>s.category==="Study").reduce((a,b)=>a+b.durationSeconds,0);
+      const src = sourceSummary(month);
+      const cat = categorySummary(month);
+      const mocks = data.mockTests.filter(m => getMonthKey(m.date || todayKey()) === month);
+      const revisions = (data.topics || []).flatMap(t =>
+        (t.revisions || []).map(r => ({
+          topic:t.topic,
+          rev:r,
+          done:(t.done || []).includes(r)
+        }))
+      ).filter(r => getMonthKey(r.rev) === month);
+
+      return `
+        <div class="note">
+          <b>${BRAND_NAME}</b> • Monthly Preview<br>
+          Student: <b>${esc(currentUser?.displayName || data.profile.name || "Student")}</b><br>
+          Exam: <b>${esc(data.exam || "—")}</b><br>
+          Month: <b>${esc(month)}</b><br>
+          Total Study Time: <b>${formatSecondsHuman(studySec)}</b><br>
+          Sessions: <b>${sess.length}</b><br>
+          Revisions in Month: <b>${revisions.length}</b><br>
+          Mock Tests in Month: <b>${mocks.length}</b>
+        </div>
+
+        <div class="list" style="margin-top:10px;">
+          <div class="list-item">
+            <div class="title">Source Summary</div>
+            <div class="meta">
+              ${Object.keys(src).length
+                ? Object.entries(src).map(([k,v])=>`${esc(k)}: ${formatSecondsHuman(v.time)} (${v.count} sessions)`).join("<br>")
+                : "No source records for this month."}
+            </div>
+          </div>
+          <div class="list-item">
+            <div class="title">Category Summary</div>
+            <div class="meta">
+              ${Object.entries(cat).map(([k,v])=>`${esc(k)}: ${formatSecondsHuman(v.time)} (${v.count} sessions)`).join("<br>")}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function exportMonthlyCSV(monthKey){
+      const mk = monthKey || getMonthKey();
+      const rows = [];
+      rows.push(["Brand", BRAND_NAME]);
+      rows.push(["Student", currentUser?.displayName || data.profile.name || "Student"]);
+      rows.push(["Exam", data.exam || ""]);
+      rows.push(["Month", mk]);
+      rows.push([]);
+
+      rows.push(["Type","Source","Category","Duration Seconds","Date","Timestamp","Note"]);
+      sessionsByMonth(mk).forEach(s=>{
+        rows.push(["Session", s.source || "", s.category || "", s.durationSeconds || 0, s.date || "", s.timestamp || "", s.note || ""]);
+      });
+
+      rows.push([]);
+      rows.push(["Mock","Marks","Total","Accuracy","Date"]);
+      data.mockTests.filter(m=>getMonthKey(m.date || todayKey()) === mk).forEach(m=>{
+        rows.push(["Mock", m.marks || 0, m.total || 0, m.accuracy || 0, m.date || ""]);
+      });
+
+      rows.push([]);
+      rows.push(["Revision","Topic","Revision Date","Done"]);
+      (data.topics || []).forEach(t=>{
+        (t.revisions || []).forEach(r=>{
+          if(getMonthKey(r) === mk){
+            rows.push(["Revision", t.topic || "", r, (t.done || []).includes(r) ? "Yes" : "No"]);
+          }
+        });
+      });
+
+      const csv = rows.map(r=>r.map(csvCell).join(",")).join("\n");
+      const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `rank-rise-${mk}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function csvCell(v){
+      return `"${String(v ?? "").replace(/"/g,'""')}"`;
+    }
+
+    function printMonthlyReport(){
+      const mk = $("reportMonth")?.value || getMonthKey();
+      data.monthlyReportMonth = mk;
+      saveData();
+      $("monthlyReportPreview").innerHTML = renderMonthlyReportPreview(mk);
+      window.print();
+    }
+
+    /* =========================================================
+       32) EVENTS
+    ========================================================= */
+    function bindStaticEvents(){
+      $("overlayGoogleBtn").addEventListener("click", doGoogleSignIn);
+      $("headerGoogleBtn").addEventListener("click", doGoogleSignIn);
+      $("startLocalBtn").addEventListener("click", saveLocalProfile);
+    }
+
+    function bindDashboardEvents(){
+      $("timerSource")?.addEventListener("change", ()=>{
+        $("timerOtherWrap").style.display = $("timerSource").value === "Other" ? "block" : "none";
+      });
+
+      $("startTimerBtn")?.addEventListener("click", startTimer);
+      $("pauseTimerBtn")?.addEventListener("click", pauseTimer);
+      $("stopTimerBtn")?.addEventListener("click", stopTimerAndSave);
+      $("resetTimerBtn")?.addEventListener("click", resetTimer);
+
+      $("refreshMonthlyBtn")?.addEventListener("click", ()=>{
+        const mk = $("reportMonth").value || getMonthKey();
+        data.monthlyReportMonth = mk;
+        saveData();
+        $("monthlyReportPreview").innerHTML = renderMonthlyReportPreview(mk);
+      });
+
+      $("printMonthlyBtn")?.addEventListener("click", printMonthlyReport);
+      $("exportMonthlyCsvBtn")?.addEventListener("click", ()=>{
+        const mk = $("reportMonth").value || getMonthKey();
+        exportMonthlyCSV(mk);
+        showToast("Monthly CSV exported");
+      });
+
+      $("resetDataBtn")?.addEventListener("click", ()=>{
+        const ok = confirm("Reset all saved dashboard data for this profile?");
+        if(!ok) return;
+        localStorage.removeItem(getStorageKey());
+        data = defaultData();
+        renderApp();
+        showToast("Data reset");
+      });
+
+      $("signOutBtn")?.addEventListener("click", doGoogleSignOut);
+      $("loginAgainBtn")?.addEventListener("click", doGoogleSignIn);
+    }
+
+    function bindStudyInputEvents(){
+      $("saveExamBtn")?.addEventListener("click", ()=>{
+        data.exam = $("examSelect").value;
+        data.profile.exam = data.exam;
+        data.examDate = $("examDateInput").value;
+        saveData();
+        applyTheme();
+        renderApp();
+        showToast("Exam setup saved");
+      });
+
+      $("manualSource")?.addEventListener("change", ()=>{
+        $("manualOtherWrap").style.display = $("manualSource").value === "Other" ? "block" : "none";
+      });
+
+      $("saveManualSessionBtn")?.addEventListener("click", ()=>{
+        const h = Number($("manualHours").value || 0);
+        const m = Number($("manualMinutes").value || 0);
+        const s = Number($("manualSeconds").value || 0);
+        const duration = h*3600 + m*60 + s;
+        if(!duration){
+          showToast("Select a valid manual time");
+          return;
+        }
+        let source = $("manualSource").value;
+        if(source === "Other"){
+          source = $("manualOtherSource").value.trim() || "Other";
+        }
+        const category = $("manualCategory").value;
+        const note = $("manualNote").value.trim();
+
+        saveSession({
+          source,
+          category,
+          durationSeconds:duration,
+          date:nowISO(),
+          timestamp:nowISO(),
+          note,
+          mode:"manual_input"
+        });
+
+        showToast("Manual session saved");
+      });
+
+      $("saveProductivityBtn")?.addEventListener("click", ()=>{
+        data.questionsSolved = Number($("questionsSolvedInput").value || 0);
+        data.lecturesAttended = Number($("lecturesInput").value || 0);
+        data.dppAttempted = Number($("dppAttemptedInput").value || 0);
+        data.dppCompleted = Number($("dppCompletedInput").value || 0);
+        data.productiveTime = Number($("productiveInput").value || 0);
+        data.wastedTime = Number($("wastedInput").value || 0);
+        data.readingTime = Number($("readingInput").value || 0);
+        data.revisionTime = Number($("revisionInput").value || 0);
+
+        Array.from(document.querySelectorAll(".subjectTimeInput")).forEach(inp=>{
+          data.subjectTime[inp.dataset.subject] = Number(inp.value || 0);
+        });
+
+        saveData(true);
+        renderApp();
+      });
+    }
+
+    function bindRoutineEvents(){
+      $("routineDid")?.addEventListener("input", e=>saveTodayRoutineField("did", e.target.value));
+      $("routineWill")?.addEventListener("input", e=>saveTodayRoutineField("will", e.target.value));
+      $("routineAchieved")?.addEventListener("input", e=>saveTodayRoutineField("achieved", e.target.value));
+      $("routineRegret")?.addEventListener("input", e=>saveTodayRoutineField("regret", e.target.value));
+
+      $("buildTasksBtn")?.addEventListener("click", rebuildPromiseTasksFromTextarea);
+
+      Array.from(document.querySelectorAll(".promiseCheck")).forEach(chk=>{
+        chk.addEventListener("change", ()=>{
+          togglePromiseTask(Number(chk.dataset.index));
+        });
+      });
+
+      $("saveLogBtn")?.addEventListener("click", ()=>{
+        const text = $("dailyLogText").value.trim();
+        if(!text){
+          showToast("Write what you studied today");
+          return;
+        }
+        const today = todayKey();
+        data.logs.unshift({text, date:today, createdAt:nowISO()});
+        if(data.logs.length > 120) data.logs = data.logs.slice(0,120);
+
+        const revs = REVISION_DAYS.map(n=>{
+          const d = new Date();
+          d.setDate(d.getDate() + n);
+          return d.toISOString().slice(0,10);
+        });
+
+        data.topics.unshift({
+          topic:text,
+          date:today,
+          revisions:revs,
+          done:[]
+        });
+        if(data.topics.length > 160) data.topics = data.topics.slice(0,160);
+
+        saveData();
+        renderApp();
+        showToast("Topic saved and revision dates created");
+      });
+    }
+
+    function bindMockEvents(){
+      $("saveMockBtn")?.addEventListener("click", ()=>{
+        const marks = Number($("mockMarks").value || 0);
+        const total = Number($("mockTotal").value || 0);
+        const date = $("mockDate").value || todayKey();
+        if(!marks || !total){
+          showToast("Enter valid mock score");
+          return;
+        }
+        data.mockTests.unshift({
+          marks,
+          total,
+          accuracy:Math.round((marks/total)*100),
+          date
+        });
+        if(data.mockTests.length > 120) data.mockTests = data.mockTests.slice(0,120);
+        saveData();
+        renderApp();
+        showToast("Mock test saved");
+      });
+    }
+
+    function bindRevisionEvents(){
+      Array.from(document.querySelectorAll(".revisionDoneBtn")).forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          const topicIndex = Number(btn.dataset.topic);
+          const revDate = btn.dataset.date;
+          const t = data.topics[topicIndex];
+          if(!t) return;
+          if(!Array.isArray(t.done)) t.done = [];
+          if(!t.done.includes(revDate)) t.done.push(revDate);
+          saveData();
+          renderApp();
+          showToast("Revision marked done");
+        });
+      });
+    }
+
+    function bindPlanEvents(){
+      $("addPlanSubjectBtn")?.addEventListener("click", ()=>{
+        data.planSubjects.push({name:"",hours:""});
+        saveData();
+        renderTab();
+      });
+
+      renderPlanRows();
+
+      $("generatePlanBtn")?.addEventListener("click", generatePlan);
+    }
+
+    /* =========================================================
+       33) TIMER EVENTS
+    ========================================================= */
+    function startTimer(){
+      if(timer.running) return;
+      timer.running = true;
+      $("timerStatus").textContent = "Running";
+      timer.interval = setInterval(()=>{
+        timer.elapsed++;
+        $("timerDisplay").textContent = formatSecondsHMS(timer.elapsed);
+      }, 1000);
+    }
+
+    function pauseTimer(){
+      if(!timer.running) return;
+      timer.running = false;
+      clearInterval(timer.interval);
+      timer.interval = null;
+      $("timerStatus").textContent = "Paused";
+    }
+
+    function resetTimer(){
+      timer.running = false;
+      clearInterval(timer.interval);
+      timer.interval = null;
+      timer.elapsed = 0;
+      if($("timerDisplay")) $("timerDisplay").textContent = formatSecondsHMS(0);
+      if($("timerStatus")) $("timerStatus").textContent = "Ready to start";
+    }
+
+    function stopTimerAndSave(){
+      if(timer.interval){
+        clearInterval(timer.interval);
+        timer.interval = null;
+      }
+      const duration = timer.elapsed;
+      timer.running = false;
+      if(!duration){
+        $("timerStatus").textContent = "No session saved";
+        return;
+      }
+
+      let source = $("timerSource").value;
+      if(source === "Other"){
+        source = $("timerOtherSource").value.trim() || "Other";
+      }
+      const category = $("timerCategory").value;
+      const note = $("timerNote").value.trim();
+
+      saveSession({
+        source,
+        category,
+        durationSeconds:duration,
+        date:nowISO(),
+        timestamp:nowISO(),
+        note,
+        mode:"timer"
+      });
+
+      timer.elapsed = 0;
+      $("timerDisplay").textContent = formatSecondsHMS(0);
+      $("timerStatus").textContent = "Session saved";
+      $("timerNote").value = "";
+      showToast(`Saved ${formatSecondsHuman(duration)} in ${source}`);
+    }
+
+    /* =========================================================
+       34) CHARTS
+    ========================================================= */
+    function destroyCharts(){
+      Object.keys(charts).forEach(key=>{
+        if(charts[key] && typeof charts[key].destroy === "function"){
+          charts[key].destroy();
+        }
+        charts[key] = null;
+      });
+    }
+
+    function safeChart(id, key, config){
+      const canvas = $(id);
+      if(!canvas || typeof Chart === "undefined") return;
+      try{
+        charts[key] = new Chart(canvas, config);
+      }catch(e){
+        console.error("Chart error", key, e);
+      }
+    }
+
+    function renderDashboardCharts(){
+      const src = sourceSummary();
+      const labels = Object.keys(src);
+      const values = labels.map(k => Math.round(src[k].time / 60));
+
+      safeChart("dashboardUsageChart","dashboardUsageChart",{
+        type:"doughnut",
+        data:{
+          labels: labels.length ? labels : ["No data"],
+          datasets:[{
+            data: labels.length ? values : [1],
+            backgroundColor: labels.length ? ["#2563eb","#16a34a","#ea7a20","#7c3aed","#dc2626","#94a3b8"] : ["#e5e7eb"],
+            borderColor:"#fff",
+            borderWidth:2
+          }]
+        },
+        options:{
+          responsive:true,
+          maintainAspectRatio:false,
+          plugins:{legend:{position:"bottom"}}
+        }
+      });
+
+      const mocks = data.mockTests.slice().reverse();
+      safeChart("dashboardMockChart","dashboardMockChart",{
+        type:"line",
+        data:{
+          labels: mocks.length ? mocks.map((_,i)=>`T${i+1}`) : ["No tests"],
+          datasets:[{
+            data: mocks.length ? mocks.map(m=>m.accuracy) : [0],
+            borderColor:getComputedStyle(document.body).getPropertyValue("--primary").trim(),
+            backgroundColor:getComputedStyle(document.body).getPropertyValue("--accent-soft").trim(),
+            fill:true,
+            tension:.35,
+            pointRadius:4
+          }]
+        },
+        options:{
+          responsive:true,
+          maintainAspectRatio:false,
+          plugins:{legend:{display:false}},
+          scales:{y:{min:0,max:100}}
+        }
+      });
+    }
+
+    function renderMockCharts(){
+      const mocks = data.mockTests.slice().reverse();
+      safeChart("mockChart","mockChart",{
+        type:"line",
+        data:{
+          labels: mocks.length ? mocks.map((_,i)=>`Test ${i+1}`) : ["No tests"],
+          datasets:[{
+            data: mocks.length ? mocks.map(m=>m.accuracy) : [0],
+            borderColor:getComputedStyle(document.body).getPropertyValue("--primary").trim(),
+            backgroundColor:getComputedStyle(document.body).getPropertyValue("--accent-soft").trim(),
+            fill:true,
+            tension:.35,
+            pointRadius:4
+          }]
+        },
+        options:{
+          responsive:true,
+          maintainAspectRatio:false,
+          plugins:{legend:{display:false}},
+          scales:{y:{min:0,max:100}}
+        }
+      });
+    }
+
+    function renderAnalyticsCharts(){
+      const src = sourceSummary();
+      const srcLabels = Object.keys(src);
+      const srcValues = srcLabels.map(k => Math.round(src[k].time / 60));
+
+      safeChart("sourceChart","sourceChart",{
+        type:"bar",
+        data:{
+          labels: srcLabels.length ? srcLabels : ["No data"],
+          datasets:[{
+            label:"Minutes",
+            data: srcLabels.length ? srcValues : [0],
+            backgroundColor:"#2563eb",
+            borderRadius:8
+          }]
+        },
+        options:{responsive:true,maintainAspectRatio:false}
+      });
+
+      const cat = categorySummary();
+      const catLabels = Object.keys(cat);
+      const catValues = catLabels.map(k => Math.round(cat[k].time / 60));
+
+      safeChart("categoryChart","categoryChart",{
+        type:"doughnut",
+        data:{
+          labels:catLabels,
+          datasets:[{
+            data:catValues,
+            backgroundColor:["#16a34a","#dc2626","#7c3aed"],
+            borderColor:"#fff",
+            borderWidth:2
+          }]
+        },
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom"}}}
+      });
+
+      safeChart("questionAccuracyChart","questionAccuracyChart",{
+        type:"bar",
+        data:{
+          labels:["Questions Solved","Mock Accuracy"],
+          datasets:[{
+            data:[Number(data.questionsSolved || 0), Number(getAverageMockAccuracy() || 0)],
+            backgroundColor:["#2563eb","#16a34a"],
+            borderRadius:8
+          }]
+        },
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+      });
+
+      safeChart("subjectChart","subjectChart",{
+        type:"doughnut",
+        data:{
+          labels:SUBJECTS,
+          datasets:[{
+            data: SUBJECTS.map(s=>Number(data.subjectTime[s] || 0)),
+            backgroundColor:["#2563eb","#16a34a","#ea7a20","#7c3aed"],
+            borderColor:"#fff",
+            borderWidth:2
+          }]
+        },
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom"}}}
+      });
+
+      safeChart("studyVsResultChart","studyVsResultChart",{
+        type:"line",
+        data:{
+          labels:["Today","Week","Month","Mock Avg"],
+          datasets:[{
+            data:[
+              Number((getTodayStudySeconds()/3600).toFixed(2)),
+              Number((getWeekStudySeconds()/3600).toFixed(2)),
+              Number((getMonthStudySeconds()/3600).toFixed(2)),
+              Number(getAverageMockAccuracy() || 0)
+            ],
+            borderColor:getComputedStyle(document.body).getPropertyValue("--primary").trim(),
+            backgroundColor:getComputedStyle(document.body).getPropertyValue("--accent-soft").trim(),
+            fill:true,
+            tension:.35,
+            pointRadius:4
+          }]
+        },
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}
+      });
+    }
+
+    /* =========================================================
+       35) TAB RENDER
+    ========================================================= */
+    function renderTab(){
+      destroyCharts();
+
+      let html = "";
+      if(activeTab === "Dashboard") html = renderDashboard();
+      if(activeTab === "Study Input") html = renderStudyInput();
+      if(activeTab === "Routine & Log") html = renderRoutineTab();
+      if(activeTab === "Mock Tests") html = renderMockTab();
+      if(activeTab === "Revisions") html = renderRevisionTab();
+      if(activeTab === "Analytics") html = renderAnalyticsTab();
+      if(activeTab === "Plan") html = renderPlanTab();
+
+      $("tabContent").innerHTML = html;
+
+      if(activeTab === "Dashboard"){
+        bindDashboardEvents();
+        renderDashboardCharts();
+      }
+      if(activeTab === "Study Input"){
+        bindStudyInputEvents();
+      }
+      if(activeTab === "Routine & Log"){
+        bindRoutineEvents();
+      }
+      if(activeTab === "Mock Tests"){
+        bindMockEvents();
+        renderMockCharts();
+      }
+      if(activeTab === "Revisions"){
+        bindRevisionEvents();
+      }
+      if(activeTab === "Analytics"){
+        renderAnalyticsCharts();
+      }
+      if(activeTab === "Plan"){
+        bindPlanEvents();
+      }
+
+      const streakMetric = $("streakMetric");
+      if(streakMetric){
+        streakMetric.animate(
+          [{transform:"scale(1)"},{transform:"scale(1.06)"},{transform:"scale(1)"}],
+          {duration:450,easing:"ease-out"}
+        );
+      }
+    }
+
+    /* =========================================================
+       36) GLOBAL RENDER
+    ========================================================= */
+    function renderApp(){
+      ensureStreakHealth();
+      ensureTodayRoutine();
+      applyTheme();
+      updateAuthUI();
+      renderTabs();
+      renderHero();
+      renderTab();
+    }
+
+    /* =========================================================
+       37) TOAST
+    ========================================================= */
+    function showToast(msg){
+      const t = $("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(()=>t.classList.remove("show"), 2400);
+    }
+
+    /* =========================================================
+       38) INIT
+    ========================================================= */
+    applyBrandLogo();
+    bindStaticEvents();
+
+    setInterval(()=>{
+      renderHero();
+    }, 1000);
+  </script>
+</body>
+</html>
