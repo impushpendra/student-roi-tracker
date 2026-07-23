@@ -1,0 +1,4628 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Rank Rise – by Pushpendra</title>
+    <meta name="theme-color" content="#13a47a" />
+    <meta
+      name="description"
+      content="NEET/JEE/CUET/SSC Student Productivity Tracker by Pushpendra"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="application-name" content="Rank Rise" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Rank Rise" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+      :root {
+        --bg: #edf4f2;
+        --bg-2: #f7faf9;
+        --card: rgba(255, 255, 255, 0.78);
+        --card-solid: #ffffff;
+        --text: #10221c;
+        --muted: #657a73;
+        --line: rgba(16, 34, 28, 0.08);
+        --shadow: 0 14px 40px rgba(16, 34, 28, 0.1);
+        --shadow-soft: 0 8px 22px rgba(16, 34, 28, 0.06);
+        --radius: 24px;
+        --radius-md: 18px;
+        --radius-sm: 14px;
+        --brand: #13a47a;
+        --brand-2: #0d8663;
+        --brand-soft: rgba(19, 164, 122, 0.12);
+        --danger: #de4c4c;
+        --danger-soft: rgba(222, 76, 76, 0.12);
+        --warning: #dd9814;
+        --warning-soft: rgba(221, 152, 20, 0.14);
+        --purple: #8d5cf6;
+        --purple-soft: rgba(141, 92, 246, 0.12);
+        --blue: #3f79ff;
+        --blue-soft: rgba(63, 121, 255, 0.12);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        min-height: 100%;
+      }
+      body {
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          Arial,
+          sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(
+            circle at top left,
+            rgba(255, 255, 255, 0.9),
+            transparent 28%
+          ),
+          radial-gradient(
+            circle at bottom right,
+            rgba(255, 255, 255, 0.75),
+            transparent 24%
+          ),
+          linear-gradient(180deg, #f7fbfa 0%, var(--bg) 100%);
+        overflow-x: hidden;
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: var(--watermark, none);
+        background-repeat: no-repeat;
+        background-position: center center;
+        background-size: min(52vw, 540px);
+        opacity: 0.035;
+        pointer-events: none;
+        z-index: 0;
+        filter: grayscale(1);
+      }
+      .app {
+        position: relative;
+        z-index: 1;
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 14px 14px 108px;
+      }
+
+      .glass {
+        background: var(--card);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        border: 1px solid rgba(255, 255, 255, 0.55);
+        box-shadow: var(--shadow);
+        border-radius: var(--radius);
+      }
+      .card {
+        background: var(--card-solid);
+        border: 1px solid rgba(16, 34, 28, 0.06);
+        box-shadow: var(--shadow-soft);
+        border-radius: 22px;
+        padding: 18px;
+      }
+      .section-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .section-title h2 {
+        font-size: 15px;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+      }
+      .section-sub {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 3px;
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .grid-2,
+      .grid-3,
+      .grid-4 {
+        display: grid;
+        gap: 14px;
+      }
+      .grid-2,
+      .grid-3,
+      .grid-4 {
+        grid-template-columns: 1fr;
+      }
+      @media (min-width: 760px) {
+        .grid-2 {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .grid-3 {
+          grid-template-columns: repeat(3, 1fr);
+        }
+        .grid-4 {
+          grid-template-columns: repeat(4, 1fr);
+        }
+      }
+      .field {
+        margin-bottom: 12px;
+      }
+      .field label {
+        display: block;
+        font-size: 12px;
+        font-weight: 800;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+      .input,
+      .select,
+      .textarea {
+        width: 100%;
+        border: 1px solid var(--line);
+        background: #fff;
+        border-radius: 16px;
+        padding: 12px 13px;
+        font-size: 14px;
+        color: var(--text);
+        outline: none;
+        transition: 0.18s ease;
+      }
+      .input:focus,
+      .select:focus,
+      .textarea:focus {
+        border-color: var(--brand);
+        box-shadow: 0 0 0 4px var(--brand-soft);
+      }
+      .textarea {
+        min-height: 92px;
+        resize: vertical;
+        font-family: inherit;
+      }
+      .btn {
+        border: none;
+        border-radius: 16px;
+        padding: 12px 15px;
+        font-size: 13px;
+        font-weight: 800;
+        cursor: pointer;
+        transition:
+          transform 0.15s ease,
+          box-shadow 0.18s ease,
+          opacity 0.18s ease;
+        background: #eef4f2;
+        color: var(--text);
+      }
+      .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 18px rgba(16, 34, 28, 0.08);
+      }
+      .btn-primary {
+        background: linear-gradient(135deg, var(--brand), var(--brand-2));
+        color: #fff;
+      }
+      .btn-soft {
+        background: var(--brand-soft);
+        color: var(--brand-2);
+      }
+      .btn-danger {
+        background: var(--danger-soft);
+        color: var(--danger);
+      }
+      .btn-warning {
+        background: var(--warning-soft);
+        color: #996300;
+      }
+      .btn-full {
+        width: 100%;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 7px 11px;
+        font-size: 11px;
+        font-weight: 900;
+        white-space: nowrap;
+      }
+      .b-brand {
+        background: var(--brand-soft);
+        color: var(--brand-2);
+      }
+      .b-danger {
+        background: var(--danger-soft);
+        color: var(--danger);
+      }
+      .b-warning {
+        background: var(--warning-soft);
+        color: #996300;
+      }
+      .b-purple {
+        background: var(--purple-soft);
+        color: var(--purple);
+      }
+      .b-blue {
+        background: var(--blue-soft);
+        color: var(--blue);
+      }
+
+      .header {
+        position: sticky;
+        top: 0;
+        z-index: 60;
+        padding: 14px 16px;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 14px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+      .brand-logo {
+        width: 44px;
+        height: 44px;
+        border-radius: 15px;
+        overflow: hidden;
+        background: linear-gradient(135deg, var(--brand), var(--brand-2));
+        display: grid;
+        place-items: center;
+        color: #fff;
+        font-weight: 900;
+        font-size: 15px;
+        flex-shrink: 0;
+      }
+      .brand-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .brand h1 {
+        font-size: 17px;
+        font-weight: 900;
+        line-height: 1.02;
+        letter-spacing: -0.03em;
+      }
+      .brand p {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 3px;
+      }
+      .top-streak {
+        justify-self: center;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 900;
+        flex-wrap: wrap;
+        justify-content: center;
+        text-align: center;
+      }
+      .top-streak .main {
+        font-size: 24px;
+        letter-spacing: -0.04em;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: var(--brand-2);
+      }
+      .top-streak .best {
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 800;
+        width: 100%;
+      }
+      .user-chip {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(255, 255, 255, 0.82);
+        border: 1px solid rgba(16, 34, 28, 0.06);
+        padding: 7px 10px 7px 7px;
+        border-radius: 999px;
+        min-width: 0;
+      }
+      .user-chip img {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        object-fit: cover;
+        background: #fff;
+        border: 1px solid rgba(16, 34, 28, 0.06);
+      }
+      .user-meta b,
+      .user-meta span {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .user-meta b {
+        font-size: 13px;
+      }
+      .user-meta span {
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .hero {
+        padding: 18px;
+        background:
+          radial-gradient(
+            circle at top right,
+            rgba(255, 255, 255, 0.24),
+            transparent 28%
+          ),
+          radial-gradient(
+            circle at bottom left,
+            rgba(255, 255, 255, 0.14),
+            transparent 30%
+          ),
+          linear-gradient(135deg, #29c39b 0%, #11a67b 55%, #0b8b67 100%);
+        color: #fff;
+        margin-bottom: 14px;
+        overflow: hidden;
+        position: relative;
+      }
+      .hero::after {
+        content: "";
+        position: absolute;
+        right: -24px;
+        bottom: -24px;
+        width: 180px;
+        height: 180px;
+        background: radial-gradient(
+          circle,
+          rgba(255, 255, 255, 0.15),
+          transparent 60%
+        );
+        border-radius: 50%;
+      }
+      .hero-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: start;
+        margin-bottom: 14px;
+        position: relative;
+        z-index: 1;
+      }
+      .hero-title {
+        font-size: 25px;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        line-height: 1;
+      }
+      .hero-sub {
+        margin-top: 8px;
+        font-size: 13px;
+        opacity: 0.95;
+        line-height: 1.55;
+      }
+      .count-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        position: relative;
+        z-index: 1;
+      }
+      @media (max-width: 620px) {
+        .count-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      .count-box {
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.17);
+        border-radius: 18px;
+        padding: 14px 10px;
+        text-align: center;
+        backdrop-filter: blur(8px);
+      }
+      .count-box .num {
+        font-size: 30px;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        line-height: 1;
+      }
+      .count-box .lbl {
+        margin-top: 6px;
+        font-size: 11px;
+        opacity: 0.9;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .hero-quote {
+        margin-top: 14px;
+        background: rgba(255, 255, 255, 0.93);
+        color: #15352b;
+        border-radius: 20px;
+        padding: 18px 20px;
+        position: relative;
+        z-index: 1;
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        align-items: center;
+      }
+      .hero-quote-text {
+        font-size: clamp(14px, 3.4vw, 18px);
+        font-weight: 700;
+        line-height: 1.6;
+        letter-spacing: -0.01em;
+      }
+      .hero-quote-author {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 6px;
+      }
+      .mascot {
+        font-size: 58px;
+        line-height: 1;
+        flex-shrink: 0;
+        filter: drop-shadow(0 8px 16px rgba(16, 34, 28, 0.14));
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+        margin-bottom: 14px;
+      }
+      @media (min-width: 760px) {
+        .stats-grid {
+          grid-template-columns: repeat(4, 1fr);
+        }
+      }
+      .stat {
+        padding: 16px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.84);
+        border: 1px solid rgba(16, 34, 28, 0.06);
+        box-shadow: var(--shadow-soft);
+      }
+      .stat .label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+        font-weight: 900;
+        margin-bottom: 7px;
+      }
+      .stat .value {
+        font-size: 30px;
+        font-weight: 900;
+        line-height: 1.02;
+        letter-spacing: -0.04em;
+      }
+      .stat .sub {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 6px;
+      }
+      .streak-live {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .streak-burst {
+        animation: burst 0.65s ease;
+      }
+      @keyframes burst {
+        0% {
+          transform: scale(0.85);
+        }
+        50% {
+          transform: scale(1.15);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      .metric-table {
+        display: grid;
+        gap: 10px;
+      }
+      .metric-row {
+        display: grid;
+        grid-template-columns: 1.6fr 0.8fr 0.8fr;
+        gap: 10px;
+        align-items: center;
+        font-size: 14px;
+        padding: 7px 0;
+        border-bottom: 1px dashed rgba(16, 34, 28, 0.06);
+      }
+      .metric-row.header {
+        padding-top: 0;
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .metric-row:last-child {
+        border-bottom: none;
+      }
+      .metric-subject {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 800;
+      }
+      .metric-icon {
+        font-size: 16px;
+      }
+      .metric-num {
+        text-align: right;
+        font-weight: 800;
+      }
+
+      .insight-list {
+        display: grid;
+        gap: 12px;
+      }
+      .insight-card {
+        background: #fff;
+        border: 1px solid rgba(16, 34, 28, 0.06);
+        border-radius: 18px;
+        padding: 15px 16px;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 12px;
+        align-items: start;
+        box-shadow: var(--shadow-soft);
+      }
+      .insight-ico {
+        font-size: 22px;
+        line-height: 1.1;
+      }
+      .insight-card h4 {
+        font-size: 16px;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        margin-bottom: 4px;
+      }
+      .insight-card p {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+      .tone-danger {
+        border-left: 4px solid var(--danger);
+      }
+      .tone-warning {
+        border-left: 4px solid var(--warning);
+      }
+      .tone-brand {
+        border-left: 4px solid var(--brand);
+      }
+      .tone-purple {
+        border-left: 4px solid var(--purple);
+      }
+
+      .task-list {
+        display: grid;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .task-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border: 1px solid rgba(16, 34, 28, 0.06);
+        border-radius: 14px;
+        background: #fff;
+        transition: 0.18s ease;
+      }
+      .task-row.done {
+        background: #effbf6;
+        border-color: #c9efdf;
+        transform: scale(0.995);
+      }
+      .task-row input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--brand);
+        cursor: pointer;
+      }
+      .task-row .txt {
+        font-size: 13px;
+        line-height: 1.45;
+        flex: 1;
+      }
+      .task-row.done .txt {
+        text-decoration: line-through;
+        color: var(--muted);
+      }
+
+      .digital-time {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+      .slot {
+        background: #122720;
+        color: #fff;
+        border-radius: 18px;
+        padding: 12px;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+      }
+      .slot .slot-label {
+        font-size: 11px;
+        opacity: 0.78;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 8px;
+      }
+      .slot select {
+        width: 100%;
+        background: #11201b;
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 10px;
+        font-size: 17px;
+        font-weight: 900;
+        text-align: center;
+        outline: none;
+      }
+
+      .tools-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+      @media (min-width: 760px) {
+        .tools-grid {
+          grid-template-columns: repeat(4, 1fr);
+        }
+      }
+
+      .chart-wrap {
+        position: relative;
+        height: 260px;
+      }
+      .chart-wrap.sm {
+        height: 220px;
+      }
+
+      .page-section {
+        display: none;
+      }
+      .page-section.active {
+        display: block;
+      }
+
+      .bottom-nav {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 70;
+        background: rgba(255, 255, 255, 0.94);
+        backdrop-filter: blur(24px) saturate(180%);
+        border-top: 1px solid rgba(16, 34, 28, 0.06);
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        padding: 6px 2px calc(8px + env(safe-area-inset-bottom));
+        box-shadow: 0 -6px 32px rgba(16, 34, 28, 0.09);
+      }
+      .nav-btn {
+        background: none;
+        border: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        cursor: pointer;
+        color: #9aada6;
+        padding: 4px 1px 8px;
+        border-radius: 0;
+        font-size: 9.5px;
+        font-weight: 900;
+        letter-spacing: 0.01em;
+        transition: color 0.18s ease;
+        position: relative;
+      }
+      .nav-btn .icon {
+        font-size: 22px;
+        line-height: 1;
+        display: block;
+        transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      .nav-btn .label {
+        line-height: 1;
+        margin-top: 2px;
+      }
+      .nav-btn.active {
+        color: var(--brand-2);
+      }
+      .nav-btn.active .icon {
+        transform: translateY(-2px) scale(1.18);
+      }
+      .nav-pip {
+        position: absolute;
+        bottom: 2px;
+        left: 50%;
+        transform: translateX(-50%) scaleX(0);
+        width: 22px;
+        height: 3px;
+        border-radius: 999px;
+        background: var(--brand);
+        transition: transform 0.26s cubic-bezier(0.34, 1.56, 0.64, 1);
+        transform-origin: center;
+      }
+      .nav-btn.active .nav-pip {
+        transform: translateX(-50%) scaleX(1);
+      }
+
+      /* PWA Install FAB */
+      .pwa-fab {
+        position: fixed;
+        right: 16px;
+        bottom: 82px;
+        z-index: 80;
+        background: linear-gradient(135deg, #13a47a 0%, #0d8663 100%);
+        color: #fff;
+        border: none;
+        border-radius: 32px;
+        padding: 12px 18px;
+        font-size: 13px;
+        font-weight: 900;
+        letter-spacing: 0.01em;
+        box-shadow: 0 8px 28px rgba(19, 164, 122, 0.42);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        animation: fabFloat 3.5s ease-in-out infinite;
+        transition:
+          opacity 0.3s ease,
+          transform 0.3s ease;
+      }
+      .pwa-fab.hidden {
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(18px) scale(0.9) !important;
+        animation: none;
+      }
+      .pwa-fab-icon {
+        font-size: 18px;
+        flex-shrink: 0;
+        animation: fabBounce 2s ease-in-out infinite;
+      }
+      @keyframes fabFloat {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-7px);
+        }
+      }
+      @keyframes fabBounce {
+        0%,
+        100% {
+          transform: rotate(0deg);
+        }
+        25% {
+          transform: rotate(-8deg);
+        }
+        75% {
+          transform: rotate(8deg);
+        }
+      }
+
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 92px;
+        transform: translateX(-50%);
+        background: #10221c;
+        color: #fff;
+        padding: 12px 16px;
+        border-radius: 12px;
+        box-shadow: 0 14px 28px rgba(0, 0, 0, 0.22);
+        font-size: 13px;
+        opacity: 0;
+        pointer-events: none;
+        transition:
+          opacity 0.22s,
+          transform 0.22s;
+        z-index: 120;
+        max-width: min(92vw, 560px);
+        text-align: center;
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(-4px);
+      }
+
+      .overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(16, 34, 28, 0.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        backdrop-filter: blur(8px);
+        z-index: 100;
+      }
+      .overlay-card {
+        width: min(100%, 480px);
+        padding: 24px;
+        border-radius: 28px;
+        background: #fff;
+        box-shadow: 0 25px 60px rgba(16, 34, 28, 0.24);
+      }
+      .overlay-head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+      .overlay-card h3 {
+        font-size: 24px;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+      }
+      .overlay-card p {
+        font-size: 14px;
+        line-height: 1.6;
+        color: var(--muted);
+        margin-bottom: 16px;
+      }
+      .helper-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-top: 12px;
+      }
+      .helper-grid div {
+        background: #f7faf9;
+        border: 1px solid rgba(16, 34, 28, 0.06);
+        border-radius: 14px;
+        padding: 10px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .helper-grid b {
+        display: block;
+        color: var(--text);
+        margin-bottom: 4px;
+      }
+      .error {
+        font-size: 12px;
+        color: var(--danger);
+        min-height: 18px;
+        margin-top: 8px;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      /* Chapter Tracker */
+      .chapter-card {
+        background: #fff;
+        border: 1px solid rgba(16, 34, 28, 0.07);
+        border-radius: 18px;
+        padding: 16px;
+        margin-bottom: 10px;
+        transition: 0.2s ease;
+      }
+      .chapter-card.ch-complete {
+        background: linear-gradient(
+          135deg,
+          rgba(19, 164, 122, 0.07),
+          rgba(19, 164, 122, 0.03)
+        );
+        border-color: rgba(19, 164, 122, 0.28);
+      }
+      .chapter-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+      }
+      .chapter-name {
+        font-size: 15px;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        flex: 1;
+        min-width: 0;
+      }
+      .chapter-tasks {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+      }
+      @media (min-width: 480px) {
+        .chapter-tasks {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+      .ch-task {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 10px;
+        border-radius: 12px;
+        background: #f7faf9;
+        border: 1px solid rgba(16, 34, 28, 0.06);
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 700;
+        transition: 0.15s ease;
+        user-select: none;
+      }
+      .ch-task input {
+        width: 15px;
+        height: 15px;
+        accent-color: var(--brand);
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+      .ch-task.done {
+        background: #effbf6;
+        border-color: #c9efdf;
+        color: var(--muted);
+      }
+      .ch-task.done span {
+        text-decoration: line-through;
+      }
+      .ch-revision {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px dashed rgba(16, 34, 28, 0.08);
+      }
+      .rev-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 0;
+        font-size: 12px;
+        font-weight: 800;
+      }
+      .rev-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        transition: 0.2s;
+      }
+      .rev-dot.done {
+        background: var(--brand);
+      }
+      .rev-dot.pending {
+        background: #d1d5db;
+      }
+      .rev-label {
+        flex: 1;
+      }
+      /* Smart Timetable Generator 2.0 */
+      .plan-tabs {
+        display: flex;
+        overflow-x: auto;
+        gap: 6px;
+        margin-bottom: 14px;
+        padding-bottom: 2px;
+        scrollbar-width: none;
+      }
+      .plan-tab {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 900;
+        background: #f7faf9;
+        border: 1.5px solid rgba(16, 34, 28, 0.08);
+        cursor: pointer;
+        white-space: nowrap;
+        transition: 0.15s ease;
+        user-select: none;
+      }
+      .plan-tab.active {
+        background: var(--brand);
+        color: #fff;
+        border-color: var(--brand);
+      }
+      .timeline {
+        display: flex;
+        flex-direction: column;
+      }
+      .tl-row {
+        display: grid;
+        grid-template-columns: 72px 1fr;
+        gap: 10px;
+        align-items: flex-start;
+        padding: 9px 0;
+        border-bottom: 1px solid rgba(16, 34, 28, 0.05);
+      }
+      .tl-row:last-child {
+        border-bottom: none;
+      }
+      .tl-time {
+        font-size: 11px;
+        font-weight: 900;
+        color: var(--muted);
+        padding-top: 3px;
+        white-space: nowrap;
+        letter-spacing: 0.03em;
+      }
+      .tl-body {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .tl-icon {
+        font-size: 20px;
+        flex-shrink: 0;
+      }
+      .tl-act {
+        font-size: 13px;
+        font-weight: 800;
+        line-height: 1.4;
+      }
+      .week-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+        gap: 10px;
+      }
+      .week-card {
+        background: #f7faf9;
+        border-radius: 14px;
+        padding: 12px;
+        border: 1px solid rgba(16, 34, 28, 0.07);
+      }
+      .week-day-label {
+        font-size: 10px;
+        font-weight: 900;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 6px;
+      }
+      .week-task {
+        font-size: 12px;
+        font-weight: 700;
+        padding: 5px 8px;
+        border-radius: 8px;
+        background: #fff;
+        border: 1px solid rgba(16, 34, 28, 0.06);
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .month-card {
+        background: #f7faf9;
+        border-radius: 14px;
+        padding: 14px;
+        border: 1px solid rgba(16, 34, 28, 0.07);
+        margin-bottom: 10px;
+      }
+      .month-week-label {
+        font-size: 12px;
+        font-weight: 900;
+        color: var(--brand-2);
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .priority-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 900;
+        margin: 3px;
+      }
+      /* Daily Reflection Tracker */
+      .study-work-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        margin-top: 6px;
+      }
+      @media (min-width: 480px) {
+        .study-work-grid {
+          grid-template-columns: repeat(4, 1fr);
+        }
+      }
+      .sw-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        border-radius: 14px;
+        background: #f7faf9;
+        border: 1px solid rgba(16, 34, 28, 0.07);
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 800;
+        transition: 0.15s ease;
+        user-select: none;
+      }
+      .sw-item input {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--brand);
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+      .sw-item.sw-done {
+        background: #effbf6;
+        border-color: #c9efdf;
+        color: var(--brand-2);
+      }
+      .rf-test-toggle {
+        display: flex;
+        gap: 8px;
+        margin-top: 6px;
+        flex-wrap: wrap;
+      }
+      .rf-test-opt {
+        padding: 8px 18px;
+        border-radius: 20px;
+        border: 1.5px solid rgba(16, 34, 28, 0.1);
+        background: #f7faf9;
+        font-size: 13px;
+        font-weight: 900;
+        cursor: pointer;
+        transition: 0.15s ease;
+        user-select: none;
+      }
+      .rf-test-opt.sel-yes {
+        background: #effbf6;
+        border-color: var(--brand);
+        color: var(--brand-2);
+      }
+      .rf-test-opt.sel-no {
+        background: rgba(222, 76, 76, 0.08);
+        border-color: var(--danger);
+        color: var(--danger);
+      }
+      /* Error Notebook 2.0 */
+      .mistake-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 4px;
+      }
+      .mistake-chip {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 12px;
+        border-radius: 30px;
+        border: 1.5px solid rgba(16, 34, 28, 0.1);
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 800;
+        background: #f7faf9;
+        transition: 0.15s ease;
+        user-select: none;
+      }
+      .mistake-chip input[type="radio"] {
+        width: 14px;
+        height: 14px;
+        accent-color: var(--brand);
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+      .mistake-chip.selected-concept {
+        background: rgba(63, 121, 255, 0.1);
+        border-color: var(--blue);
+        color: var(--blue);
+      }
+      .mistake-chip.selected-memory {
+        background: rgba(141, 92, 246, 0.1);
+        border-color: var(--purple);
+        color: var(--purple);
+      }
+      .mistake-chip.selected-silly {
+        background: rgba(221, 152, 20, 0.14);
+        border-color: #dd9814;
+        color: #996300;
+      }
+      .mistake-chip.selected-guess {
+        background: rgba(222, 76, 76, 0.1);
+        border-color: var(--danger);
+        color: var(--danger);
+      }
+      .err-card {
+        background: #fff;
+        border: 1px solid rgba(16, 34, 28, 0.07);
+        border-radius: 16px;
+        padding: 14px;
+        margin-bottom: 10px;
+      }
+      .err-card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .err-type-badge {
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.04em;
+        flex-shrink: 0;
+      }
+      .err-concept {
+        background: rgba(63, 121, 255, 0.1);
+        color: var(--blue);
+      }
+      .err-memory {
+        background: rgba(141, 92, 246, 0.1);
+        color: var(--purple);
+      }
+      .err-silly {
+        background: rgba(221, 152, 20, 0.14);
+        color: #996300;
+      }
+      .err-guess {
+        background: rgba(222, 76, 76, 0.1);
+        color: var(--danger);
+      }
+      .err-field-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        font-size: 12px;
+        margin-bottom: 6px;
+      }
+      .err-label {
+        font-size: 10px;
+        font-weight: 900;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 2px;
+      }
+      .err-val {
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .err-rule {
+        margin-top: 8px;
+        padding: 8px 12px;
+        background: linear-gradient(
+          135deg,
+          rgba(19, 164, 122, 0.07),
+          rgba(63, 121, 255, 0.05)
+        );
+        border-radius: 10px;
+        border-left: 3px solid var(--brand);
+        font-size: 12px;
+        font-weight: 800;
+      }
+      .insight-box {
+        background: linear-gradient(
+          135deg,
+          rgba(19, 164, 122, 0.08),
+          rgba(63, 121, 255, 0.06)
+        );
+        border-radius: 14px;
+        padding: 14px 16px;
+        border: 1px solid rgba(19, 164, 122, 0.15);
+      }
+      /* Daily Checklist Score */
+      .score-ring {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 12px;
+        padding: 8px 14px;
+        font-size: 13px;
+        font-weight: 900;
+      }
+      .score-ring.good {
+        background: var(--brand-soft);
+        color: var(--brand-2);
+      }
+      .score-ring.avg {
+        background: var(--warning-soft);
+        color: #996300;
+      }
+      .score-ring.bad {
+        background: var(--danger-soft);
+        color: var(--danger);
+      }
+      .score-ring.champ {
+        background: linear-gradient(135deg, #13a47a, #3f79ff);
+        color: #fff;
+      }
+
+      .list{display:grid;gap:8px}
+      .list-item{background:#fff;border:1px solid rgba(16,34,28,.07);border-radius:16px;padding:12px 14px;box-shadow:var(--shadow-soft)}
+      .list-item .title{font-size:14px;font-weight:900;letter-spacing:-.02em;margin-bottom:3px}
+      .list-item .meta{font-size:12px;color:var(--muted);line-height:1.55}
+      .note{font-size:13px;color:var(--muted);padding:10px 2px;line-height:1.6}
+
+      @media print {
+        body {
+          background: #fff;
+        }
+        body::before,
+        .header,
+        .bottom-nav,
+        .toast,
+        .overlay,
+        .nav-tools-hide {
+          display: none !important;
+        }
+        .app {
+          max-width: none;
+          padding: 0;
+        }
+        .hero,
+        .glass,
+        .card {
+          box-shadow: none !important;
+          border: 1px solid #ddd !important;
+          background: #fff !important;
+          color: #111 !important;
+        }
+        .count-box {
+          background: #f8fafc !important;
+          color: #111 !important;
+          border: 1px solid #eee !important;
+        }
+        .page-section {
+          display: block !important;
+        }
+        .page-section:not(#dataSection) {
+          display: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body class="theme-neet">
+    <div class="overlay" id="loginOverlay">
+      <div class="overlay-card">
+        <div class="overlay-head">
+          <div class="brand-logo" id="loginBrandLogo">RR</div>
+          <div>
+            <h3>Rank Rise</h3>
+            <div style="font-size: 12px; color: var(--muted); margin-top: 2px">
+              by Pushpendra
+            </div>
+          </div>
+        </div>
+        <p>
+          Track study hours, DPPs, lectures, reviews, mocks, smart insights, and
+          a premium exam countdown in one place.
+        </p>
+        <div class="field">
+          <label for="localName">Your name</label>
+          <input
+            id="localName"
+            class="input"
+            type="text"
+            placeholder="e.g. Pushpendra"
+          />
+        </div>
+        <div class="field">
+          <label for="localExam">Target exam</label>
+          <select id="localExam" class="select">
+            <option>NEET</option>
+            <option>JEE</option>
+            <option>CUET</option>
+            <option>SSC</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div id="loginCustomExamWrap" class="field hidden">
+          <label for="loginCustomExamName">Exam name</label>
+          <input
+            id="loginCustomExamName"
+            class="input"
+            type="text"
+            placeholder="e.g. UPSC, State PSC, Bank PO"
+          />
+        </div>
+        <div id="loginCustomSubjectsWrap" class="field hidden">
+          <label for="loginCustomSubjects"
+            >Your subjects
+            <span style="font-weight: 400; color: var(--muted)"
+              >(one per line or comma-separated)</span
+            ></label
+          >
+          <textarea
+            id="loginCustomSubjects"
+            class="textarea"
+            style="min-height: 72px"
+            placeholder="e.g. History&#10;Geography&#10;Polity"
+          ></textarea>
+        </div>
+        <button id="startLocalBtn" class="btn btn-primary btn-full">
+          Start Dashboard
+        </button>
+        <div
+          style="
+            text-align: center;
+            font-size: 12px;
+            color: var(--muted);
+            margin: 14px 0 10px;
+          "
+        >
+          or continue with Google
+        </div>
+        <button id="overlayGoogleBtn" class="btn btn-soft btn-full">
+          Sign in with Google
+        </button>
+        <div id="authError" class="error"></div>
+        <div class="helper-grid">
+          <div><b>Premium UI</b>Mobile-first glass cards and bottom nav.</div>
+          <div><b>AI Insights</b>Rule-based focus guidance from your data.</div>
+          <div><b>DPP Tracking</b>Today + total, subject-wise progress.</div>
+          <div><b>Safe Save</b>Firebase + localStorage backup.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="app">
+      <header class="glass header">
+        <div class="brand">
+          <div class="brand-logo" id="brandLogo">RR</div>
+          <div>
+            <h1>Rank Rise</h1>
+            <p>by Pushpendra</p>
+          </div>
+        </div>
+
+        <div class="top-streak">
+          <div class="main" id="topStreakMain">0 🔥</div>
+          <div class="best" id="topStreakBest">Best: 0 day</div>
+        </div>
+
+        <div class="user-chip" id="userChip" style="display: none">
+          <img id="userAvatar" src="" alt="avatar" />
+          <div class="user-meta">
+            <b id="userName">Student</b>
+            <span id="userExam">NEET</span>
+          </div>
+        </div>
+      </header>
+
+      <section class="hero glass">
+        <div class="hero-top">
+          <div>
+            <div
+              style="font-size: 14px; font-weight: 800; opacity: 0.92"
+              id="heroExamTitle"
+            >
+              NEET
+            </div>
+            <div class="hero-title" id="heroTargetDate">Target: 3 May 2026</div>
+            <div class="hero-sub" id="heroNowText">Now: —</div>
+          </div>
+          <div class="badge b-brand" id="heroUrgency">On Track</div>
+        </div>
+
+        <div class="count-grid">
+          <div class="count-box">
+            <div class="num" id="cdMonth">0</div>
+            <div class="lbl">Month</div>
+          </div>
+          <div class="count-box">
+            <div class="num" id="cdDays">0</div>
+            <div class="lbl">Days</div>
+          </div>
+          <div class="count-box">
+            <div class="num" id="cdHours">0</div>
+            <div class="lbl">Hours</div>
+          </div>
+          <div class="count-box">
+            <div class="num" id="cdSeconds">0</div>
+            <div class="lbl">Seconds</div>
+          </div>
+        </div>
+
+        <div class="hero-quote">
+          <div>
+            <div class="hero-quote-text" id="heroQuoteText">
+              “Start now. Small sessions become big rank movement.”
+            </div>
+            <div class="hero-quote-author" id="heroQuoteAuthor">
+              — Rank Rise Focus Engine
+            </div>
+          </div>
+          <div class="mascot" id="heroMascot">🐱</div>
+        </div>
+      </section>
+
+      <section id="dashboardSection" class="page-section active"></section>
+      <section id="trackSection" class="page-section"></section>
+      <section id="routineSection" class="page-section"></section>
+      <section id="reviewSection" class="page-section"></section>
+      <section id="mocksSection" class="page-section"></section>
+      <section id="planSection" class="page-section"></section>
+      <section id="dataSection" class="page-section"></section>
+    </div>
+
+    <nav class="bottom-nav" id="bottomNav">
+      <button class="nav-btn active" data-page="dashboard">
+        <span class="icon">🏠</span><span class="label">Dashboard</span
+        ><span class="nav-pip"></span>
+      </button>
+      <button class="nav-btn" data-page="track">
+        <span class="icon">⏱️</span><span class="label">Track</span
+        ><span class="nav-pip"></span>
+      </button>
+      <button class="nav-btn" data-page="routine">
+        <span class="icon">📋</span><span class="label">Routine</span
+        ><span class="nav-pip"></span>
+      </button>
+      <button class="nav-btn" data-page="review">
+        <span class="icon">🔁</span><span class="label">Review</span
+        ><span class="nav-pip"></span>
+      </button>
+      <button class="nav-btn" data-page="mocks">
+        <span class="icon">📊</span><span class="label">Mocks</span
+        ><span class="nav-pip"></span>
+      </button>
+      <button class="nav-btn" data-page="plan">
+        <span class="icon">🗓️</span><span class="label">Plan</span
+        ><span class="nav-pip"></span>
+      </button>
+      <button class="nav-btn" data-page="data">
+        <span class="icon">📈</span><span class="label">Data</span
+        ><span class="nav-pip"></span>
+      </button>
+    </nav>
+
+    <button
+      class="pwa-fab hidden"
+      id="pwaInstallBtn"
+      title="Install Rank Rise App"
+    >
+      <span class="pwa-fab-icon">📲</span>
+      <span>Install App</span>
+    </button>
+
+    <div class="toast" id="toast"></div>
+
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+      import {
+        getAuth,
+        GoogleAuthProvider,
+        signInWithPopup,
+        signOut,
+        onAuthStateChanged,
+      } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+      const BRAND_LOGO = "/icon.svg";
+      const BRAND_NAME = "Rank Rise";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyATu-GbL7KzwRCQzmqwBJCH8brDdhUiAK8",
+        authDomain: "students-roi-tracker.firebaseapp.com",
+        projectId: "students-roi-tracker",
+        storageBucket: "students-roi-tracker.firebasestorage.app",
+        messagingSenderId: "1028064018046",
+        appId: "1:1028064018046:web:8c9123d5c48eb4f77b622f",
+        measurementId: "G-RVJ8CPN3V7",
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const provider = new GoogleAuthProvider();
+      const $ = (id) => document.getElementById(id);
+
+      const SUBJECTS = [
+        "Physics",
+        "Chemistry",
+        "Biology/Maths",
+        "Math",
+        "Other",
+      ];
+      const SOURCES = [
+        "YouTube",
+        "PW",
+        "Self Study",
+        "Notes",
+        "Test Series",
+        "Other",
+      ];
+      const CATEGORIES = ["Study", "Time Waste", "Entertainment"];
+      const REVISION_DAYS = [1, 3, 7, 21];
+      const MASCOTS = ["🐱", "🐰", "🐼", "🐹"];
+      const CHAPTER_TASKS = [
+        { key: "lectDone", label: "Lecture Done" },
+        { key: "notesDone", label: "Notes Done" },
+        { key: "readingDone", label: "NCERT/Book Reading" },
+        { key: "dppDone", label: "DPP Done" },
+        { key: "revDone", label: "Revision Done" },
+        { key: "mcqDone", label: "MCQ/PYQ Done" },
+      ];
+      const DEFAULT_CHECKLIST_ITEMS = [
+        { id: "cl_ex", text: "Exercise", preset: true },
+        { id: "cl_lec", text: "All Lectures", preset: true },
+        { id: "cl_pdpp", text: "Physics DPP", preset: true },
+        { id: "cl_cdpp", text: "Chemistry DPP", preset: true },
+        { id: "cl_bmcq", text: "Biology MCQ", preset: true },
+        { id: "cl_rev", text: "Revision", preset: true },
+        { id: "cl_fn", text: "Formula Notebook", preset: true },
+        { id: "cl_en", text: "Error Notebook", preset: true },
+        { id: "cl_slp", text: "Sleep 7+ Hours", preset: true },
+      ];
+
+      let currentUser = null;
+      let currentPage = "dashboard";
+      let charts = {};
+      let previousStreakShown = 0;
+
+      const timerState = {
+        running: false,
+        elapsed: 0,
+        interval: null,
+        startedAt: 0,
+        carry: 0,
+      };
+      const TIMER_KEY = "rr_timer_state";
+
+      function saveTimerState() {
+        try {
+          localStorage.setItem(
+            TIMER_KEY,
+            JSON.stringify({
+              running: timerState.running,
+              startedAt: timerState.startedAt,
+              carry: timerState.carry,
+            }),
+          );
+        } catch (e) {
+          console.error("saveTimerState", e);
+        }
+      }
+
+      function clearTimerState() {
+        try {
+          localStorage.removeItem(TIMER_KEY);
+        } catch (e) {}
+      }
+
+      function loadTimerState() {
+        try {
+          const raw = localStorage.getItem(TIMER_KEY);
+          if (!raw) return;
+          const t = JSON.parse(raw);
+          if (t.running && t.startedAt) {
+            timerState.startedAt = t.startedAt;
+            timerState.carry = t.carry || 0;
+            timerState.running = true;
+            clearInterval(timerState.interval);
+            timerState.interval = setInterval(refreshTimerDisplay, 1000);
+            refreshTimerDisplay();
+            const x = $("timerStatus");
+            if (x) x.textContent = "Running (resumed)";
+          } else if (!t.running && t.carry > 0) {
+            timerState.carry = t.carry;
+            timerState.running = false;
+            timerState.elapsed = t.carry;
+            refreshTimerDisplay();
+            const x = $("timerStatus");
+            if (x) x.textContent = "Paused";
+          }
+        } catch (e) {
+          console.error("loadTimerState", e);
+        }
+      }
+
+      function defaultData() {
+        return {
+          profile: { name: "", exam: "NEET" },
+          exam: "NEET",
+          customExamName: "",
+          customSubjects: [],
+          examDate: "2026-05-03",
+          totalStudySeconds: 0,
+          points: 0,
+          coins: 0,
+          streak: 0,
+          bestStreak: 0,
+          lastStudyDate: "",
+          sessions: [],
+          questionsSolved: 0,
+          productiveTime: 0,
+          wastedTime: 0,
+          readingTime: 0,
+          revisionTime: 0,
+          mockTests: [],
+          topics: [],
+          routineByDate: {},
+          dpp: {
+            total: 0,
+            dailyHistory: {},
+            subjects: {
+              Physics: { today: 0, total: 0 },
+              Chemistry: { today: 0, total: 0 },
+              "Biology/Maths": { today: 0, total: 0 },
+              Other: { today: 0, total: 0 },
+            },
+          },
+          lectures: {
+            total: 0,
+            subjects: {
+              Physics: { today: 0, total: 0 },
+              Chemistry: { today: 0, total: 0 },
+              "Biology/Maths": { today: 0, total: 0 },
+              Other: { today: 0, total: 0 },
+            },
+          },
+          subjectStudy: {
+            Physics: { day: 0, total: 0 },
+            Chemistry: { day: 0, total: 0 },
+            "Biology/Maths": { day: 0, total: 0 },
+            Other: { day: 0, total: 0 },
+            Revision: { day: 0, total: 0 },
+          },
+          chapters: [],
+          checklist: { items: [], byDate: {} },
+          errorNotebook: [],
+          planSubjects: [],
+          monthlyReportMonth: "",
+          localBackupVersion: 6,
+        };
+      }
+
+      let data = defaultData();
+
+      function deepMerge(base, extra) {
+        const out = Array.isArray(base) ? [...base] : { ...base };
+        if (!extra || typeof extra !== "object") return out;
+        Object.keys(extra).forEach((k) => {
+          if (Array.isArray(extra[k])) out[k] = extra[k];
+          else if (
+            extra[k] &&
+            typeof extra[k] === "object" &&
+            out[k] &&
+            typeof out[k] === "object" &&
+            !Array.isArray(out[k])
+          )
+            out[k] = deepMerge(out[k], extra[k]);
+          else out[k] = extra[k];
+        });
+        return out;
+      }
+
+      function getStorageKey() {
+        return currentUser?.uid
+          ? "rank_rise_" + currentUser.uid
+          : "rank_rise_guest";
+      }
+      function nowISO() {
+        return new Date().toISOString();
+      }
+      function todayKey() {
+        return new Date().toISOString().slice(0, 10);
+      }
+      function prevDateKey(days = 1) {
+        const d = new Date();
+        d.setDate(d.getDate() - days);
+        return d.toISOString().slice(0, 10);
+      }
+      function getMonthKey(dateStr = todayKey()) {
+        return dateStr.slice(0, 7);
+      }
+      function getWeekKey(dateStr = todayKey()) {
+        const d = new Date(dateStr);
+        const f = new Date(d.getFullYear(), 0, 1);
+        const days = Math.floor((d - f) / 86400000);
+        const wk = Math.ceil((days + f.getDay() + 1) / 7);
+        return `${d.getFullYear()}-W${wk}`;
+      }
+
+      function examPresetSubjects(exam) {
+        const key = String(exam || data.exam || "NEET").trim();
+        if (key === "NEET") return ["Biology", "Physics", "Chemistry"];
+        if (key === "JEE") return ["Maths", "Physics", "Chemistry"];
+        return [];
+      }
+      function normalizedCustomSubjects() {
+        const list = Array.isArray(data.customSubjects)
+          ? data.customSubjects
+          : [];
+        const clean = list.map((x) => String(x || "").trim()).filter(Boolean);
+        return [...new Set(clean)].slice(0, 8);
+      }
+      function activeExamLabel() {
+        return data.exam === "Other"
+          ? data.customExamName || "Other"
+          : data.exam || "NEET";
+      }
+      function activeSubjects() {
+        const preset = examPresetSubjects(data.exam);
+        if (preset.length) return preset;
+        const custom = normalizedCustomSubjects();
+        if (custom.length) return custom;
+        // For CUET/SSC/Other: no hardcoded defaults — user must define subjects in setup
+        return [];
+      }
+      function needsCustomSubjects() {
+        return ["CUET", "SSC", "Other"].includes(data.exam);
+      }
+      function studySubjectsWithRevision() {
+        return [...activeSubjects(), "Revision"];
+      }
+      function ensureExamModel() {
+        if (!data.dpp || !data.dpp.subjects)
+          data.dpp = { total: 0, subjects: {} };
+        if (!data.lectures || !data.lectures.subjects)
+          data.lectures = { total: 0, subjects: {} };
+        if (!data.subjectStudy) data.subjectStudy = {};
+        activeSubjects().forEach((s) => {
+          if (!data.dpp.subjects[s])
+            data.dpp.subjects[s] = { today: 0, total: 0 };
+          if (!data.lectures.subjects[s])
+            data.lectures.subjects[s] = { today: 0, total: 0 };
+          if (!data.subjectStudy[s])
+            data.subjectStudy[s] = { day: 0, total: 0 };
+        });
+        if (!data.subjectStudy["Revision"])
+          data.subjectStudy["Revision"] = { day: 0, total: 0 };
+        data.profile.exam = data.exam;
+      }
+
+      function loadData() {
+        const saved = localStorage.getItem(getStorageKey());
+        data = defaultData();
+        if (saved) {
+          try {
+            data = deepMerge(defaultData(), JSON.parse(saved));
+          } catch (e) {
+            console.error("loadData", e);
+          }
+        }
+        if (!data.profile.name && localStorage.getItem("student_name"))
+          data.profile.name = localStorage.getItem("student_name") || "";
+        if (!data.profile.exam && localStorage.getItem("student_exam"))
+          data.profile.exam = localStorage.getItem("student_exam") || "NEET";
+        if (!data.exam) data.exam = data.profile.exam || "NEET";
+        if (!data.profile.exam) data.profile.exam = data.exam || "NEET";
+        ensureExamModel();
+      }
+
+      function saveData(show = false) {
+        try {
+          localStorage.setItem(getStorageKey(), JSON.stringify(data));
+          localStorage.setItem("student_name", data.profile.name || "");
+          localStorage.setItem(
+            "student_exam",
+            data.exam || data.profile.exam || "NEET",
+          );
+          if (show) toast("Saved");
+        } catch (e) {
+          console.error("saveData", e);
+          toast("Could not save");
+        }
+      }
+
+      function esc(t) {
+        return String(t ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+      function fmtDate(x) {
+        if (!x) return "—";
+        const d = new Date(x);
+        if (isNaN(d)) return x;
+        return d.toLocaleDateString(undefined, {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        });
+      }
+      function fmtDateTime(x) {
+        const d = x ? new Date(x) : new Date();
+        return d.toLocaleString(undefined, {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+      }
+      function fmtHMS(sec) {
+        sec = Math.max(0, Math.floor(sec || 0));
+        const h = Math.floor(sec / 3600),
+          m = Math.floor((sec % 3600) / 60),
+          s = sec % 60;
+        return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+      }
+      function fmtHuman(sec) {
+        sec = Math.max(0, Math.floor(sec || 0));
+        const h = Math.floor(sec / 3600),
+          m = Math.floor((sec % 3600) / 60),
+          s = sec % 60;
+        if (h > 0) return `${h}h ${m}m ${s}s`;
+        if (m > 0) return `${m}m ${s}s`;
+        return `${s}s`;
+      }
+      function hours(sec) {
+        return ((sec || 0) / 3600).toFixed(1);
+      }
+      function mins(sec) {
+        return Math.floor((sec || 0) / 60);
+      }
+
+      function applyTheme() {
+        document.body.className = "";
+        const map = {
+          NEET: "theme-neet",
+          JEE: "theme-jee",
+          CUET: "theme-cuet",
+          SSC: "theme-ssc",
+          Other: "theme-other",
+        };
+        document.body.classList.add(map[data.exam] || "theme-other");
+      }
+
+      function applyBrandLogo() {
+        ["brandLogo", "loginBrandLogo"].forEach((id) => {
+          const el = $(id);
+          if (!el) return;
+          const img = new Image();
+          img.onload = () =>
+            (el.innerHTML = `<img src="${BRAND_LOGO}" alt="${BRAND_NAME} logo">`);
+          img.onerror = () => (el.textContent = "RR");
+          img.src = BRAND_LOGO;
+        });
+        const wm = new Image();
+        wm.onload = () =>
+          document.body.style.setProperty(
+            "--watermark",
+            `url("${BRAND_LOGO}")`,
+          );
+        wm.onerror = () =>
+          document.body.style.setProperty("--watermark", "none");
+        wm.src = BRAND_LOGO;
+      }
+
+      function updateAuthUI() {
+        const visible = !!(currentUser || data.profile.name);
+        $("userChip").style.display = visible ? "flex" : "none";
+        if (visible) {
+          $("userName").textContent =
+            currentUser?.displayName || data.profile.name || "Student";
+          $("userExam").textContent = activeExamLabel();
+          $("userAvatar").src = currentUser?.photoURL || "";
+        }
+        $("loginOverlay").style.display = visible ? "none" : "flex";
+      }
+
+      function signInGoogle() {
+        $("authError").textContent = "";
+        signInWithPopup(auth, provider).catch(
+          (e) =>
+            ($("authError").textContent = e.message || "Google sign-in failed"),
+        );
+      }
+      function signOutGoogle() {
+        signOut(auth).catch(() => toast("Sign out failed"));
+      }
+      function startLocalProfile() {
+        const name = $("localName").value.trim();
+        if (!name) {
+          toast("Enter your name");
+          $("localName").focus();
+          return;
+        }
+        const exam = $("localExam").value;
+        const needsCustom = ["CUET", "SSC", "Other"].includes(exam);
+        if (needsCustom) {
+          const subjectsRaw = ($("loginCustomSubjects")?.value || "")
+            .split(/\n|,/)
+            .map((x) => x.trim())
+            .filter(Boolean);
+          if (!subjectsRaw.length) {
+            toast("Add at least one subject");
+            $("loginCustomSubjects")?.focus();
+            return;
+          }
+          data.customSubjects = [...new Set(subjectsRaw)].slice(0, 8);
+          data.customExamName =
+            exam === "Other"
+              ? ($("loginCustomExamName")?.value || "").trim() || "Other"
+              : exam;
+        }
+        data.profile.name = name;
+        data.profile.exam = exam;
+        data.exam = exam;
+        ensureExamModel();
+        saveData();
+        renderApp();
+        toast("Welcome to Rank Rise");
+      }
+
+      onAuthStateChanged(auth, (user) => {
+        currentUser = user || null;
+        loadData();
+        if (currentUser) {
+          if (!data.profile.name)
+            data.profile.name = currentUser.displayName || "Student";
+          if (!data.profile.exam) data.profile.exam = data.exam || "NEET";
+          if (!data.exam) data.exam = data.profile.exam;
+          saveData();
+        }
+        updateAuthUI();
+        renderApp();
+        loadTimerState();
+      });
+
+      function ensureStreakHealth() {
+        if (!data.lastStudyDate) return;
+        const today = todayKey(),
+          y = prevDateKey(1);
+        if (data.lastStudyDate === today || data.lastStudyDate === y) return;
+        data.streak = 0;
+      }
+      function updateStreakOnStudy(dateStr) {
+        const day = (dateStr || todayKey()).slice(0, 10);
+        const y = prevDateKey(1);
+        if (data.lastStudyDate === day) return;
+        if (!data.lastStudyDate) data.streak = 1;
+        else if (data.lastStudyDate === y) data.streak += 1;
+        else data.streak = 1;
+        data.bestStreak = Math.max(data.bestStreak || 0, data.streak || 0);
+        data.lastStudyDate = day;
+      }
+
+      function countdown() {
+        if (!data.examDate) return null;
+        const now = new Date();
+        const target = new Date(data.examDate + "T00:00:00");
+        const diff = Math.max(0, target - now);
+        const totalSec = Math.floor(diff / 1000);
+        return {
+          months: Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24 * 30))),
+          days: Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24))),
+          hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+          seconds: Math.floor((diff % (1000 * 60)) / 1000),
+          totalSec,
+        };
+      }
+
+      const QUOTES = [
+        ["Believe you can and you're halfway there.", "Theodore Roosevelt"],
+        ["Discipline today becomes confidence on exam day.", "Rank Rise"],
+        ["Clear basics. Repeat revision. Protect momentum.", "Rank Rise"],
+        ["A focused hour is stronger than five distracted ones.", "Rank Rise"],
+        ["Small daily wins build visible rank movement.", "Rank Rise"],
+      ];
+
+      function heroQuote() {
+        const cd = countdown();
+        const idx =
+          (new Date().getDate() * 7 +
+            Math.floor(new Date().getMinutes() / 10)) %
+          QUOTES.length;
+        let [text, author] = QUOTES[idx];
+        if (cd && cd.days <= 15) {
+          text =
+            "Final stretch. Protect your streak and reduce avoidable waste.";
+          author = "Rank Rise Focus Engine";
+        }
+        if (cd && cd.days <= 7) {
+          text = "Stay calm. Revise smartly. Precision matters most now.";
+          author = "Rank Rise Focus Engine";
+        }
+        return { text, author };
+      }
+
+      function renderHero() {
+        const cd = countdown();
+        $("heroExamTitle").textContent = activeExamLabel();
+        $("heroTargetDate").textContent = `Target: ${fmtDate(data.examDate)}`;
+        $("heroNowText").textContent = `Now: ${fmtDateTime()}`;
+        const q = heroQuote();
+        $("heroQuoteText").textContent = `“${q.text}”`;
+        $("heroQuoteAuthor").textContent = `— ${q.author}`;
+        $("heroMascot").textContent =
+          MASCOTS[(data.streak + new Date().getDate()) % MASCOTS.length];
+        if (!cd) {
+          $("cdMonth").textContent = "0";
+          $("cdDays").textContent = "0";
+          $("cdHours").textContent = "0";
+          $("cdSeconds").textContent = "0";
+          $("heroUrgency").textContent = "Set Date";
+          $("heroUrgency").className = "badge b-warning";
+          return;
+        }
+        $("cdMonth").textContent = cd.months;
+        $("cdDays").textContent = cd.days;
+        $("cdHours").textContent = cd.hours;
+        $("cdSeconds").textContent = cd.seconds;
+        if (cd.days > 60) {
+          $("heroUrgency").textContent = "On Track";
+          $("heroUrgency").className = "badge b-brand";
+        } else if (cd.days > 21) {
+          $("heroUrgency").textContent = "Focus";
+          $("heroUrgency").className = "badge b-warning";
+        } else {
+          $("heroUrgency").textContent = "High Urgency";
+          $("heroUrgency").className = "badge b-danger";
+        }
+      }
+
+      function syncTodayRollovers() {
+        const today = todayKey();
+        const last = localStorage.getItem("rank_rise_rollover_date");
+        if (last === today) return;
+        ensureExamModel();
+        activeSubjects().forEach((s) => {
+          if (data.dpp.subjects[s]) data.dpp.subjects[s].today = 0;
+          if (data.lectures.subjects[s]) data.lectures.subjects[s].today = 0;
+        });
+        studySubjectsWithRevision().forEach((s) => {
+          if (data.subjectStudy[s]) data.subjectStudy[s].day = 0;
+        });
+        ensureTodayRoutine();
+        localStorage.setItem("rank_rise_rollover_date", today);
+        saveData();
+      }
+
+      function ensureTodayRoutine() {
+        const today = todayKey(),
+          yesterday = prevDateKey(1);
+        if (!data.routineByDate[today])
+          data.routineByDate[today] = {
+            did: "",
+            will: "",
+            achieved: "",
+            regret: "",
+            promiseTasks: [],
+            shifted: false,
+          };
+        const t = data.routineByDate[today],
+          y = data.routineByDate[yesterday];
+        if (y && !t.shifted && y.promiseTasks && y.promiseTasks.length) {
+          const ref = y.promiseTasks
+            .map((x) => `${x.done ? "✔" : "•"} ${x.text}`)
+            .join("\n");
+          const block = `Reference from yesterday plan:\n${ref}\n\n`;
+          if (!t.did.includes("Reference from yesterday plan:"))
+            t.did = block + (t.did || "");
+          t.shifted = true;
+        }
+      }
+
+      function saveSession(obj) {
+        const s = {
+          source: obj.source || "Other",
+          category: obj.category || "Study",
+          durationSeconds: Number(obj.durationSeconds || 0),
+          date: obj.date || nowISO(),
+          timestamp: obj.timestamp || nowISO(),
+          note: obj.note || "",
+          subject: obj.subject || "",
+        };
+        if (!s.durationSeconds) return;
+        data.sessions.unshift(s);
+        if (data.sessions.length > 400)
+          data.sessions = data.sessions.slice(0, 400);
+        ensureExamModel();
+        if (s.category === "Study") {
+          data.totalStudySeconds += s.durationSeconds;
+          data.points += mins(s.durationSeconds);
+          updateStreakOnStudy(s.date);
+          if (s.subject && data.subjectStudy[s.subject]) {
+            data.subjectStudy[s.subject].day += +(
+              s.durationSeconds / 3600
+            ).toFixed(2);
+            data.subjectStudy[s.subject].total += +(
+              s.durationSeconds / 3600
+            ).toFixed(2);
+          }
+        }
+        saveData();
+        renderApp();
+      }
+
+      function addDpp(subject, count = 1) {
+        if (!data.dpp.subjects[subject]) return;
+        data.dpp.total += count;
+        data.dpp.subjects[subject].today += count;
+        data.dpp.subjects[subject].total += count;
+        // Real-time daily history — drives weekly/monthly analytics
+        const dk = todayKey();
+        if (!data.dpp.dailyHistory) data.dpp.dailyHistory = {};
+        if (!data.dpp.dailyHistory[dk])
+          data.dpp.dailyHistory[dk] = { total: 0, subjects: {} };
+        data.dpp.dailyHistory[dk].total += count;
+        data.dpp.dailyHistory[dk].subjects[subject] =
+          (data.dpp.dailyHistory[dk].subjects[subject] || 0) + count;
+        saveData(true);
+        renderApp();
+      }
+
+      function dppTodayTotal() {
+        return activeSubjects().reduce(
+          (a, s) => a + (data.dpp.subjects[s]?.today || 0),
+          0,
+        );
+      }
+      function dppWeekTotal() {
+        const wk = getWeekKey();
+        return Object.entries(data.dpp.dailyHistory || {})
+          .filter(([d]) => getWeekKey(d) === wk)
+          .reduce((a, [, v]) => a + (v.total || 0), 0);
+      }
+      function dppMonthTotal() {
+        const mk = getMonthKey();
+        return Object.entries(data.dpp.dailyHistory || {})
+          .filter(([d]) => getMonthKey(d) === mk)
+          .reduce((a, [, v]) => a + (v.total || 0), 0);
+      }
+      function dppSubjectWeek(s) {
+        const wk = getWeekKey();
+        return Object.entries(data.dpp.dailyHistory || {})
+          .filter(([d]) => getWeekKey(d) === wk)
+          .reduce((a, [, v]) => a + (v.subjects?.[s] || 0), 0);
+      }
+      function dppLast7Days() {
+        const days = [];
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          const dk = d.toISOString().slice(0, 10);
+          days.push({
+            date: dk,
+            label: d.toLocaleDateString(undefined, { weekday: "short" }),
+            total: data.dpp.dailyHistory?.[dk]?.total || 0,
+          });
+        }
+        return days;
+      }
+      function addLecture(subject, count = 1) {
+        if (!data.lectures.subjects[subject]) return;
+        data.lectures.total += count;
+        data.lectures.subjects[subject].today += count;
+        data.lectures.subjects[subject].total += count;
+        saveData(true);
+        renderApp();
+      }
+
+      function studyTodaySec() {
+        return data.sessions
+          .filter(
+            (s) =>
+              s.category === "Study" &&
+              (s.date || "").slice(0, 10) === todayKey(),
+          )
+          .reduce((a, b) => a + (b.durationSeconds || 0), 0);
+      }
+      function weekStudySec() {
+        const wk = getWeekKey();
+        return data.sessions
+          .filter(
+            (s) =>
+              s.category === "Study" &&
+              getWeekKey((s.date || todayKey()).slice(0, 10)) === wk,
+          )
+          .reduce((a, b) => a + (b.durationSeconds || 0), 0);
+      }
+      function monthStudySec() {
+        const mk = getMonthKey();
+        return data.sessions
+          .filter(
+            (s) =>
+              s.category === "Study" &&
+              getMonthKey((s.date || todayKey()).slice(0, 10)) === mk,
+          )
+          .reduce((a, b) => a + (b.durationSeconds || 0), 0);
+      }
+      function yearStudySec() {
+        const yr = new Date().getFullYear();
+        return data.sessions
+          .filter(
+            (s) =>
+              s.category === "Study" && new Date(s.date).getFullYear() === yr,
+          )
+          .reduce((a, b) => a + (b.durationSeconds || 0), 0);
+      }
+      function avgMock() {
+        if (!data.mockTests.length) return null;
+        return Math.round(
+          data.mockTests.reduce((a, b) => a + Number(b.accuracy || 0), 0) /
+            data.mockTests.length,
+        );
+      }
+      function pendingRevisions() {
+        const t = todayKey();
+        return data.topics.filter((tp) =>
+          (tp.revisions || []).some(
+            (r) => r <= t && !(tp.done || []).includes(r),
+          ),
+        );
+      }
+      function overdueRevisions() {
+        const t = todayKey();
+        return data.topics.filter((tp) =>
+          (tp.revisions || []).some(
+            (r) => r < t && !(tp.done || []).includes(r),
+          ),
+        );
+      }
+      function productivityScore() {
+        const productive = +data.productiveTime || 0,
+          reading = +data.readingTime || 0,
+          revision = +data.revisionTime || 0,
+          study = (data.totalStudySeconds || 0) / 3600;
+        let wasted = +data.wastedTime || 0;
+        if (!wasted)
+          wasted = Math.max(
+            0,
+            24 - 8 - 4 - productive - reading - revision - study,
+          );
+        const good = productive + reading + revision + study,
+          total = good + wasted;
+        if (!total) return 0;
+        return Math.max(0, Math.min(100, Math.round((good / total) * 100)));
+      }
+      function roiScore() {
+        const input = Math.max(
+          1,
+          (data.totalStudySeconds || 0) / 3600 + (+data.productiveTime || 0),
+        );
+        const output =
+          (+data.questionsSolved || 0) * 0.35 +
+          (avgMock() || 0) +
+          (data.lectures.total || 0) * 1.5 +
+          (data.dpp.total || 0) * 0.2;
+        return Math.max(
+          0,
+          Math.min(100, Math.round((output / (input * 5.5)) * 100)),
+        );
+      }
+
+      function sourceSummary(month = "") {
+        const out = {};
+        const pool = month
+          ? data.sessions.filter(
+              (s) => getMonthKey((s.date || todayKey()).slice(0, 10)) === month,
+            )
+          : data.sessions;
+        pool.forEach((s) => {
+          const k = s.source || "Other";
+          if (!out[k]) out[k] = { time: 0, count: 0 };
+          out[k].time += s.durationSeconds || 0;
+          out[k].count += 1;
+        });
+        return out;
+      }
+      function categorySummary(month = "") {
+        const out = {
+          Study: { time: 0, count: 0 },
+          "Time Waste": { time: 0, count: 0 },
+          Entertainment: { time: 0, count: 0 },
+        };
+        const pool = month
+          ? data.sessions.filter(
+              (s) => getMonthKey((s.date || todayKey()).slice(0, 10)) === month,
+            )
+          : data.sessions;
+        pool.forEach((s) => {
+          const k = s.category || "Study";
+          if (!out[k]) out[k] = { time: 0, count: 0 };
+          out[k].time += s.durationSeconds || 0;
+          out[k].count += 1;
+        });
+        return out;
+      }
+
+      function insightEngine() {
+        const cd = countdown();
+        const list = [];
+        const yt = sourceSummary()["YouTube"]?.time || 0;
+        const self = sourceSummary()["Self Study"]?.time || 0;
+        const waste = categorySummary()["Time Waste"]?.time || 0;
+        const p = pendingRevisions().length;
+        const over = overdueRevisions().length;
+        const avg = avgMock();
+        if (cd && cd.days <= 15)
+          list.push({
+            title: `${cd.days} Days Left`,
+            text: "High urgency. Shift focus to mocks and weak points.",
+            tone: "danger",
+            ico: "📅",
+          });
+        if (studyTodaySec() === 0)
+          list.push({
+            title: "Action Required",
+            text: "You have not logged study today. Start with one focused session now.",
+            tone: "warning",
+            ico: "⚠️",
+          });
+        if (avg !== null && avg < 55)
+          list.push({
+            title: "Mock Tests Weak",
+            text: "Focus more on mock analysis, timed practice, and accuracy recovery.",
+            tone: "warning",
+            ico: "📉",
+          });
+        if (p >= 3)
+          list.push({
+            title: "Revision Load High",
+            text: `${p} topics need revision. Clear pending reviews before adding more new study.`,
+            tone: "danger",
+            ico: "🔁",
+          });
+        if (over > 0)
+          list.push({
+            title: "Overdue Revision",
+            text: `${over} revision item(s) are overdue. Finish backlog first.`,
+            tone: "danger",
+            ico: "🧠",
+          });
+        if (yt > self * 1.4 && yt > 0)
+          list.push({
+            title: "Video Heavy Pattern",
+            text: "YouTube time is higher than self-study. Convert watching into recall and practice.",
+            tone: "brand",
+            ico: "🎥",
+          });
+        if (waste > categorySummary()["Study"].time && waste > 0)
+          list.push({
+            title: "Waste Time Dominating",
+            text: "Tracked waste is larger than study. Cut one distraction block today.",
+            tone: "danger",
+            ico: "⛔",
+          });
+        if (productivityScore() >= 75)
+          list.push({
+            title: "Strong Productivity",
+            text: "Your focus quality is strong. Keep the same rhythm and protect your streak.",
+            tone: "brand",
+            ico: "🚀",
+          });
+        if (productivityScore() < 45)
+          list.push({
+            title: "Low Productivity",
+            text: "Make your next session shorter, clearer, and distraction-free.",
+            tone: "warning",
+            ico: "🎯",
+          });
+        if (data.dpp.total === 0)
+          list.push({
+            title: "No DPP Logged",
+            text: "Start solving DPPs. Output matters more than passive input.",
+            tone: "warning",
+            ico: "📝",
+          });
+        return list.slice(0, 4);
+      }
+
+      function motivationSignals() {
+        const out = [];
+        const cd = countdown();
+        if (data.streak > 0)
+          out.push(`Your streak is alive. Protect it today: ${data.streak} 🔥`);
+        if (cd && cd.days <= 21)
+          out.push(
+            `${cd.days} days left. Focus on weak chapters and revision first.`,
+          );
+        if (pendingRevisions().length)
+          out.push(
+            `Revision due today: ${pendingRevisions().length} topic${pendingRevisions().length === 1 ? "" : "s"}.`,
+          );
+        if (avgMock() !== null && avgMock() >= 70)
+          out.push(
+            "Good mock trend. Keep accuracy stable while increasing speed.",
+          );
+        if (avgMock() !== null && avgMock() < 50)
+          out.push(
+            "Mock average is low. Increase review and question practice.",
+          );
+        if (studyTodaySec() === 0)
+          out.push(
+            "No study logged today. One session now is better than waiting for a perfect time.",
+          );
+        if (productivityScore() >= 75)
+          out.push(
+            "Strong productivity. Repeat today’s structure tomorrow too.",
+          );
+        if (productivityScore() < 45)
+          out.push(
+            "Your focus quality needs help. Shrink the next task and start immediately.",
+          );
+        return out.slice(0, 4);
+      }
+
+      function destroyCharts() {
+        Object.values(charts).forEach((c) => {
+          if (c && typeof c.destroy === "function") c.destroy();
+        });
+        charts = {};
+      }
+      function chart(id, config, key) {
+        const el = $(id);
+        if (!el || typeof Chart === "undefined") return;
+        try {
+          charts[key] = new Chart(el, config);
+        } catch (e) {
+          console.error("chart", key, e);
+        }
+      }
+
+      function renderDashboard() {
+        const insights = insightEngine();
+        const motives = motivationSignals();
+        $("dashboardSection").innerHTML = `
+        <div class="stats-grid">
+          <div class="stat"><div class="label">Total Study Hours</div><div class="value">${hours(yearStudySec())}</div><div class="sub">Yearly</div></div>
+          <div class="stat"><div class="label">This Month</div><div class="value">${hours(monthStudySec())}</div><div class="sub">Monthly</div></div>
+          <div class="stat"><div class="label">This Week</div><div class="value">${hours(weekStudySec())}</div><div class="sub">Week</div></div>
+          <div class="stat"><div class="label">Today</div><div class="value">${hours(studyTodaySec())}</div><div class="sub">Day</div></div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="section-title"><div><h2>Total Study Hours = ${hours(data.totalStudySeconds)}</h2><div class="section-sub">Yearly, monthly, week, day tracking</div></div></div>
+            <div class="metric-table">
+              <div class="metric-row"><div class="metric-subject">Yearly</div><div class="metric-num">—</div><div class="metric-num">${hours(yearStudySec())}</div></div>
+              <div class="metric-row"><div class="metric-subject">Monthly</div><div class="metric-num">—</div><div class="metric-num">${hours(monthStudySec())}</div></div>
+              <div class="metric-row"><div class="metric-subject">Week</div><div class="metric-num">—</div><div class="metric-num">${hours(weekStudySec())}</div></div>
+              <div class="metric-row"><div class="metric-subject">Day</div><div class="metric-num">—</div><div class="metric-num">${hours(studyTodaySec())}</div></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="section-title"><div><h2>DPPs Solved = ${data.dpp.total}</h2><div class="section-sub">Today · Week · Total by subject</div></div><span class="mascot" style="font-size:42px">🐹</span></div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
+              <div style="background:var(--brand-soft);border-radius:14px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:900;color:var(--brand-2)">${dppTodayTotal()}</div><div style="font-size:11px;color:var(--muted);font-weight:800;margin-top:3px">TODAY</div></div>
+              <div style="background:var(--blue-soft);border-radius:14px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:900;color:var(--blue)">${dppWeekTotal()}</div><div style="font-size:11px;color:var(--muted);font-weight:800;margin-top:3px">THIS WEEK</div></div>
+              <div style="background:var(--purple-soft);border-radius:14px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:900;color:var(--purple)">${dppMonthTotal()}</div><div style="font-size:11px;color:var(--muted);font-weight:800;margin-top:3px">THIS MONTH</div></div>
+            </div>
+            <div class="metric-table">
+              <div class="metric-row header"><div>Subject</div><div class="metric-num">Today</div><div class="metric-num">Week</div><div class="metric-num">Total</div></div>
+              ${activeSubjects()
+                .map(
+                  (s, i) =>
+                    `<div class="metric-row" style="grid-template-columns:1.6fr .6fr .6fr .6fr"><div class="metric-subject"><span class="metric-icon">${["📁", "🧪", "🧬", "💬", "📘", "📝", "💻", "🗂️"][i] || "📘"}</span>${esc(s)}</div><div class="metric-num">${data.dpp.subjects[s]?.today || 0}</div><div class="metric-num">${dppSubjectWeek(s)}</div><div class="metric-num">${data.dpp.subjects[s]?.total || 0}</div></div>`,
+                )
+                .join("")}
+            </div>
+            <div style="margin-top:12px"><div style="font-size:11px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">7-Day DPP Trend</div><div class="chart-wrap sm"><canvas id="dppTrendChart"></canvas></div></div>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top:14px">
+          <div class="card">
+            <div class="section-title"><div><h2>Total Lecture = ${data.lectures.total}</h2><div class="section-sub">Today + total by subject</div></div></div>
+            <div class="metric-table">
+              <div class="metric-row header"><div>Subject</div><div class="metric-num">Today</div><div class="metric-num">Total</div></div>
+              ${activeSubjects()
+                .map(
+                  (s) =>
+                    `<div class="metric-row"><div class="metric-subject">${esc(s)}</div><div class="metric-num">${data.lectures.subjects[s]?.today || 0}</div><div class="metric-num">${data.lectures.subjects[s]?.total || 0}</div></div>`,
+                )
+                .join("")}
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="section-title"><div><h2>Subject-wise Study Hours = ${Object.values(
+              data.subjectStudy,
+            )
+              .reduce((a, b) => a + (+b.total || 0), 0)
+              .toFixed(
+                1,
+              )}</h2><div class="section-sub">Day + total by subject</div></div><span class="mascot" style="font-size:42px">🐰</span></div>
+            <div class="metric-table">
+              <div class="metric-row header"><div>Subject</div><div class="metric-num">Day</div><div class="metric-num">Total</div></div>
+              ${studySubjectsWithRevision()
+                .map(
+                  (s) =>
+                    `<div class="metric-row"><div class="metric-subject">${esc(s)}</div><div class="metric-num">${(+data.subjectStudy[s]?.day || 0).toFixed(1)}</div><div class="metric-num">${(+data.subjectStudy[s]?.total || 0).toFixed(1)}</div></div>`,
+                )
+                .join("")}
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:14px">
+          <div class="section-title"><div><h2>Smart Insights</h2><div class="section-sub">AI-style signals from your tracked data</div></div><span class="badge b-blue">Live insights</span></div>
+          <div class="insight-list">
+            ${insights.map((ins) => `<div class="insight-card tone-${ins.tone}"><div class="insight-ico">${ins.ico}</div><div><h4>${esc(ins.title)}</h4><p>${esc(ins.text)}</p></div><div style="font-size:20px;color:#90a0a7">›</div></div>`).join("")}
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:14px">
+          <div class="section-title"><div><h2>Motivation Engine</h2><div class="section-sub">Short useful signals, not generic clutter</div></div></div>
+          <div class="list">${motives.map((m, i) => `<div class="list-item"><div class="title">Signal ${i + 1}</div><div class="meta">${esc(m)}</div></div>`).join("")}</div>
+        </div>
+      `;
+      }
+
+      function renderTrack() {
+        $("trackSection").innerHTML = `
+        <div class="grid-2">
+          <div class="card">
+            <div class="section-title"><div><h2>Exam & Subject Setup</h2><div class="section-sub">Change exam date and auto-update subjects by exam</div></div></div>
+            <div class="field"><label>Exam</label><select id="trackExamSelect" class="select">${["NEET", "JEE", "CUET", "SSC", "Other"].map((x) => `<option ${data.exam === x ? "selected" : ""}>${x}</option>`).join("")}</select></div>
+            <div class="field"><label>Exam Date</label><input id="trackExamDate" class="input" type="date" value="${esc(data.examDate || "")}"></div>
+            <div class="field ${data.exam === "Other" ? "" : "hidden"}" id="customExamWrap"><label>Custom Exam Name</label><input id="customExamName" class="input" type="text" placeholder="e.g. History / Geography / Computer" value="${esc(data.customExamName || "")}"></div>
+            <div class="field ${["CUET", "SSC", "Other"].includes(data.exam) ? "" : "hidden"}" id="customSubjectsWrap"><label>Subjects (comma or new line separated)</label><textarea id="customSubjectsInput" class="textarea" placeholder="e.g. History, Geography, Computer">${esc((data.customSubjects || []).join(", "))}</textarea></div>
+            <button id="saveExamSetupBtn" class="btn btn-primary btn-full">Save Exam Setup</button>
+            <div class="note" style="margin-top:12px">Active exam: <b>${esc(activeExamLabel())}</b><br>Active subjects: <b>${esc(activeSubjects().join(", "))}</b></div>
+          </div>
+
+          <div class="card">
+            <div class="section-title"><div><h2>Track Session</h2><div class="section-sub">Source + category + note + safe save</div></div></div>
+            <div class="field"><label>Source / App</label><select id="trackSource" class="select">${SOURCES.map((x) => `<option>${x}</option>`).join("")}</select></div>
+            <div class="field hidden" id="otherSourceWrap"><label>Custom source name</label><input id="otherSourceInput" class="input" type="text" placeholder="e.g. Telegram / Browser / Coaching App"></div>
+            <div class="field"><label>Category</label><select id="trackCategory" class="select">${CATEGORIES.map((x) => `<option>${x}</option>`).join("")}</select></div>
+            <div class="field"><label>Subject (optional, for study sessions)</label><select id="trackSubject" class="select"><option value="">Not linked</option>${studySubjectsWithRevision()
+              .map((x) => `<option>${x}</option>`)
+              .join("")}</select></div>
+            <div class="field"><label>Session note</label><input id="trackNote" class="input" type="text" placeholder="e.g. Biology revision / YouTube PYQ / Chemistry notes"></div>
+            <div style="font-size:42px;font-weight:900;letter-spacing:-.04em;margin:8px 0 8px" id="timerDisplay">${fmtHMS(timerState.elapsed)}</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:12px" id="timerStatus">Ready to start</div>
+            <div class="row">
+              <button id="startTimerBtn" class="btn btn-primary">Start</button>
+              <button id="pauseTimerBtn" class="btn">Pause</button>
+              <button id="stopTimerBtn" class="btn btn-soft">Stop & Save</button>
+              <button id="resetTimerBtn" class="btn btn-warning">Reset</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="section-title"><div><h2>Quick Progress Add</h2><div class="section-sub">Add DPP and lectures instantly</div></div></div>
+            <div class="field"><label>DPP subject</label><select id="quickDppSubject" class="select">${activeSubjects()
+              .map((x) => `<option>${x}</option>`)
+              .join("")}</select></div>
+            <div class="field"><label>DPP count</label><input id="quickDppCount" class="input" type="number" min="1" value="1"></div>
+            <button id="addDppBtn" class="btn btn-primary btn-full">Add DPP</button>
+            <div style="height:10px"></div>
+            <div class="field"><label>Lecture subject</label><select id="quickLectureSubject" class="select">${activeSubjects()
+              .map((x) => `<option>${x}</option>`)
+              .join("")}</select></div>
+            <div class="field"><label>Lecture count</label><input id="quickLectureCount" class="input" type="number" min="1" value="1"></div>
+            <button id="addLectureBtn" class="btn btn-soft btn-full">Add Lecture</button>
+            <div class="note" style="margin-top:12px">Study sessions linked to a subject automatically increase subject-wise study hour totals.</div>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top:14px">
+          <div class="card">
+            <div class="section-title"><div><h2>Source Usage</h2><div class="section-sub">Where your time is going</div></div></div>
+            <div class="chart-wrap sm"><canvas id="trackSourceChart"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="section-title"><div><h2>Category Usage</h2><div class="section-sub">Study vs waste vs entertainment</div></div></div>
+            <div class="chart-wrap sm"><canvas id="trackCategoryChart"></canvas></div>
+          </div>
+        </div>
+      `;
+
+        const trackExamSelect = $("trackExamSelect");
+        const customExamWrap = $("customExamWrap");
+        const customSubjectsWrap = $("customSubjectsWrap");
+        trackExamSelect.addEventListener("change", (e) => {
+          const val = e.target.value;
+          customExamWrap.classList.toggle("hidden", val !== "Other");
+          customSubjectsWrap.classList.toggle(
+            "hidden",
+            !["CUET", "SSC", "Other"].includes(val),
+          );
+        });
+        $("saveExamSetupBtn").addEventListener("click", () => {
+          data.exam = $("trackExamSelect").value;
+          data.profile.exam = data.exam;
+          data.examDate = $("trackExamDate").value || data.examDate;
+          data.customExamName = ($("customExamName")?.value || "").trim();
+          const customRaw = ($("customSubjectsInput")?.value || "")
+            .split(/\n|,/)
+            .map((x) => x.trim())
+            .filter(Boolean);
+          data.customSubjects = [...new Set(customRaw)].slice(0, 8);
+          ensureExamModel();
+          saveData(true);
+          renderApp();
+          toast("Exam setup updated");
+        });
+        $("trackSource").addEventListener("change", (e) =>
+          $("otherSourceWrap").classList.toggle(
+            "hidden",
+            e.target.value !== "Other",
+          ),
+        );
+        $("startTimerBtn").addEventListener("click", startTimer);
+        $("pauseTimerBtn").addEventListener("click", pauseTimer);
+        $("stopTimerBtn").addEventListener("click", stopTimer);
+        $("resetTimerBtn").addEventListener("click", resetTimer);
+        $("addDppBtn").addEventListener("click", () =>
+          addDpp(
+            $("quickDppSubject").value,
+            Math.max(1, Number($("quickDppCount").value || 1)),
+          ),
+        );
+        $("addLectureBtn").addEventListener("click", () =>
+          addLecture(
+            $("quickLectureSubject").value,
+            Math.max(1, Number($("quickLectureCount").value || 1)),
+          ),
+        );
+      }
+
+      // ─── Daily Checklist ────────────────────────────────────────────────────────
+      function ensureChecklist() {
+        if (!data.checklist || typeof data.checklist !== "object")
+          data.checklist = { items: [], byDate: {} };
+        if (
+          !Array.isArray(data.checklist.items) ||
+          !data.checklist.items.length
+        )
+          data.checklist.items = DEFAULT_CHECKLIST_ITEMS.map((x) => ({ ...x }));
+        if (!data.checklist.byDate) data.checklist.byDate = {};
+      }
+      function todayChecklistStatus() {
+        ensureChecklist();
+        return data.checklist.byDate[todayKey()] || {};
+      }
+      function checklistScore() {
+        const s = todayChecklistStatus();
+        return Object.values(s).filter(Boolean).length;
+      }
+      function getDayLabel(score, total) {
+        if (total > 0 && score >= total)
+          return { label: "Champion Day 🏆", cls: "champ" };
+        if (score >= 8) return { label: "Good Day ⭐", cls: "good" };
+        if (score >= 5) return { label: "Average Day 📘", cls: "avg" };
+        return { label: "Bad Day 😔", cls: "bad" };
+      }
+      function toggleChecklistItem(id) {
+        ensureChecklist();
+        const dk = todayKey();
+        if (!data.checklist.byDate[dk]) data.checklist.byDate[dk] = {};
+        data.checklist.byDate[dk][id] = !data.checklist.byDate[dk][id];
+        saveData();
+        renderRoutine();
+      }
+      function deleteChecklistItem(id) {
+        ensureChecklist();
+        data.checklist.items = data.checklist.items.filter((x) => x.id !== id);
+        if (data.checklist.byDate[todayKey()])
+          delete data.checklist.byDate[todayKey()][id];
+        saveData();
+        renderRoutine();
+      }
+      function addChecklistItem(text) {
+        if (!text.trim()) {
+          toast("Enter task name");
+          return;
+        }
+        ensureChecklist();
+        const id = "cl_" + Date.now();
+        data.checklist.items.push({ id, text: text.trim(), preset: false });
+        saveData();
+        renderRoutine();
+        toast("Task added");
+      }
+      function editChecklistItem(id, newText) {
+        ensureChecklist();
+        const it = data.checklist.items.find((x) => x.id === id);
+        if (!it || !newText.trim()) return;
+        it.text = newText.trim();
+        saveData();
+        renderRoutine();
+      }
+      function checklistHTML() {
+        ensureChecklist();
+        const status = todayChecklistStatus(),
+          items = data.checklist.items;
+        const score = checklistScore(),
+          dl = getDayLabel(score, items.length);
+        return `<div class="card" style="margin-top:14px">
+        <div class="section-title">
+          <div><h2>Daily Checklist</h2><div class="section-sub">Score: ${score}/${items.length} — <span style="font-weight:900">${dl.label}</span></div></div>
+          <span class="score-ring ${dl.cls}">${score}/${items.length}</span>
+        </div>
+        <div class="task-list">
+          ${items
+            .map((item) => {
+              const checked = !!status[item.id];
+              return `<div class="task-row ${checked ? "done" : ""}" style="display:flex;align-items:center;gap:10px">
+              <label style="flex:1;display:flex;align-items:center;gap:10px;cursor:pointer">
+                <input type="checkbox" data-cl-id="${item.id}" ${checked ? "checked" : ""} style="width:16px;height:16px;accent-color:var(--brand);cursor:pointer;flex-shrink:0">
+                <span class="txt">${esc(item.text)}</span>
+              </label>
+              <div style="display:flex;gap:6px;flex-shrink:0">
+                <button class="btn btn-soft" style="padding:4px 8px;font-size:11px" data-cl-edit="${item.id}">✏</button>
+                ${!item.preset ? `<button class="btn btn-danger" style="padding:4px 8px;font-size:11px" data-cl-del="${item.id}">🗑</button>` : ""}
+              </div>
+            </div>`;
+            })
+            .join("")}
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <input id="newClItem" class="input" type="text" placeholder="Add custom task..." style="flex:1">
+          <button id="addClItemBtn" class="btn btn-primary">+ Add Task</button>
+        </div>
+      </div>`;
+      }
+      // ────────────────────────────────────────────────────────────────────────────
+
+      // ─── Daily Reflection Tracker ───────────────────────────────────────────────
+      const STUDY_WORK_ITEMS = [
+        { key: "theoryRevised", label: "Theory Revised", icon: "📖" },
+        { key: "dppSolved", label: "DPP Solved", icon: "📝" },
+        { key: "pyqPracticed", label: "PYQ Practiced", icon: "🎯" },
+        { key: "formulaRevised", label: "Formula Revised", icon: "🔢" },
+      ];
+      function reflectionHTML(t) {
+        const sw = t.studyWork || {};
+        const hadTest = t.hadTest || "";
+        return `<div class="card" style="margin-top:14px">
+        <div class="section-title"><div><h2>Daily Reflection Tracker</h2><div class="section-sub">Notebook-style · auto-saved · permanent per day</div></div><span class="badge b-brand">📔 Today</span></div>
+
+        <div class="field">
+          <label>Today's Study Work</label>
+          <div class="study-work-grid">
+            ${STUDY_WORK_ITEMS.map(
+              (
+                item,
+              ) => `<label class="sw-item ${sw[item.key] ? "sw-done" : ""}">
+              <input type="checkbox" data-sw-key="${item.key}" ${sw[item.key] ? "checked" : ""}>
+              ${item.icon} ${item.label}
+            </label>`,
+            ).join("")}
+          </div>
+        </div>
+
+        <div class="field"><label>How was your study today?</label><input id="rfStudyRating" class="input" type="text" placeholder="e.g. Productive, Distracted, Average, Deep Focus…" value="${esc(t.studyRating || "")}"></div>
+
+        <div class="field">
+          <label>Any Test?</label>
+          <div class="rf-test-toggle">
+            <label class="rf-test-opt ${hadTest === "yes" ? "sel-yes" : ""}"><input type="radio" name="rfHadTest" value="yes" ${hadTest === "yes" ? "checked" : ""} style="display:none"> ✔ Yes</label>
+            <label class="rf-test-opt ${hadTest === "no" ? "sel-no" : ""}"><input type="radio" name="rfHadTest" value="no" ${hadTest === "no" ? "checked" : ""} style="display:none"> ✗ No</label>
+          </div>
+        </div>
+
+        <div id="rfTestFields" class="${hadTest === "yes" ? "" : "hidden"}">
+          <div class="grid-2">
+            <div class="field"><label>Test Name</label><input id="rfTestName" class="input" type="text" placeholder="e.g. DPP Test, Mock 5, PW Test" value="${esc(t.testName || "")}"></div>
+            <div class="field"><label>Score</label><input id="rfTestScore" class="input" type="text" placeholder="e.g. 72/100" value="${esc(t.testScore || "")}"></div>
+          </div>
+          <div class="field"><label>Accuracy</label><input id="rfTestAccuracy" class="input" type="text" placeholder="e.g. 88%" value="${esc(t.testAccuracy || "")}"></div>
+        </div>
+
+        <div class="field"><label>⚡ 1 Mistake I Must Not Repeat</label><input id="rfMistake" class="input" type="text" placeholder="Be specific — one mistake only…" value="${esc(t.mistakeNotRepeat || "")}"></div>
+        <div class="field"><label>🌱 Today I Improved At</label><input id="rfImproved" class="input" type="text" placeholder="e.g. Organic chemistry speed, Newton's law problems…" value="${esc(t.improvedAt || "")}"></div>
+        <div class="field"><label>Notes</label><textarea id="rfNotes" class="textarea" rows="4" placeholder="Anything else worth remembering from today…">${esc(t.reflectionNotes || "")}</textarea></div>
+      </div>`;
+      }
+      // ───────────────────────────────────────────────────────────────v��────────────
+
+      function renderRoutine() {
+        ensureTodayRoutine();
+        const t = data.routineByDate[todayKey()];
+        $("routineSection").innerHTML = `
+        <div class="grid-2">
+          <div class="card">
+            <div class="section-title"><div><h2>Daily Journal</h2><div class="section-sub">Auto-saved and date-aware</div></div></div>
+            <div class="field"><label>What I did</label><textarea id="routineDid" class="textarea">${esc(t.did || "")}</textarea></div>
+            <div class="field"><label>What I will do (one task per line)</label><textarea id="routineWill" class="textarea">${esc(t.will || "")}</textarea></div>
+            <div class="row"><button id="buildTasksBtn" class="btn btn-primary">Create Promise Tasks</button></div>
+            <div class="field" style="margin-top:12px"><label>What I achieved</label><textarea id="routineAchieved" class="textarea">${esc(t.achieved || "")}</textarea></div>
+            <div class="field"><label>What I regret</label><textarea id="routineRegret" class="textarea">${esc(t.regret || "")}</textarea></div>
+          </div>
+
+          <div class="card">
+            <div class="section-title"><div><h2>Promise Tasks</h2><div class="section-sub">Tick completed tasks with a satisfying update</div></div></div>
+            <div class="task-list" id="taskList">
+              ${(t.promiseTasks || []).length ? (t.promiseTasks || []).map((task, i) => `<label class="task-row ${task.done ? "done" : ""}"><input type="checkbox" data-task-index="${i}" ${task.done ? "checked" : ""}><span class="txt">${esc(task.text)}</span><span>${task.done ? "✨" : "○"}</span></label>`).join("") : `<div class="note">No tasks yet. Write tasks in “What I will do” and press Create Promise Tasks.</div>`}
+            </div>
+          </div>
+        </div>
+        ${checklistHTML()}
+        ${reflectionHTML(t)}
+      `;
+
+        [
+          "routineDid",
+          "routineWill",
+          "routineAchieved",
+          "routineRegret",
+        ].forEach((id) => {
+          $(id).addEventListener("input", (e) => {
+            const map = {
+              routineDid: "did",
+              routineWill: "will",
+              routineAchieved: "achieved",
+              routineRegret: "regret",
+            };
+            data.routineByDate[todayKey()][map[id]] = e.target.value;
+            saveData();
+          });
+        });
+        $("buildTasksBtn").addEventListener("click", buildPromiseTasks);
+        Array.from(document.querySelectorAll("[data-task-index]")).forEach(
+          (el) =>
+            el.addEventListener("change", () =>
+              toggleTask(Number(el.dataset.taskIndex)),
+            ),
+        );
+        // Daily Checklist listeners
+        document
+          .querySelectorAll("[data-cl-id]")
+          .forEach((el) =>
+            el.addEventListener("change", () =>
+              toggleChecklistItem(el.dataset.clId),
+            ),
+          );
+        document
+          .querySelectorAll("[data-cl-del]")
+          .forEach((btn) =>
+            btn.addEventListener("click", () =>
+              deleteChecklistItem(btn.dataset.clDel),
+            ),
+          );
+        document.querySelectorAll("[data-cl-edit]").forEach((btn) =>
+          btn.addEventListener("click", () => {
+            const id = btn.dataset.clEdit;
+            const it = data.checklist?.items?.find((x) => x.id === id);
+            if (!it) return;
+            const newText = prompt("Edit task name:", it.text);
+            if (newText) editChecklistItem(id, newText);
+          }),
+        );
+        $("addClItemBtn")?.addEventListener("click", () => {
+          const inp = $("newClItem");
+          addChecklistItem(inp?.value || "");
+          if (inp) inp.value = "";
+        });
+        $("newClItem")?.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            addChecklistItem(e.target.value);
+            e.target.value = "";
+          }
+        });
+        // Daily Reflection Tracker listeners
+        const dk = todayKey();
+        document.querySelectorAll("[data-sw-key]").forEach((el) => {
+          el.addEventListener("change", () => {
+            if (!data.routineByDate[dk].studyWork)
+              data.routineByDate[dk].studyWork = {};
+            data.routineByDate[dk].studyWork[el.dataset.swKey] = el.checked;
+            const lbl = el.closest(".sw-item");
+            if (lbl) {
+              el.checked
+                ? lbl.classList.add("sw-done")
+                : lbl.classList.remove("sw-done");
+            }
+            saveData();
+          });
+        });
+        document.querySelectorAll('input[name="rfHadTest"]').forEach((r) => {
+          r.addEventListener("change", () => {
+            data.routineByDate[dk].hadTest = r.value;
+            document
+              .querySelectorAll(".rf-test-opt")
+              .forEach((l) => l.classList.remove("sel-yes", "sel-no"));
+            const lbl = r.closest(".rf-test-opt");
+            if (lbl) lbl.classList.add("sel-" + r.value);
+            const tf = $("rfTestFields");
+            if (tf) tf.classList.toggle("hidden", r.value !== "yes");
+            saveData();
+          });
+        });
+        [
+          ["rfStudyRating", "studyRating"],
+          ["rfTestName", "testName"],
+          ["rfTestScore", "testScore"],
+          ["rfTestAccuracy", "testAccuracy"],
+          ["rfMistake", "mistakeNotRepeat"],
+          ["rfImproved", "improvedAt"],
+        ].forEach(([id, key]) => {
+          $(id)?.addEventListener("input", (e) => {
+            data.routineByDate[dk][key] = e.target.value;
+            saveData();
+          });
+        });
+        $("rfNotes")?.addEventListener("input", (e) => {
+          data.routineByDate[dk].reflectionNotes = e.target.value;
+          saveData();
+        });
+      }
+
+      function buildPromiseTasks() {
+        ensureTodayRoutine();
+        const raw = $("routineWill").value.trim();
+        data.routineByDate[todayKey()].will = raw;
+        data.routineByDate[todayKey()].promiseTasks = raw
+          .split("\n")
+          .map((x) => x.trim())
+          .filter(Boolean)
+          .map((x) => ({ text: x, done: false, createdAt: nowISO() }));
+        saveData();
+        renderRoutine();
+        toast("Promise tasks created");
+      }
+      function toggleTask(index) {
+        const list = data.routineByDate[todayKey()].promiseTasks || [];
+        const task = list[index];
+        if (!task) return;
+        task.done = !task.done;
+        saveData();
+        renderRoutine();
+        toast(task.done ? "Task completed ✨" : "Task reopened");
+      }
+
+      // ─── Chapter Tracker ───────────────────────────────────────────────────────
+      function chapterTasksDoneCount(ch) {
+        return CHAPTER_TASKS.filter((t) => ch.tasks?.[t.key]).length;
+      }
+      function checkAndCompleteChapter(idx) {
+        const ch = data.chapters[idx];
+        if (!ch) return;
+        const nowComplete = CHAPTER_TASKS.every((t) => ch.tasks?.[t.key]);
+        if (nowComplete && !ch.complete) {
+          ch.complete = true;
+          ch.completedAt = todayKey();
+          ch.revisions = REVISION_DAYS.map((d) => {
+            const dt = new Date();
+            dt.setDate(dt.getDate() + d);
+            return dt.toISOString().slice(0, 10);
+          });
+          ch.revisionDone = [];
+          toast(`${ch.name} COMPLETE 🟢 Revision scheduled!`);
+        } else if (!nowComplete && ch.complete) {
+          ch.complete = false;
+          ch.completedAt = null;
+          ch.revisions = null;
+          ch.revisionDone = [];
+        }
+      }
+      function toggleChapterTask(chIdx, taskKey) {
+        const ch = data.chapters[chIdx];
+        if (!ch) return;
+        if (!ch.tasks) ch.tasks = {};
+        ch.tasks[taskKey] = !ch.tasks[taskKey];
+        checkAndCompleteChapter(chIdx);
+        saveData();
+        renderReview();
+      }
+      function deleteChapter(idx) {
+        if (!confirm("Delete this chapter and its revision schedule?")) return;
+        data.chapters.splice(idx, 1);
+        saveData();
+        renderReview();
+        toast("Chapter deleted");
+      }
+      function markChapterRevDone(chIdx, date) {
+        const ch = data.chapters[chIdx];
+        if (!ch) return;
+        if (!ch.revisionDone) ch.revisionDone = [];
+        if (!ch.revisionDone.includes(date)) ch.revisionDone.push(date);
+        saveData();
+        renderReview();
+        toast("Revision done ✔");
+      }
+      function saveNewChapter() {
+        const subject = $("newChSubject")?.value;
+        const name = ($("newChName")?.value || "").trim();
+        if (!name) {
+          toast("Enter chapter name");
+          $("newChName")?.focus();
+          return;
+        }
+        data.chapters.push({
+          id: "ch_" + Date.now(),
+          subject: subject || activeSubjects()[0] || "General",
+          name,
+          tasks: {
+            lectDone: false,
+            notesDone: false,
+            readingDone: false,
+            dppDone: false,
+            revDone: false,
+            mcqDone: false,
+          },
+          complete: false,
+          completedAt: null,
+          revisions: null,
+          revisionDone: [],
+          createdAt: nowISO(),
+        });
+        saveData();
+        renderReview();
+        toast("Chapter added");
+      }
+      function chapterTrackerHTML() {
+        const subs = activeSubjects();
+        const subjectOpts = (subs.length ? subs : ["General"])
+          .map((s) => `<option>${esc(s)}</option>`)
+          .join("");
+        let rows = "";
+        if (!data.chapters.length) {
+          rows = `<div style="color:var(--muted);font-size:13px;padding:10px 0">No chapters yet. Click "+ Add Chapter" to start.</div>`;
+        } else {
+          // Group by subject
+          const groups = {};
+          (subs.length ? subs : ["General"]).forEach((s) => (groups[s] = []));
+          data.chapters.forEach((ch, gi) => {
+            const key = subs.includes(ch.subject) ? ch.subject : "Other";
+            if (!groups[key]) groups[key] = [];
+            groups[key].push({ ch, gi });
+          });
+          Object.entries(groups).forEach(([subj, list]) => {
+            if (!list.length) return;
+            rows += `<div style="margin-bottom:6px"><div style="font-size:11px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;padding:6px 2px 4px">${esc(subj)}</div>`;
+            list.forEach(({ ch, gi }) => {
+              const done = chapterTasksDoneCount(ch),
+                complete = ch.complete;
+              const allRevDone =
+                complete &&
+                ch.revisions &&
+                ch.revisions.every((r) => (ch.revisionDone || []).includes(r));
+              rows += `<div class="chapter-card ${complete ? "ch-complete" : ""}">
+              <div class="chapter-header">
+                <span class="chapter-name">${complete ? "🟢" : "⬜"} ${esc(ch.name)}</span>
+                ${complete ? `<span class="badge b-brand">✓ COMPLETE</span>` : `<span style="font-size:12px;color:var(--muted);font-weight:800">${done}/6 done</span>`}
+                <button class="btn btn-danger" style="padding:5px 10px;font-size:11px" data-del-ch="${gi}">🗑</button>
+              </div>
+              <div class="chapter-tasks">
+                ${CHAPTER_TASKS.map((t) => `<label class="ch-task ${ch.tasks?.[t.key] ? "done" : ""}"><input type="checkbox" data-ch-idx="${gi}" data-ch-task="${t.key}" ${ch.tasks?.[t.key] ? "checked" : ""}><span>${esc(t.label)}</span></label>`).join("")}
+              </div>
+              ${
+                complete && ch.revisions
+                  ? `<div class="ch-revision">
+                <div style="font-size:11px;font-weight:900;color:${allRevDone ? "var(--brand-2)" : "var(--muted)"};margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">${allRevDone ? "😊 Revision Cycle Complete ✅" : "1–3–7–21 Revision Schedule"}</div>
+                ${ch.revisions
+                  .map((r, i) => {
+                    const isDone = (ch.revisionDone || []).includes(r);
+                    return `<div class="rev-row"><span class="rev-dot ${isDone ? "done" : "pending"}"></span><span class="rev-label">Day ${REVISION_DAYS[i]} — ${fmtDate(r)}</span>${isDone ? '<span style="color:var(--brand);font-size:12px;font-weight:900">✔ Done</span>' : `<button class="btn btn-soft" style="padding:4px 10px;font-size:11px" data-ch-rev-idx="${gi}" data-ch-rev-date="${r}">Mark Done</button>`}</div>`;
+                  })
+                  .join("")}
+              </div>`
+                  : ""
+              }
+            </div>`;
+            });
+            rows += `</div>`;
+          });
+        }
+        return `<div class="card" style="margin-bottom:14px">
+        <div class="section-title"><div><h2>Chapter Tracker</h2><div class="section-sub">All 6 tasks done = Chapter Complete → Auto 1-3-7-21</div></div><button id="showAddChBtn" class="btn btn-primary">+ Add Chapter</button></div>
+        <div id="addChForm" class="hidden" style="margin-bottom:14px;padding:14px;background:#f7faf9;border-radius:14px;border:1px solid rgba(16,34,28,.06)">
+          <div class="grid-2"><div class="field" style="margin-bottom:8px"><label>Subject</label><select id="newChSubject" class="select">${subjectOpts}</select></div><div class="field" style="margin-bottom:8px"><label>Chapter Name</label><input id="newChName" class="input" type="text" placeholder="e.g. Motion, NLM, WEP"></div></div>
+          <div class="row"><button id="saveNewChBtn" class="btn btn-primary">Save Chapter</button><button id="cancelChBtn" class="btn">Cancel</button></div>
+        </div>
+        ${rows}
+      </div>`;
+      }
+      // ───────────────────────────────────────────────────────────────────────────
+
+      function renderReview() {
+        $("reviewSection").innerHTML =
+          chapterTrackerHTML() +
+          `
+        <div class="grid-2">
+          <div class="card">
+            <div class="section-title"><div><h2>Save Topic for Revision</h2><div class="section-sub">Auto creates 1-3-7-21 revision schedule</div></div></div>
+            <div class="field"><label>Topic studied today</label><textarea id="reviewTopicInput" class="textarea" placeholder="e.g. Cell division / Trigonometry identities / Organic revision"></textarea></div>
+            <button id="saveTopicBtn" class="btn btn-primary btn-full">Save Topic & Schedule Revisions</button>
+          </div>
+          <div class="card">
+            <div class="section-title"><div><h2>Pending Revisions</h2><div class="section-sub">Due today or overdue</div></div><span class="badge ${pendingRevisions().length ? "b-danger" : "b-brand"}">${pendingRevisions().length}</span></div>
+            ${renderPendingReviews(true)}
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:14px">
+          <div class="section-title"><div><h2>Full Revision Schedule</h2><div class="section-sub">All saved topics and all revision dates</div></div></div>
+          <div class="list">
+            ${data.topics.length ? data.topics.map((tp, idx) => `<div class="list-item"><div class="title">${esc(tp.topic)}</div><div class="meta">Saved: ${fmtDate(tp.date)}<br>${(tp.revisions || []).map((r, i) => `Day ${REVISION_DAYS[i]}: ${r} ${(tp.done || []).includes(r) ? "✔" : ""}`).join("<br>")}</div></div>`).join("") : `<div class="note">No topics saved yet.</div>`}
+          </div>
+        </div>
+      `;
+        $("saveTopicBtn").addEventListener("click", saveTopicForReview);
+        Array.from(document.querySelectorAll("[data-review-topic]")).forEach(
+          (btn) =>
+            btn.addEventListener("click", () =>
+              markRevisionDone(
+                Number(btn.dataset.reviewTopic),
+                btn.dataset.reviewDate,
+              ),
+            ),
+        );
+        // Chapter Tracker listeners
+        $("showAddChBtn")?.addEventListener("click", () => {
+          $("addChForm").classList.remove("hidden");
+          $("newChName")?.focus();
+        });
+        $("cancelChBtn")?.addEventListener("click", () => {
+          $("addChForm").classList.add("hidden");
+        });
+        $("saveNewChBtn")?.addEventListener("click", saveNewChapter);
+        $("newChName")?.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") saveNewChapter();
+        });
+        document
+          .querySelectorAll("[data-ch-idx]")
+          .forEach((el) =>
+            el.addEventListener("change", () =>
+              toggleChapterTask(Number(el.dataset.chIdx), el.dataset.chTask),
+            ),
+          );
+        document
+          .querySelectorAll("[data-del-ch]")
+          .forEach((btn) =>
+            btn.addEventListener("click", () =>
+              deleteChapter(Number(btn.dataset.delCh)),
+            ),
+          );
+        document
+          .querySelectorAll("[data-ch-rev-idx]")
+          .forEach((btn) =>
+            btn.addEventListener("click", () =>
+              markChapterRevDone(
+                Number(btn.dataset.chRevIdx),
+                btn.dataset.chRevDate,
+              ),
+            ),
+          );
+      }
+
+      function saveTopicForReview() {
+        const txt = $("reviewTopicInput").value.trim();
+        if (!txt) {
+          toast("Write a topic first");
+          $("reviewTopicInput").focus();
+          return;
+        }
+        const today = todayKey();
+        const revisions = REVISION_DAYS.map((day) => {
+          const d = new Date();
+          d.setDate(d.getDate() + day);
+          return d.toISOString().slice(0, 10);
+        });
+        data.topics.unshift({ topic: txt, date: today, revisions, done: [] });
+        if (data.topics.length > 160) data.topics = data.topics.slice(0, 160);
+        saveData();
+        renderReview();
+        toast("Topic saved and revision schedule created");
+      }
+      function renderPendingReviews(withButtons = false) {
+        const pend = pendingRevisions();
+        if (!pend.length)
+          return `<div class="note">No pending revisions today.</div>`;
+        return `<div class="list">${pend
+          .map((tp) => {
+            const idx = data.topics.findIndex(
+              (x) => x.topic === tp.topic && x.date === tp.date,
+            );
+            const due = tp.revisions.filter(
+              (r) => r <= todayKey() && !(tp.done || []).includes(r),
+            );
+            return `<div class="list-item"><div class="title">${esc(tp.topic)}</div><div class="meta">Saved: ${fmtDate(tp.date)}</div><div class="row" style="margin-top:8px">${due.map((r) => (withButtons ? `<button class="btn ${r < todayKey() ? "btn-danger" : "btn-soft"}" data-review-topic="${idx}" data-review-date="${r}">${r} done</button>` : `<span class="badge ${r < todayKey() ? "b-danger" : "b-warning"}">${r}</span>`)).join("")}</div></div>`;
+          })
+          .join("")}</div>`;
+      }
+      function markRevisionDone(idx, date) {
+        const tp = data.topics[idx];
+        if (!tp) return;
+        if (!tp.done.includes(date)) tp.done.push(date);
+        saveData();
+        renderReview();
+        toast("Revision marked done");
+      }
+
+      // ─── Error Notebook 2.0 ─────────────────────────────────────────────────────
+      const MISTAKE_TYPES = [
+        {
+          key: "concept",
+          label: "Concept Error",
+          badge: "err-concept",
+          chip: "selected-concept",
+          icon: "🧠",
+        },
+        {
+          key: "memory",
+          label: "Memory Error",
+          badge: "err-memory",
+          chip: "selected-memory",
+          icon: "💾",
+        },
+        {
+          key: "silly",
+          label: "Silly Mistake",
+          badge: "err-silly",
+          chip: "selected-silly",
+          icon: "🤦",
+        },
+        {
+          key: "guess",
+          label: "Guess Error",
+          badge: "err-guess",
+          chip: "selected-guess",
+          icon: "🎲",
+        },
+      ];
+      const MISTAKE_TIPS = {
+        concept:
+          "Review core concepts — these chapters need deeper study, not just practice.",
+        memory:
+          "Use active recall daily — write formulas without looking, then verify.",
+        silly: "Slow down. Check each calculation step before moving forward.",
+        guess:
+          "Never guess. Eliminate wrong options systematically every time.",
+      };
+      function saveErrorEntry() {
+        const subject = ($("errSubject")?.value || "").trim();
+        const chapter = ($("errChapter")?.value || "").trim();
+        const source = ($("errSource")?.value || "").trim();
+        const mistakeType = document.querySelector(
+          'input[name="errMistake"]:checked',
+        )?.value;
+        const whatHappened = ($("errWhat")?.value || "").trim();
+        const correctApproach = ($("errCorrect")?.value || "").trim();
+        const neverRepeat = ($("errRule")?.value || "").trim();
+        if (!subject || !mistakeType || !whatHappened) {
+          toast("Fill Subject, Mistake Type, and What Happened");
+          return;
+        }
+        if (!data.errorNotebook) data.errorNotebook = [];
+        data.errorNotebook.unshift({
+          id: "err_" + Date.now(),
+          subject,
+          chapter,
+          source,
+          mistakeType,
+          whatHappened,
+          correctApproach,
+          neverRepeat,
+          date: todayKey(),
+          createdAt: nowISO(),
+        });
+        if (data.errorNotebook.length > 200)
+          data.errorNotebook = data.errorNotebook.slice(0, 200);
+        saveData();
+        renderMocks();
+        toast("Error saved to notebook ✔");
+      }
+      function deleteErrorEntry(idx) {
+        if (!confirm("Delete this error entry?")) return;
+        data.errorNotebook.splice(idx, 1);
+        saveData();
+        renderMocks();
+        toast("Entry deleted");
+      }
+      function errCounts() {
+        const c = { concept: 0, memory: 0, silly: 0, guess: 0 };
+        (data.errorNotebook || []).forEach((e) => {
+          if (c[e.mistakeType] !== undefined) c[e.mistakeType]++;
+        });
+        return c;
+      }
+      function errTopType(counts) {
+        return Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+      }
+      function errorAnalyticsHTML() {
+        const c = errCounts();
+        const total = Object.values(c).reduce((a, b) => a + b, 0);
+        const [topKey, topCount] = errTopType(c);
+        const topMeta = MISTAKE_TYPES.find((m) => m.key === topKey);
+        const tip = MISTAKE_TIPS[topKey];
+        return `
+        <div class="grid-2" style="margin-top:14px">
+          <div class="card">
+            <div class="section-title"><div><h2>Error Analytics</h2><div class="section-sub">${total} errors logged across all subjects</div></div><span class="badge b-danger">${total}</span></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+              ${MISTAKE_TYPES.map(
+                (
+                  m,
+                ) => `<div style="background:#f7faf9;border-radius:14px;padding:12px;text-align:center;border:1px solid rgba(16,34,28,.06)">
+                <div style="font-size:26px">${m.icon}</div>
+                <div style="font-size:22px;font-weight:900;color:var(--text);margin:4px 0">${c[m.key]}</div>
+                <div style="font-size:11px;font-weight:900;color:var(--muted)">${m.label.toUpperCase()}</div>
+              </div>`,
+              ).join("")}
+            </div>
+          </div>
+          <div class="card">
+            <div class="section-title"><div><h2>AI Insight</h2><div class="section-sub">Pattern from your error data</div></div><span class="badge b-blue">Auto</span></div>
+            ${
+              total === 0
+                ? `<div class="note">Log your first error to see insights.</div>`
+                : `
+            <div class="insight-box">
+              <div style="font-size:24px;margin-bottom:8px">${topMeta?.icon || "📊"}</div>
+              <div style="font-size:14px;font-weight:900;color:var(--text);margin-bottom:6px">Most errors are ${topMeta?.label || topKey} <span style="color:var(--muted);font-weight:700">(${topCount} of ${total})</span></div>
+              <div style="font-size:13px;color:var(--muted);font-weight:700;line-height:1.5">${tip}</div>
+            </div>
+            ${Object.entries(c)
+              .filter(([, v]) => v > 0)
+              .map(([k, v]) => {
+                const m = MISTAKE_TYPES.find((x) => x.key === k);
+                const pct = Math.round((v / total) * 100);
+                return `<div style="margin-top:10px"><div style="display:flex;justify-content:space-between;font-size:12px;font-weight:800;margin-bottom:4px"><span>${m?.icon} ${m?.label}</span><span>${pct}%</span></div><div style="height:8px;background:#f0f0f0;border-radius:6px"><div style="height:8px;border-radius:6px;background:var(--brand);width:${pct}%"></div></div></div>`;
+              })
+              .join("")}
+            `
+            }
+          </div>
+        </div>
+        <div class="card" style="margin-top:14px">
+          <div class="section-title"><div><h2>Error Log</h2><div class="section-sub">All saved error entries — most recent first</div></div><span class="badge b-danger">${(data.errorNotebook || []).length}</span></div>
+          <div>
+            ${
+              !(data.errorNotebook || []).length
+                ? `<div class="note">No errors logged yet. Add your first one above.</div>`
+                : (data.errorNotebook || [])
+                    .map((e, i) => {
+                      const m =
+                        MISTAKE_TYPES.find((x) => x.key === e.mistakeType) ||
+                        MISTAKE_TYPES[0];
+                      return `
+              <div class="err-card">
+                <div class="err-card-header">
+                  <div>
+                    <span class="err-type-badge ${m.badge}">${m.icon} ${m.label}</span>
+                    <div style="font-size:12px;color:var(--muted);font-weight:700;margin-top:5px">${fmtDate(e.date)}</div>
+                  </div>
+                  <button class="btn btn-danger" style="padding:5px 10px;font-size:11px" data-del-err="${i}">🗑</button>
+                </div>
+                <div class="err-field-row">
+                  <div><div class="err-label">Subject</div><div class="err-val">${esc(e.subject)}</div></div>
+                  <div><div class="err-label">Chapter</div><div class="err-val">${esc(e.chapter || "—")}</div></div>
+                  <div><div class="err-label">Source</div><div class="err-val">${esc(e.source || "—")}</div></div>
+                  <div><div class="err-label">Date</div><div class="err-val">${fmtDate(e.date)}</div></div>
+                </div>
+                <div><div class="err-label">What Happened</div><div class="err-val" style="white-space:pre-wrap;line-height:1.5">${esc(e.whatHappened)}</div></div>
+                ${e.correctApproach ? `<div style="margin-top:8px"><div class="err-label">Correct Approach</div><div class="err-val" style="white-space:pre-wrap;line-height:1.5">${esc(e.correctApproach)}</div></div>` : ""}
+                ${e.neverRepeat ? `<div class="err-rule">⚡ Never Repeat: ${esc(e.neverRepeat)}</div>` : ""}
+              </div>`;
+                    })
+                    .join("")
+            }
+          </div>
+        </div>`;
+      }
+      // ────────────────────────────────────────────────────────────────────────────
+
+      function renderMocks() {
+        $("mocksSection").innerHTML = `
+        <div class="grid-2">
+          <div class="card">
+            <div class="section-title"><div><h2>Add Mock Test</h2><div class="section-sub">Track marks, total, accuracy, and date</div></div></div>
+            <div class="field"><label>Marks scored</label><input id="mockMarks" class="input" type="number" min="0"></div>
+            <div class="field"><label>Total marks</label><input id="mockTotal" class="input" type="number" min="1" value="100"></div>
+            <div class="field"><label>Test date</label><input id="mockDate" class="input" type="date" value="${todayKey()}"></div>
+            <button id="saveMockBtn" class="btn btn-primary btn-full">Save Mock Test</button>
+          </div>
+          <div class="card">
+            <div class="section-title"><div><h2>Mock Analytics</h2><div class="section-sub">Trend, average, and recent history</div></div><span class="badge b-blue">Avg ${avgMock() !== null ? avgMock() + "%" : "—"}</span></div>
+            <div class="chart-wrap sm"><canvas id="mockChart"></canvas></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:14px">
+          <div class="section-title"><div><h2>Mock History</h2><div class="section-sub">Recent tests and performance</div></div></div>
+          <div class="list">${data.mockTests.length ? data.mockTests.map((m, i) => `<div class="list-item"><div class="title">Test ${data.mockTests.length - i}</div><div class="meta">${fmtDate(m.date)} • ${m.marks}/${m.total} • ${m.accuracy}%</div></div>`).join("") : `<div class="note">No mock tests saved yet.</div>`}</div>
+        </div>
+
+        <div style="margin-top:24px;margin-bottom:4px;display:flex;align-items:center;gap:10px">
+          <div style="font-size:18px;font-weight:900;letter-spacing:-.02em">📓 Error Notebook 2.0</div>
+          <span class="badge b-danger">${(data.errorNotebook || []).length} errors</span>
+        </div>
+
+        <div class="card">
+          <div class="section-title"><div><h2>Log a New Error</h2><div class="section-sub">Subject • Chapter • Mistake Type • What happened</div></div></div>
+          <div class="grid-2">
+            <div class="field"><label>Subject</label><select id="errSubject" class="select"><option value="">— Select —</option>${activeSubjects()
+              .map((s) => `<option>${esc(s)}</option>`)
+              .join("")}<option value="General">General</option></select></div>
+            <div class="field"><label>Chapter</label><input id="errChapter" class="input" type="text" placeholder="e.g. Motion, Organic"></div>
+          </div>
+          <div class="field"><label>Question Source</label><input id="errSource" class="input" type="text" placeholder="e.g. DPP 12, PYQ 2022, Mock Test 3"></div>
+          <div class="field">
+            <label>Mistake Type</label>
+            <div class="mistake-chips">
+              ${MISTAKE_TYPES.map((m) => `<label class="mistake-chip" id="chip_${m.key}"><input type="radio" name="errMistake" value="${m.key}">${m.icon} ${m.label}</label>`).join("")}
+            </div>
+          </div>
+          <div class="field"><label>What happened?</label><textarea id="errWhat" class="textarea" placeholder="Describe what went wrong in your thinking or calculation…" rows="3"></textarea></div>
+          <div class="field"><label>Correct Approach</label><textarea id="errCorrect" class="textarea" placeholder="The right method or concept to use…" rows="2"></textarea></div>
+          <div class="field"><label>Never Repeat Rule ⚡</label><input id="errRule" class="input" type="text" placeholder="One sentence rule you commit to…"></div>
+          <button id="saveErrBtn" class="btn btn-primary btn-full" style="margin-top:4px">Save Error Entry</button>
+        </div>
+
+        ${errorAnalyticsHTML()}
+      `;
+        $("saveMockBtn").addEventListener("click", saveMock);
+        $("saveErrBtn").addEventListener("click", saveErrorEntry);
+        // Mistake chip highlight on radio change
+        document.querySelectorAll('input[name="errMistake"]').forEach((r) => {
+          r.addEventListener("change", () => {
+            MISTAKE_TYPES.forEach((m) => {
+              const chip = $("chip_" + m.key);
+              if (chip) {
+                chip.classList.remove(
+                  "selected-concept",
+                  "selected-memory",
+                  "selected-silly",
+                  "selected-guess",
+                );
+              }
+            });
+            const chip = $("chip_" + r.value);
+            if (chip) chip.classList.add("selected-" + r.value);
+          });
+        });
+        document
+          .querySelectorAll("[data-del-err]")
+          .forEach((btn) =>
+            btn.addEventListener("click", () =>
+              deleteErrorEntry(Number(btn.dataset.delErr)),
+            ),
+          );
+      }
+      function saveMock() {
+        const marks = Math.max(0, Number($("mockMarks").value || 0));
+        const total = Math.max(1, Number($("mockTotal").value || 0));
+        if (!marks && marks !== 0) {
+          toast("Enter valid marks");
+          return;
+        }
+        data.mockTests.unshift({
+          marks,
+          total,
+          accuracy: Math.round((marks / total) * 100),
+          date: $("mockDate").value || todayKey(),
+        });
+        if (data.mockTests.length > 120)
+          data.mockTests = data.mockTests.slice(0, 120);
+        saveData();
+        renderMocks();
+        toast("Mock test saved");
+      }
+
+      // ─── Smart Timetable Generator 2.0 ─────────────────────────────────────────
+      function ttMin(t) {
+        const [h, m] = (t || "05:30").split(":").map(Number);
+        return h * 60 + (m || 0);
+      }
+      function ttStr(m) {
+        m = ((m % 1440) + 1440) % 1440;
+        const h = Math.floor(m / 60);
+        const mn = m % 60;
+        const ap = h >= 12 ? "PM" : "AM";
+        const hh = h % 12 || 12;
+        return `${hh}:${mn.toString().padStart(2, "0")} ${ap}`;
+      }
+      function buildDailySlots(weak, hrs, wakeTime, classTime) {
+        const hasClass =
+          classTime &&
+          !/^no/i.test(classTime.trim()) &&
+          classTime.trim().length > 1;
+        let t = ttMin(wakeTime || "05:30"),
+          slots = [];
+        const s = (icon, act, min) => {
+          slots.push({ time: ttStr(t), icon, act });
+          t += min;
+        };
+        s("🌅", "Wake Up + Water + Freshen Up", 30);
+        s("🧠", `${esc(weak)} Revision — Priority Subject`, 60);
+        if (hasClass) {
+          s("🍳", "Breakfast + Prepare", 30);
+          s("🏫", `School / College / Online Classes (${esc(classTime)})`, 300);
+          s("🍛", "Lunch + Short Rest", 30);
+          s("📝", "DPP Practice", 60);
+          s("📹", "Lecture / New Chapter", 75);
+          s("☕", "Break / Walk", 20);
+          s("🎯", "PYQ / MCQ Practice", 60);
+          s("🔢", "Formula + Notes Review", 30);
+          s("🔁", `${esc(weak)} Evening Revision`, 45);
+          s("📔", "Daily Reflection + Planning", 15);
+          s("😴", "Sleep", "");
+        } else if (hrs >= 10) {
+          s("📹", "Lecture / New Chapter — Session 1", 90);
+          s("📝", "DPP Practice — Session 1", 60);
+          s("🍳", "Breakfast + Break", 30);
+          s("🎯", "PYQ / MCQ Practice", 90);
+          s("🍛", "Lunch + Rest", 60);
+          s("📹", "Lecture / New Chapter — Session 2", 90);
+          s("📝", "DPP Practice — Session 2", 60);
+          s("☕", "Break / Walk", 20);
+          s("📊", "Mock Test / Test Series Section", 60);
+          s("🔢", "Formula + Error Notebook Review", 30);
+          s("🔁", `${esc(weak)} Final Revision`, 60);
+          s("📔", "Daily Reflection + Planning", 15);
+          s("😴", "Sleep", "");
+        } else if (hrs >= 6) {
+          s("📹", "Lecture / New Chapter", 90);
+          s("📝", "DPP Practice", 60);
+          s("🍳", "Breakfast + Break", 30);
+          s("🎯", "PYQ / MCQ Practice", 60);
+          s("🍛", "Lunch + Rest", 45);
+          s("🔁", `${esc(weak)} Revision`, 60);
+          s("🔢", "Formula + Notes Review", 30);
+          s("📔", "Daily Reflection", 15);
+          s("😴", "Sleep", "");
+        } else {
+          s("📹", "Lecture / New Chapter", 90);
+          s("📝", "DPP + PYQ Practice", 75);
+          s("🍳", "Break", 30);
+          s("🔁", `${esc(weak)} Revision`, 60);
+          s("📔", "Reflection + Notes", 15);
+          s("😴", "Sleep", "");
+        }
+        return slots;
+      }
+      function buildWeeklyPlanHTML(weak, hrs) {
+        const days = [
+          {
+            d: "Monday",
+            tasks: [
+              "📹 Lecture — Session 1",
+              "📝 DPP Practice",
+              `🧠 ${esc(weak)} Theory`,
+            ],
+          },
+          {
+            d: "Tuesday",
+            tasks: [
+              "📹 Lecture — Session 2",
+              "📝 DPP Practice",
+              "🎯 PYQ Solved (5 Q)",
+            ],
+          },
+          {
+            d: "Wednesday",
+            tasks: [
+              "📹 Lecture — New Chapter",
+              "📝 DPP + MCQ",
+              "🔢 Formula Notebook",
+            ],
+          },
+          {
+            d: "Thursday",
+            tasks: ["📹 Lecture", "🎯 PYQ Practice (10 Q)", "📔 Error Review"],
+          },
+          { d: "Friday", tasks: ["📹 Lecture", "📝 DPP", "📊 Mini Mock Test"] },
+          {
+            d: "Saturday",
+            tasks: [
+              "🔁 Full Week Revision",
+              "🗒 Error Notebook Review",
+              `🧠 ${esc(weak)} Deep Practice`,
+            ],
+          },
+          {
+            d: "Sunday",
+            tasks: [
+              "📊 Full Mock Test",
+              "📈 Mock Analysis",
+              "📅 Next Week Planning",
+            ],
+          },
+        ];
+        if (hrs < 6)
+          days.forEach((d) => {
+            d.tasks = d.tasks.slice(0, 2);
+          });
+        return `<div class="week-grid">${days.map((d) => `<div class="week-card"><div class="week-day-label">${d.d}</div>${d.tasks.map((t) => `<div class="week-task">${t}</div>`).join("")}</div>`).join("")}</div>`;
+      }
+      function buildMonthlyPlanHTML(weak, daysLeft) {
+        const urgent = daysLeft !== null && daysLeft < 60;
+        const plans = [
+          {
+            wk: "Week 1",
+            focus: "Foundation",
+            items: [
+              "New chapters + DPPs",
+              "Understand core concepts",
+              `${esc(weak)} base building`,
+              "Formula notebook setup",
+            ],
+          },
+          {
+            wk: "Week 2",
+            focus: "Practice",
+            items: [
+              "PYQ practice — 10/day",
+              "DPP all subjects",
+              "Chapter-wise MCQ",
+              urgent ? "Mock test 1" : "Mock test prep",
+            ],
+          },
+          {
+            wk: "Week 3",
+            focus: "Revision",
+            items: [
+              "Complete chapter revision",
+              "Error notebook analysis",
+              `${esc(weak)} intensive`,
+              urgent ? "2 Mock tests" : "Weak topics drill",
+            ],
+          },
+          {
+            wk: "Week 4",
+            focus: urgent ? "Full Exam Mode" : "Consolidation",
+            items: [
+              urgent ? "Daily mock test" : "1 Mock test",
+              urgent ? "Previous year papers" : "Revision",
+              "Weak topic cleanup",
+              "Backlog recovery + rest",
+            ],
+          },
+        ];
+        return plans
+          .map(
+            (p) =>
+              `<div class="month-card"><div class="month-week-label">${p.wk} — ${p.focus}</div>${p.items.map((i) => `<div class="week-task" style="margin-bottom:5px">• ${i}</div>`).join("")}</div>`,
+          )
+          .join("");
+      }
+      function buildPriorityHTML(weak) {
+        const incomplete = (data.chapters || []).filter((ch) => !ch.complete);
+        const weakChs = incomplete.filter((ch) => ch.subject === weak);
+        const otherChs = incomplete.filter((ch) => ch.subject !== weak);
+        if (!incomplete.length)
+          return `<div class="note">🎉 All tracked chapters are complete! Add more via the Review tab.</div>`;
+        return `
+        ${weakChs.length ? `<div style="margin-bottom:10px"><div style="font-size:11px;font-weight:900;color:var(--danger);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">🔴 Priority — ${esc(weak)} (Weak Subject)</div>${weakChs.map((ch) => `<span class="priority-badge" style="background:rgba(222,76,76,.1);color:var(--danger);border:1px solid rgba(222,76,76,.2)">${esc(ch.name)} — ${chapterTasksDoneCount(ch)}/6</span>`).join("")}</div>` : ""}
+        ${otherChs.length ? `<div><div style="font-size:11px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">📌 Incomplete Chapters</div>${otherChs.map((ch) => `<span class="priority-badge" style="background:rgba(63,121,255,.1);color:var(--blue);border:1px solid rgba(63,121,255,.2)">${esc(ch.subject)}: ${esc(ch.name)} — ${chapterTasksDoneCount(ch)}/6</span>`).join("")}</div>` : ""}`;
+      }
+      function buildBacklogHTML(weak, daysLeft, hrs) {
+        const incomplete = (data.chapters || []).filter(
+          (ch) => !ch.complete,
+        ).length;
+        const pendRev = pendingRevisions().length;
+        const urgency =
+          daysLeft !== null
+            ? daysLeft < 30
+              ? "Critical"
+              : daysLeft < 60
+                ? "High"
+                : "Moderate"
+            : "Unknown";
+        const urgColor =
+          urgency === "Critical"
+            ? "var(--danger)"
+            : urgency === "High"
+              ? "#dd9814"
+              : "var(--brand)";
+        return `
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+          <div style="background:#f7faf9;border-radius:14px;padding:12px;text-align:center;border:1px solid rgba(16,34,28,.06)"><div style="font-size:22px;font-weight:900;color:var(--danger)">${incomplete}</div><div style="font-size:10px;font-weight:900;color:var(--muted)">INCOMPLETE CHAPTERS</div></div>
+          <div style="background:#f7faf9;border-radius:14px;padding:12px;text-align:center;border:1px solid rgba(16,34,28,.06)"><div style="font-size:22px;font-weight:900;color:#dd9814">${pendRev}</div><div style="font-size:10px;font-weight:900;color:var(--muted)">PENDING REVISIONS</div></div>
+          <div style="background:#f7faf9;border-radius:14px;padding:12px;text-align:center;border:1px solid rgba(16,34,28,.06)"><div style="font-size:22px;font-weight:900;color:${urgColor}">${urgency}</div><div style="font-size:10px;font-weight:900;color:var(--muted)">URGENCY LEVEL</div></div>
+        </div>
+        <div class="insight-box">
+          <div style="font-size:14px;font-weight:900;margin-bottom:10px">🛠 Recovery Plan</div>
+          <div class="week-task" style="margin-bottom:6px">⚡ Give first ${Math.min(2, Math.ceil(hrs * 0.25))}h daily to ${esc(weak)} — priority backlog</div>
+          ${incomplete > 0 ? `<div class="week-task" style="margin-bottom:6px">📅 Complete ${Math.ceil(incomplete / Math.max(1, daysLeft || 30))} chapter(s) per day to clear backlog</div>` : ""}
+          ${pendRev > 0 ? `<div class="week-task" style="margin-bottom:6px">🔁 Clear ${pendRev} pending revision(s) — do before new chapters</div>` : ""}
+          <div class="week-task" style="margin-bottom:6px">📝 Reduce DPP count on strong subjects — redirect to weak area</div>
+          <div class="week-task">📊 1 mock test this week — check accuracy vs speed ratio</div>
+        </div>`;
+      }
+      function buildRevisionCycleHTML() {
+        const pend = pendingRevisions();
+        const comp = (data.topics || []).filter(
+          (tp) =>
+            tp.revisions &&
+            tp.revisions.every((r) => (tp.done || []).includes(r)),
+        );
+        return `
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px">
+          <div style="background:rgba(222,76,76,.08);border-radius:14px;padding:12px;text-align:center;border:1px solid rgba(222,76,76,.15)"><div style="font-size:22px;font-weight:900;color:var(--danger)">${pend.length}</div><div style="font-size:10px;font-weight:900;color:var(--muted)">PENDING TODAY</div></div>
+          <div style="background:#effbf6;border-radius:14px;padding:12px;text-align:center;border:1px solid #c9efdf"><div style="font-size:22px;font-weight:900;color:var(--brand)">${comp.length}</div><div style="font-size:10px;font-weight:900;color:var(--muted)">FULLY DONE</div></div>
+        </div>
+        <div style="margin-bottom:8px;font-size:11px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:.07em">1 – 3 – 7 – 21 Day Cycle</div>
+        <div style="background:#f7faf9;border-radius:14px;padding:12px;margin-bottom:10px">
+          ${REVISION_DAYS.map((d) => `<div class="rev-row"><span class="rev-dot done"></span><span class="rev-label">Day ${d} — Revisit within ${d} day${d > 1 ? "s" : ""} of learning</span></div>`).join("")}
+        </div>
+        ${
+          pend.length
+            ? `<div style="font-size:12px;font-weight:900;color:var(--danger);margin-bottom:6px">⚠ Overdue / Due Today</div><div class="list">${pend
+                .slice(0, 8)
+                .map(
+                  (tp) =>
+                    `<div class="list-item"><div class="title">${esc(tp.topic)}</div><div class="meta">Saved ${fmtDate(tp.date)}</div></div>`,
+                )
+                .join("")}</div>`
+            : `<div class="note">No pending revisions today 🎉</div>`
+        }`;
+      }
+      function buildTimetableOutput(
+        exam,
+        targetDate,
+        weak,
+        hrs,
+        wake,
+        sleep,
+        classTime,
+        daysLeft,
+      ) {
+        const slots = buildDailySlots(weak, hrs, wake, classTime);
+        const dailyHTML = `<div class="timeline">${slots.map((s) => `<div class="tl-row"><div class="tl-time">${s.time || ""}</div><div class="tl-body"><div class="tl-icon">${s.icon}</div><div class="tl-act">${s.act}</div></div></div>`).join("")}</div>`;
+        const weekHTML = buildWeeklyPlanHTML(weak, hrs);
+        const monthHTML = buildMonthlyPlanHTML(weak, daysLeft);
+        const prioHTML = buildPriorityHTML(weak);
+        const backHTML = buildBacklogHTML(weak, daysLeft, hrs);
+        const revHTML = buildRevisionCycleHTML();
+        const daysTag =
+          daysLeft !== null
+            ? `<span class="badge b-danger" style="margin-left:8px">${daysLeft} days left</span>`
+            : "";
+        return `
+        <div class="card">
+          <div class="section-title"><div><h2>${esc(exam)} Timetable ${daysTag}</h2><div class="section-sub">Sleep: ${ttStr(ttMin(sleep || "22:30"))} • ${hrs}h study/day • Wake: ${ttStr(ttMin(wake || "05:30"))}</div></div><span class="badge b-brand">✅ Generated</span></div>
+          <div class="plan-tabs">
+            <button class="plan-tab active" data-panel="ttDaily">📅 Daily Schedule</button>
+            <button class="plan-tab" data-panel="ttWeekly">📆 Weekly Plan</button>
+            <button class="plan-tab" data-panel="ttMonthly">🗓 Monthly Plan</button>
+            <button class="plan-tab" data-panel="ttPriority">🔴 Priority Chapters</button>
+            <button class="plan-tab" data-panel="ttBacklog">🛠 Backlog Recovery</button>
+            <button class="plan-tab" data-panel="ttRevision">🔁 Revision Cycle</button>
+          </div>
+          <div id="ttDaily">${dailyHTML}</div>
+          <div id="ttWeekly" class="hidden">${weekHTML}</div>
+          <div id="ttMonthly" class="hidden">${monthHTML}</div>
+          <div id="ttPriority" class="hidden">${prioHTML}</div>
+          <div id="ttBacklog" class="hidden">${backHTML}</div>
+          <div id="ttRevision" class="hidden">${revHTML}</div>
+        </div>`;
+      }
+      function renderPlan() {
+        $("planSection").innerHTML = `
+        <div class="card">
+          <div class="section-title"><div><h2>Smart Timetable Generator 2.0</h2><div class="section-sub">Fill details → get Daily • Weekly • Monthly plan + Revision Cycle</div></div><span class="badge b-brand">🧠 Smart</span></div>
+          <div class="grid-2">
+            <div class="field"><label>Exam</label><input id="ttExam" class="input" type="text" value="${esc(activeExamLabel())}"></div>
+            <div class="field"><label>Target Date</label><input id="ttTargetDate" class="input" type="date" value="${data.examDate || ""}"></div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label>Weak Subject</label><select id="ttWeakSubject" class="select">${activeSubjects()
+              .map((s) => `<option>${esc(s)}</option>`)
+              .join("")}<option value="General">General</option></select></div>
+            <div class="field"><label>Daily Available Study Hours</label><input id="ttHours" class="input" type="number" min="1" max="18" value="8" placeholder="e.g. 8"></div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label>Wake Up Time</label><input id="ttWake" class="input" type="time" value="05:30"></div>
+            <div class="field"><label>Sleep Time</label><input id="ttSleep" class="input" type="time" value="22:30"></div>
+          </div>
+          <div class="field"><label>School / College / Online Class Timings</label><input id="ttClass" class="input" type="text" placeholder="e.g. 9:00am–2:00pm or No Classes"></div>
+          <button id="generateTTBtn" class="btn btn-primary btn-full" style="margin-top:8px">⚡ Generate Smart Timetable</button>
+        </div>
+        <div id="ttOutput" style="margin-top:14px"></div>
+      `;
+        $("generateTTBtn").addEventListener("click", () => {
+          const exam = ($("ttExam")?.value || activeExamLabel()).trim();
+          const targetDate = $("ttTargetDate")?.value || "";
+          const weak =
+            $("ttWeakSubject")?.value || activeSubjects()[0] || "Weak Subject";
+          const hrs = Math.max(
+            1,
+            Math.min(18, Number($("ttHours")?.value || 8)),
+          );
+          const wake = $("ttWake")?.value || "05:30";
+          const sleep = $("ttSleep")?.value || "22:30";
+          const classTime = ($("ttClass")?.value || "").trim();
+          const daysLeft = targetDate
+            ? Math.max(
+                0,
+                Math.round((new Date(targetDate) - new Date()) / 86400000),
+              )
+            : null;
+          $("ttOutput").innerHTML = buildTimetableOutput(
+            exam,
+            targetDate,
+            weak,
+            hrs,
+            wake,
+            sleep,
+            classTime,
+            daysLeft,
+          );
+          document.querySelectorAll(".plan-tab").forEach((tab) => {
+            tab.addEventListener("click", () => {
+              document
+                .querySelectorAll(".plan-tab")
+                .forEach((t) => t.classList.remove("active"));
+              document
+                .querySelectorAll('#ttOutput .plan-panel, #ttOutput [id^="tt"]')
+                .forEach((p) => p.classList.add("hidden"));
+              tab.classList.add("active");
+              const panel = $(tab.dataset.panel);
+              if (panel) panel.classList.remove("hidden");
+            });
+          });
+          $("ttOutput").scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      }
+      // ────────────────────────────────────────────────────────────────────────────
+
+      function renderData() {
+        const month = data.monthlyReportMonth || getMonthKey();
+        const monthSessions = data.sessions.filter(
+          (s) => getMonthKey((s.date || todayKey()).slice(0, 10)) === month,
+        );
+        const source = sourceSummary(month),
+          cat = categorySummary(month);
+        $("dataSection").innerHTML = `
+        <div class="card">
+          <div class="section-title"><div><h2>Advanced Analytics</h2><div class="section-sub">Source, category, study trends, and score comparison</div></div><span class="badge b-brand">${esc(activeExamLabel())}</span></div>
+          <div class="grid-2">
+            <div class="chart-wrap"><canvas id="analyticsSourceChart"></canvas></div>
+            <div class="chart-wrap"><canvas id="analyticsCategoryChart"></canvas></div>
+          </div>
+          <div class="grid-2" style="margin-top:14px">
+            <div class="chart-wrap sm"><canvas id="analyticsMockChart"></canvas></div>
+            <div class="chart-wrap sm"><canvas id="analyticsOutputChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:14px">
+          <div class="section-title"><div><h2>Monthly Report Tools</h2><div class="section-sub">Professional print and CSV tools</div></div></div>
+          <div class="grid-2">
+            <div class="field"><label>Select month</label><input id="monthPicker" class="input" type="month" value="${month}"></div>
+            <div class="field"><label>Utility</label><div class="tools-grid nav-tools-hide"><button id="loadMonthBtn" class="btn">Load Month</button><button id="printMonthBtn" class="btn btn-soft">Print Month</button><button id="exportCsvBtn" class="btn btn-soft">Export CSV</button><button id="signOutBtn" class="btn btn-danger">${currentUser ? "Sign Out" : "Reset Guest"}</button></div></div>
+          </div>
+          <div id="monthSummary" class="note" style="margin-top:10px">
+            <b>${month}</b><br>
+            Total sessions: ${monthSessions.length}<br>
+            Study time: ${hours(monthSessions.filter((s) => s.category === "Study").reduce((a, b) => a + (b.durationSeconds || 0), 0))}h<br>
+            Sources tracked: ${Object.keys(source).length}<br>
+            Categories tracked: ${Object.keys(cat).length}<br>
+            Mock average: ${avgMock() !== null ? avgMock() + "%" : "—"}<br>Active subjects: ${esc(activeSubjects().join(", "))}
+          </div>
+        </div>
+      `;
+        $("loadMonthBtn").addEventListener("click", () => {
+          data.monthlyReportMonth = $("monthPicker").value || getMonthKey();
+          saveData();
+          renderData();
+        });
+        $("printMonthBtn").addEventListener("click", () => window.print());
+        $("exportCsvBtn").addEventListener("click", exportCsv);
+        $("signOutBtn").addEventListener("click", () => {
+          if (currentUser) signOutGoogle();
+          else resetGuest();
+        });
+      }
+
+      function resetGuest() {
+        const ok = confirm("Reset all saved guest data?");
+        if (!ok) return;
+        localStorage.removeItem(getStorageKey());
+        data = defaultData();
+        renderApp();
+        toast("Guest data reset");
+      }
+
+      function exportCsv() {
+        const rows = [["Section", "Field", "Value"]];
+        rows.push(["Profile", "Name", data.profile.name]);
+        rows.push(["Profile", "Exam", data.exam]);
+        rows.push(["Profile", "Exam Date", data.examDate]);
+        rows.push(["Stats", "Total Study Seconds", data.totalStudySeconds]);
+        rows.push(["Stats", "Streak", data.streak]);
+        rows.push(["Stats", "Best Streak", data.bestStreak]);
+        rows.push(["Stats", "DPP Total", data.dpp.total]);
+        activeSubjects().forEach((s) =>
+          rows.push([
+            "DPP",
+            s,
+            `${data.dpp.subjects[s]?.today || 0} today / ${data.dpp.subjects[s]?.total || 0} total`,
+          ]),
+        );
+        activeSubjects().forEach((s) =>
+          rows.push([
+            "Lectures",
+            s,
+            `${data.lectures.subjects[s]?.today || 0} today / ${data.lectures.subjects[s]?.total || 0} total`,
+          ]),
+        );
+        Object.keys(data.subjectStudy).forEach((s) =>
+          rows.push([
+            "Subject Study",
+            s,
+            `${data.subjectStudy[s].day} day / ${data.subjectStudy[s].total} total`,
+          ]),
+        );
+        data.sessions.forEach((s) =>
+          rows.push([
+            "Session",
+            s.source,
+            `${s.category} / ${s.subject || "-"} / ${s.durationSeconds}s / ${s.date}`,
+          ]),
+        );
+        data.mockTests.forEach((m) =>
+          rows.push([
+            "Mock",
+            fmtDate(m.date),
+            `${m.marks}/${m.total} (${m.accuracy}%)`,
+          ]),
+        );
+        data.topics.forEach((t) =>
+          rows.push([
+            "Topic",
+            t.topic,
+            `${t.date} / ${t.revisions.join(" | ")}`,
+          ]),
+        );
+        const csv = rows
+          .map((r) =>
+            r
+              .map((v) => `"${String(v ?? "").replaceAll('"', '""')}"`)
+              .join(","),
+          )
+          .join("\n");
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `rank-rise-${getMonthKey()}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        toast("CSV exported");
+      }
+
+      function refreshTimerDisplay() {
+        const total = timerState.running
+          ? timerState.carry +
+            Math.floor((Date.now() - timerState.startedAt) / 1000)
+          : timerState.carry;
+        timerState.elapsed = Math.max(0, total);
+        const display = $("timerDisplay");
+        if (display) display.textContent = fmtHMS(timerState.elapsed);
+      }
+      function startTimer() {
+        if (timerState.running) return;
+        timerState.running = true;
+        timerState.startedAt = Date.now();
+        const x = $("timerStatus");
+        if (x) x.textContent = "Running";
+        timerState.interval = setInterval(refreshTimerDisplay, 1000);
+        refreshTimerDisplay();
+        saveTimerState();
+      }
+      function pauseTimer() {
+        if (!timerState.running) return;
+        timerState.carry += Math.floor(
+          (Date.now() - timerState.startedAt) / 1000,
+        );
+        timerState.running = false;
+        clearInterval(timerState.interval);
+        timerState.interval = null;
+        refreshTimerDisplay();
+        const x = $("timerStatus");
+        if (x) x.textContent = "Paused";
+        saveTimerState();
+      }
+      function resetTimer() {
+        clearInterval(timerState.interval);
+        timerState.interval = null;
+        timerState.running = false;
+        timerState.elapsed = 0;
+        timerState.carry = 0;
+        timerState.startedAt = 0;
+        const d = $("timerDisplay");
+        if (d) d.textContent = fmtHMS(0);
+        const s = $("timerStatus");
+        if (s) s.textContent = "Ready to start";
+        clearTimerState();
+      }
+      function stopTimer() {
+        if (timerState.running) {
+          timerState.carry += Math.floor(
+            (Date.now() - timerState.startedAt) / 1000,
+          );
+        }
+        clearInterval(timerState.interval);
+        timerState.interval = null;
+        timerState.running = false;
+        timerState.elapsed = timerState.carry;
+        const duration = timerState.elapsed;
+        const sourceRaw = $("trackSource")?.value || "Self Study";
+        const source =
+          sourceRaw === "Other"
+            ? ($("otherSourceInput")?.value || "Other").trim() || "Other"
+            : sourceRaw;
+        const category = $("trackCategory")?.value || "Study";
+        const note = $("trackNote")?.value.trim() || "";
+        const subject = $("trackSubject")?.value || "";
+        if (duration > 0) {
+          saveSession({
+            source,
+            category,
+            note,
+            subject,
+            durationSeconds: duration,
+            date: nowISO(),
+            timestamp: nowISO(),
+          });
+          toast(`Saved ${fmtHuman(duration)} from ${source}`);
+        }
+        timerState.elapsed = 0;
+        timerState.carry = 0;
+        timerState.startedAt = 0;
+        const d = $("timerDisplay");
+        if (d) d.textContent = fmtHMS(0);
+        const s = $("timerStatus");
+        if (s) s.textContent = "Session saved";
+        if ($("trackNote")) $("trackNote").value = "";
+        if ($("otherSourceInput")) $("otherSourceInput").value = "";
+        clearTimerState();
+      }
+
+      function renderCharts() {
+        destroyCharts();
+        if (currentPage === "dashboard") {
+          chart(
+            "dashboardUsageChart",
+            {
+              type: "doughnut",
+              data: {
+                labels: Object.keys(sourceSummary()).length
+                  ? Object.keys(sourceSummary())
+                  : ["No data"],
+                datasets: [
+                  {
+                    data: Object.keys(sourceSummary()).length
+                      ? Object.values(sourceSummary()).map((v) =>
+                          Math.round(v.time / 60),
+                        )
+                      : [1],
+                    backgroundColor: Object.keys(sourceSummary()).length
+                      ? [
+                          "#13a47a",
+                          "#3f79ff",
+                          "#8d5cf6",
+                          "#dd9814",
+                          "#de4c4c",
+                          "#9aa6b2",
+                        ]
+                      : ["#e5e7eb"],
+                    borderColor: "#fff",
+                    borderWidth: 2,
+                  },
+                ],
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: "bottom" } },
+              },
+            },
+            "dbUsage",
+          );
+          chart(
+            "dashboardMockChart",
+            {
+              type: "line",
+              data: {
+                labels: data.mockTests
+                  .slice()
+                  .reverse()
+                  .map((_, i) => `T${i + 1}`),
+                datasets: [
+                  {
+                    label: "Accuracy %",
+                    data: data.mockTests
+                      .slice()
+                      .reverse()
+                      .map((x) => x.accuracy),
+                    borderColor: "#13a47a",
+                    backgroundColor: "rgba(19,164,122,.12)",
+                    fill: true,
+                    tension: 0.35,
+                    pointRadius: 4,
+                  },
+                ],
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { min: 0, max: 100 } },
+              },
+            },
+            "dbMock",
+          );
+          const d7 = dppLast7Days();
+          chart(
+            "dppTrendChart",
+            {
+              type: "bar",
+              data: {
+                labels: d7.map((x) => x.label),
+                datasets: [
+                  {
+                    label: "DPPs",
+                    data: d7.map((x) => x.total),
+                    backgroundColor: d7.map((x) =>
+                      x.total > 0 ? "#13a47a" : "#e5e7eb",
+                    ),
+                    borderRadius: 8,
+                  },
+                ],
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+              },
+            },
+            "dppTrend",
+          );
+        }
+        if (currentPage === "track") {
+          chart(
+            "trackSourceChart",
+            {
+              type: "bar",
+              data: {
+                labels: Object.keys(sourceSummary()).length
+                  ? Object.keys(sourceSummary())
+                  : ["No data"],
+                datasets: [
+                  {
+                    label: "Minutes",
+                    data: Object.keys(sourceSummary()).length
+                      ? Object.values(sourceSummary()).map((v) =>
+                          Math.round(v.time / 60),
+                        )
+                      : [0],
+                    backgroundColor: "#13a47a",
+                    borderRadius: 10,
+                  },
+                ],
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+              },
+            },
+            "trackSource",
+          );
+          chart(
+            "trackCategoryChart",
+            {
+              type: "doughnut",
+              data: {
+                labels: Object.keys(categorySummary()),
+                datasets: [
+                  {
+                    data: Object.values(categorySummary()).map((v) =>
+                      Math.round(v.time / 60),
+                    ),
+                    backgroundColor: ["#13a47a", "#de4c4c", "#dd9814"],
+                    borderColor: "#fff",
+                    borderWidth: 2,
+                  },
+                ],
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: "bottom" } },
+              },
+            },
+            "trackCategory",
+          );
+        }
+        if (currentPage === "mocks") {
+          chart(
+            "mockChart",
+            {
+              type: "line",
+              data: {
+                labels: data.mockTests
+                  .slice()
+                  .reverse()
+                  .map((_, i) => `Test ${i + 1}`),
+                datasets: [
+                  {
+                    label: "Accuracy %",
+                    data: data.mockTests
+                      .slice()
+                      .reverse()
+                      .map((m) => m.accuracy),
+                    borderColor: "#13a47a",
+                    backgroundColor: "rgba(19,164,122,.12)",
+                    fill: true,
+                    tension: 0.35,
+                    pointRadius: 4,
+                  },
+                ],
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { min: 0, max: 100 } },
+              },
+            },
+            "mockChart",
+          );
+        }
+        if (currentPage === "data") {
+          chart(
+            "analyticsSourceChart",
+            {
+              type: "bar",
+              data: {
+                labels: Object.keys(sourceSummary()).length
+                  ? Object.keys(sourceSummary())
+                  : ["No data"],
+                datasets: [
+                  {
+                    label: "Minutes",
+                    data: Object.keys(sourceSummary()).length
+                      ? Object.values(sourceSummary()).map((v) =>
+                          Math.round(v.time / 60),
+                        )
+                      : [0],
+                    backgroundColor: "#13a47a",
+                    borderRadius: 10,
+                  },
+                ],
+              },
+              options: { responsive: true, maintainAspectRatio: false },
+            },
+            "anaSource",
+          );
+          chart(
+            "analyticsCategoryChart",
+            {
+              type: "pie",
+              data: {
+                labels: Object.keys(categorySummary()),
+                datasets: [
+                  {
+                    data: Object.values(categorySummary()).map((v) =>
+                      Math.round(v.time / 60),
+                    ),
+                    backgroundColor: ["#13a47a", "#de4c4c", "#dd9814"],
+                  },
+                ],
+              },
+              options: { responsive: true, maintainAspectRatio: false },
+            },
+            "anaCategory",
+          );
+          chart(
+            "analyticsMockChart",
+            {
+              type: "line",
+              data: {
+                labels: data.mockTests
+                  .slice()
+                  .reverse()
+                  .map((_, i) => `T${i + 1}`),
+                datasets: [
+                  {
+                    label: "Accuracy",
+                    data: data.mockTests
+                      .slice()
+                      .reverse()
+                      .map((x) => x.accuracy),
+                    borderColor: "#8d5cf6",
+                    backgroundColor: "rgba(141,92,246,.12)",
+                    fill: true,
+                    tension: 0.35,
+                  },
+                ],
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { min: 0, max: 100 } },
+              },
+            },
+            "anaMock",
+          );
+          chart(
+            "analyticsOutputChart",
+            {
+              type: "bar",
+              data: {
+                labels: ["Study Hrs", "Productivity", "ROI", "Pending Rev"],
+                datasets: [
+                  {
+                    data: [
+                      +hours(data.totalStudySeconds),
+                      productivityScore(),
+                      roiScore(),
+                      pendingRevisions().length,
+                    ],
+                    backgroundColor: [
+                      "#13a47a",
+                      "#3f79ff",
+                      "#8d5cf6",
+                      "#de4c4c",
+                    ],
+                    borderRadius: 10,
+                  },
+                ],
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+              },
+            },
+            "anaOutput",
+          );
+        }
+      }
+
+      function updateTop() {
+        $("topStreakMain").textContent = `${data.streak} 🔥`;
+        $("topStreakBest").textContent = `Best: ${data.bestStreak} day`;
+        if (previousStreakShown !== data.streak) {
+          $("topStreakMain").classList.remove("streak-burst");
+          void $("topStreakMain").offsetWidth;
+          $("topStreakMain").classList.add("streak-burst");
+          previousStreakShown = data.streak;
+        }
+      }
+
+      function showSection(name) {
+        currentPage = name;
+        document
+          .querySelectorAll(".page-section")
+          .forEach((el) => el.classList.remove("active"));
+        $(`${name}Section`).classList.add("active");
+        document
+          .querySelectorAll(".nav-btn")
+          .forEach((btn) =>
+            btn.classList.toggle("active", btn.dataset.page === name),
+          );
+        renderCharts();
+      }
+
+      function renderApp() {
+        syncTodayRollovers();
+        ensureExamModel();
+        ensureStreakHealth();
+        ensureTodayRoutine();
+        applyTheme();
+        applyBrandLogo();
+        updateAuthUI();
+        updateTop();
+        renderHero();
+        renderDashboard();
+        renderTrack();
+        renderRoutine();
+        renderReview();
+        renderMocks();
+        renderPlan();
+        renderData();
+        showSection(currentPage);
+      }
+
+      function toast(msg) {
+        const t = $("toast");
+        t.textContent = msg;
+        t.classList.add("show");
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(() => t.classList.remove("show"), 2400);
+      }
+
+      // Static bindings
+      $("startLocalBtn").addEventListener("click", startLocalProfile);
+      $("overlayGoogleBtn").addEventListener("click", signInGoogle);
+      document
+        .querySelectorAll(".nav-btn")
+        .forEach((btn) =>
+          btn.addEventListener("click", () => showSection(btn.dataset.page)),
+        );
+
+      // Login overlay: show/hide custom exam + subject fields based on selected exam
+      $("localExam").addEventListener("change", (e) => {
+        const val = e.target.value;
+        const needsCustom = ["CUET", "SSC", "Other"].includes(val);
+        $("loginCustomExamWrap").classList.toggle("hidden", val !== "Other");
+        $("loginCustomSubjectsWrap").classList.toggle("hidden", !needsCustom);
+      });
+
+      setInterval(() => {
+        if (currentUser || data.profile.name) renderHero();
+      }, 1000);
+
+      // Timer reliability: sync display immediately when tab becomes visible again
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden && timerState.running) {
+          refreshTimerDisplay();
+        }
+      });
+
+      // Timer reliability: handle iOS Safari back/forward cache (pagehide/pageshow)
+      window.addEventListener("pagehide", () => {
+        if (timerState.running) saveTimerState();
+      });
+      window.addEventListener("pageshow", (e) => {
+        if (e.persisted && timerState.running) refreshTimerDisplay();
+      });
+
+      // ─── PWA: Service Worker Registration ───────────────────────────────────────
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/sw.js", { scope: "/" })
+            .catch(() => {});
+        });
+      }
+
+      // ─── PWA: Install Prompt (Android / PC Chrome / Edge) ──────────────────────
+      let _pwaPrompt = null;
+      window.addEventListener("beforeinstallprompt", (e) => {
+        e.preventDefault();
+        _pwaPrompt = e;
+        const fab = $("pwaInstallBtn");
+        if (fab) {
+          fab.classList.remove("hidden");
+          // Auto-hide after 20 s if user ignores it
+          setTimeout(() => fab.classList.add("hidden"), 20000);
+        }
+      });
+      $("pwaInstallBtn")?.addEventListener("click", async () => {
+        if (!_pwaPrompt) return;
+        const fab = $("pwaInstallBtn");
+        _pwaPrompt.prompt();
+        const { outcome } = await _pwaPrompt.userChoice;
+        _pwaPrompt = null;
+        if (fab) fab.classList.add("hidden");
+        if (outcome === "accepted")
+          toast("🎉 Rank Rise installed! Open from Home Screen.");
+      });
+      window.addEventListener("appinstalled", () => {
+        const fab = $("pwaInstallBtn");
+        if (fab) fab.classList.add("hidden");
+        toast("✅ Rank Rise added to Home Screen!");
+      });
+    </script>
+  </body>
+</html>
